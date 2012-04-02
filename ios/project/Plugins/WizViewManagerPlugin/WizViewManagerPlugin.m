@@ -44,7 +44,6 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-
 + (NSMutableDictionary*)getViews
 {
     // return instance of current view list
@@ -66,7 +65,7 @@ static NSMutableDictionary *isAnimating = nil;
     
     [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
     
-    WizLog(@"[WizViewManager] ******* updateView name : %@ ", viewName); 
+    WizLog(@"[WizViewManager] ******* updateView name : %@ with options %@ ", viewName, options); 
     
     // wait for callback
     /*
@@ -85,17 +84,35 @@ static NSMutableDictionary *isAnimating = nil;
             NSString* src               = [options objectForKey:@"src"];
             if (src) {
                 
-                // load new source
-                NSString *fileString = src;
                 
-                NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
+                NSURL *candidateURL = [NSURL URLWithString:src];
+                if (candidateURL && candidateURL.scheme && candidateURL.host) {
+                    // candidate is a well-formed url with:
+                    //  - a scheme (like http://)
+                    //  - a host (like stackoverflow.com)
+                                        
+                    WizLog(@"[WizViewManager] ******* updateView with URL");
+                    [targetWebView loadRequest:[NSURLRequest requestWithURL:candidateURL]];
+                    
+                    
+                } else {
                 
-                NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
+                    WizLog(@"[WizViewManager] ******* updateView with local file");
+                    
+                    // load new source
+                    NSString *fileString = src;
                 
-                [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
+                    NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
                 
-                [newHTMLString release];
-                [newURL release];
+                    NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
+                
+                    [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
+                    
+                    [newHTMLString release];
+                    [newURL release];
+                }
+                
+                
             }
             
 
@@ -495,9 +512,6 @@ static NSMutableDictionary *isAnimating = nil;
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
     }
 }
-
-
-
 
 
 

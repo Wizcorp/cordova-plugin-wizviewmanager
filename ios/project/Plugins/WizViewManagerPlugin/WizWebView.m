@@ -32,21 +32,38 @@ static BOOL isActive = FALSE;
     wizView.userInteractionEnabled = YES;
     wizView.opaque = NO;
     
-    WizLog(@"[WizWebView] ******* building new view");
+    WizLog(@"[WizWebView] ******* building new view. src : %@", src);
     
     // load source from URI for example
-    // /Users/WizardBookPro/Library/Application Support/iPhone Simulator/4.3.2/Applications/14013381-4491-42B9-8A72-30223350C81C/zombiejombie.app/www/test2_index.html
+    // /Users/WizardBookPro/Library/Application Support/iPhone Simulator/4.3.2/Applications/14013381-4491-42B9-8A72-30223350C81C/myApp.app/www/test2_index.html
     
-    NSString *fileString = src;
     
-    NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
-    
-    NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
-    
-    [wizView loadHTMLString: newHTMLString baseURL: newURL];
-    
-    [newHTMLString release];
-    [newURL release];
+    NSURL *candidateURL = [NSURL URLWithString:src];
+    if (candidateURL && candidateURL.scheme && candidateURL.host) {
+        // candidate is a well-formed url with:
+        //  - a scheme (like http://)
+        //  - a host (like stackoverflow.com)
+        
+        WizLog(@"[WizViewManager] ******* building with URL");
+        [wizView loadRequest:[NSURLRequest requestWithURL:candidateURL]];
+        
+        
+    } else {
+        
+        WizLog(@"[WizViewManager] ******* building with local file");
+        
+        NSString *fileString = src;
+        
+        NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
+        
+        NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
+        
+        [wizView loadHTMLString: newHTMLString baseURL: newURL];
+        
+        [newHTMLString release];
+        [newURL release];
+    }
+
     
     wizView.bounds = webViewBounds;
     

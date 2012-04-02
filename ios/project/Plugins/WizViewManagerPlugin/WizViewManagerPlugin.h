@@ -25,8 +25,6 @@
 + (NSMutableDictionary *)getViews;
 + (NSMutableDictionary *)getViewLoadedCallbackId;
 
-
-
 - (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)hideView:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)showView:(NSArray*)arguments withDict:(NSDictionary*)options;
