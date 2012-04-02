@@ -183,7 +183,7 @@ function wizMessageReceiver(data)
 }
 </code></pre>
 
-to send a messsage, add this to the html your wish to send from use...
+to send a messsage, add this to the html you wish to send from use...
 <pre><code>
 function sendExample()
 {
