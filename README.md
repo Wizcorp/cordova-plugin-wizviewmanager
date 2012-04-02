@@ -54,13 +54,20 @@ Key : wizViewManager<br />
 Type : String<br />
 Value : wizViewManager<br />
 
-3 ) Add \<script\> tag to your index.html<br />
+
+3 ) Configure your AppDelegate.m
+
+See the example AppDelegate.m
+(just add/copy \#import and shouldStartLoadWithRequest function)
+
+
+4 ) Add \<script\> tag to your index.html<br />
 \<script type="text/javascript" charset="utf-8" src="phonegap/plugin/wizViewManager/wizViewManager.js"\>\</script\><br />
 (assuming your index.html is setup like tree above)
 You will also need the json.js (for getting JSON objects)
 
 
-3 ) Follow example code below.
+5 ) Follow example code below.
 
 
 
@@ -90,6 +97,7 @@ wizViewManager.create(String viewName, JSONObject options, Function success, Fun
     "width": "300", [pixels - default : fills width] 
     "x": "0", [pixels - default : 0] 
     "y": "0", [pixels - default : 0] 
+    "src": "http://google.com" [URL/URI to load] 
 
 }; 
 </code></pre>
@@ -103,7 +111,7 @@ wizViewManager.update(String viewName, JSONObject options, Function success, Fun
 
 {
 
-    "src": "http://google.com", [URL/URI to load] 
+    "src": "http://google.com" [URL/URI to load] 
 
 }; 
 </code></pre>
@@ -163,3 +171,40 @@ animation : {
 }; 
 </code></pre>
 
+Message a view<br />
+add a receiver to your html that gets the message...
+<pre><code>
+function wizMessageReceiver(data) 
+{
+                        
+    // your data comes in here
+    console.log('i got :' + data);
+                        
+}
+</code></pre>
+
+to send a messsage, add this to the html your wish to send from use...
+<pre><code>
+function sendExample()
+{
+    
+    var targetView = 'newView';
+    var action = 'message';
+    var params = { 'x' : 500 };
+    
+    
+    postEvent(targetView, action, params );
+    
+}
+
+function postEvent(targetView, action, params) 
+{
+    var msg = { 'event' : action , 'params' : params };
+    
+    var iframe = document.createElement('IFRAME');
+    iframe.setAttribute('src', 'wizMessageView://'+ window.encodeURIComponent(targetView)+ '?'+ window.encodeURIComponent(JSON.stringify(msg)) );
+    document.documentElement.appendChild(iframe);
+    iframe.parentNode.removeChild(iframe);
+    iframe = null;
+}
+</code></pre>
