@@ -30,11 +30,8 @@ var wizViewManager = {
     
     remove:  function(viewName, s, f) {
         return PhoneGap.exec(s, f, "WizViewManagerPlugin", "removeView", [viewName]);                      
-    },
-    
-    initPing:  function() {
-        return PhoneGap.exec(null, null, "WizViewManagerPlugin", "initPing", []);                      
     }
+
     
 	
 };

@@ -18,9 +18,6 @@
 static NSMutableDictionary *wizViewList = nil;
 static CGFloat viewPadder = 9999.0f;
 static NSMutableDictionary *viewLoadedCallbackId = nil;
-static int pongCount;
-static int pingCount;
-static BOOL pingSuccess;
 static NSMutableDictionary *isAnimating = nil;
 
 -(PGPlugin*) initWithWebView:(UIWebView*)theWebView
@@ -46,14 +43,6 @@ static NSMutableDictionary *isAnimating = nil;
     return self;
 }
 
-- (void)initPing:(NSArray*)arguments withDict:(NSDictionary*)options 
-{
-    // init ping
-    pingSuccess = TRUE;
-    
-    // start ping all views
-    [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(ping) userInfo:nil repeats:YES];
-}
 
 
 + (NSMutableDictionary*)getViews
@@ -513,67 +502,6 @@ static NSMutableDictionary *isAnimating = nil;
 
 
 
-
-
-
-/**
- 
- PING PONG METHODS - test if the views are still alive
- 
- **/
-- (void) ping
-{
-    // did we success last ping?
-    
-    if (pingSuccess) {
-        // new ping
-        
-        
-               
-        // reset counters
-        pingCount = 0;
-        pongCount = 0;
-        
-        for (NSString* key in wizViewList) {
-            
-            UIWebView* targetWebView = [wizViewList objectForKey:key];
-            if (![targetWebView isLoading]) {
-                
-                pingCount++;
-                WizLog(@"[PING] ----------------------------------- START PING! ");
-                [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver('%@');", @"ping"]];
-            
-            }
-        }
-        
-    } else {
-        // a view is not responding handle error
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-    }
-    
-    
-}
-
-+ (void) pong
-{
-    
-    pongCount++;
-    WizLog(@"[PONG] ----------------------------------- PONG!");
-    if (pingCount == pongCount) {
-        pingSuccess = TRUE;
-        WizLog(@"pongCount: %i pingCount: %i",pongCount,pingCount);
-    } else {
-        pingSuccess = FALSE;
-    }
-    
-}
 
 
 

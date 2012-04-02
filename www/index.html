@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+            
+            <!-- iPad/iPhone specific css below, add after your main css >
+             <link rel="stylesheet" media="only screen and (max-device-width: 1024px)" href="ipad.css" type="text/css" />		
+             <link rel="stylesheet" media="only screen and (max-device-width: 480px)" href="iphone.css" type="text/css" />		
+             -->
+            <!-- If your application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here 
+             
+             
+             
+             
+             
+             -->
+            
+			<script type='text/javascript' charset="utf-8" src="json.js"></script>
+            <script type="text/javascript" charset="utf-8" src="phonegap/js/phonegap-1.1.0.js"></script>
+            <script type='text/javascript' charset="utf-8" src="phonegap/plugin/wizViewManager/wizViewManager.js"></script>
+            
+
+            <script type="text/javascript" charset="utf-8">
+                
+                
+                // If you want to prevent dragging, uncomment this section
+                /*
+                 function preventBehavior(e) 
+                 { 
+                 e.preventDefault(); 
+                 };
+                 document.addEventListener("touchmove", preventBehavior, false);
+                 */
+                
+                /* If you are supporting your own protocol, the var invokeString will contain any arguments to the app launch.
+                 see http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
+                 for more details -jm */
+                /*
+                 function handleOpenURL(url)
+                 {
+                 // TODO: do something with the url passed in.
+                 }
+                 */
+                    
+                
+
+                function onBodyLoad()
+                {	
+                    document.addEventListener("deviceready",onDeviceReady,false);
+                    
+                                      
+                }
+
+                
+                function onDeviceReady()
+                {
+                
+                                       
+                    // you CAN test in simulator but remember you need to make this point to your html in the app bundle
+                    // for example ->
+                    // /Users/<COMPUTER NAME>/Library/Application Support/iPhone Simulator/5.0/Applications/7442EEB3-0DAF-417E-B80F-3FCE72B30341/<APP NAME>/www/newview.html
+                    
+                    
+                    wizViewManager.create("newView", { "src" : "/Users/bobsComputer/Library/Application Support/iPhone Simulator/5.0/Applications/7442EEB3-0DAF-417E-B80F-3FCE72B30341/myAPP.app/www/newview.html", "height" : 100, "width" : 320 }, showView, null); 
+                    
+				}
+				
+				
+                function slideviewfromleft()
+                {
+                    var animation = {
+                        "type" : "slideInFromLeft", 
+                        "duration" : 3000
+                    };
+                    wizViewManager.show("newView", { "animation" : animation }, onUpdateSuccess, null);
+                }
+                
+                function slideviewfromright()
+                {
+                    var animation = {
+                        "type" : "slideInFromRight", 
+                        "duration" : 3000
+                    };
+                    wizViewManager.show("newView", { "animation" : animation }, onUpdateSuccess, null);
+                }
+                
+                
+                function newView()
+                {
+                    
+                    wizViewManager.create("newView", { "src" : "/Users/bobsComputer/Library/Application Support/iPhone Simulator/5.0/Applications/7442EEB3-0DAF-417E-B80F-3FCE72B30341/myAPP.app/www/newView.html" }, onSuccess, null);
+
+                }
+                
+                function showView()
+                {
+                    
+                    var animation = {
+                        "type" : "slideInFromTop", 
+                        "duration" : 1000
+                    };
+                    wizViewManager.show("anotherView", { "animation" : animation }, slideagain, null);
+                    
+                    var animation = {
+                        "type" : "slideInFromBottom", 
+                        "duration" : 3000
+                    };
+                    wizViewManager.show("alexView", { "animation" : animation }, onUpdateSuccess, null);
+                    
+                    
+                }
+                
+                var showView = function ()
+                {
+                    var animation = {
+                        "type" : "slideInFromTop", 
+                        "duration" : 2000
+                    };
+                   wizViewManager.show("newView", { "animation" : animation }, onUpdateSuccess, null);
+                    
+                }
+                
+                var slideagain = function ()
+                {
+                    var animation = {
+                        "type" : "slideInFromRight", 
+                        "duration" : 1000
+                    };
+                    wizViewManager.show("newView", { "animation" : animation }, onUpdateSuccess, null);
+                    
+                }
+                
+                function updateView()
+                {
+                    
+                    wizViewManager.update("newView", { "src" : "http://google.com" }, onUpdateSuccess, onFail);
+                    
+                }
+
+                function removeView()
+                {
+                    
+                    wizViewManager.remove("newView", onSuccess, onFail);
+                    
+                }
+                
+                var onSuccess = function (data) {
+                    alert("success " + data);
+                    
+                }
+                
+                var onUpdateSuccess = function (data) {
+                    // alert("success " + data);
+                    
+                    sendPopup();
+                }
+                
+                var onFail = function (e) {
+                    alert("error = "+e);
+                }
+                
+                
+                function wizMessageReceiver(data) {
+                    
+                    // alert("from mainView got data: "+data);
+                    
+                    var animation = {
+                        "type" : "slideOutToTop", 
+                        "duration" : 1000
+                    };
+                    
+                    /*
+                    wizViewManager.hide('newView', { "animation" : animation }, null, null);
+                    var animation = {
+                        "type" : "slideOutToBottom", 
+                        "duration" : 3000
+                    };
+                    */
+                    
+                    wizViewManager.hide('newView', { "animation" : animation }, null, null);
+                    
+                    
+                }
+                
+                function sendPopup()
+                {
+                    
+                    var targetView = 'newView';
+                    var action = 'message';
+                    var params = { 'x' : 500 };
+                    
+                    
+                    postEvent(targetView, action, params );
+                    
+                }
+                
+                function postEvent(targetView, action, params) 
+                {
+                    var msg = { 'event' : action , 'params' : params };
+                    
+                    var iframe = document.createElement('IFRAME');
+                    iframe.setAttribute('src', 'wizMessageView://'+ window.encodeURIComponent(targetView)+ '?'+ window.encodeURIComponent(JSON.stringify(msg)) );
+                    document.documentElement.appendChild(iframe);
+                    iframe.parentNode.removeChild(iframe);
+                    iframe = null;
+                }
+
+
+    	</script>
+    </head>
+    <body onload="onBodyLoad()">
+        <h1>TEST PAGE!</h1>
+
+		<br />
+        
+        <div id="viewManager">
+            viewManager;
+            <input type="button" value="newView!" onclick="newView()" />
+            <input type="button" value="showView!" onclick="showView()" />
+            <input type="button" value="slideviewfromleft!" onclick="slideviewfromleft()" />
+            <input type="button" value="slideviewfromright!" onclick="slideviewfromright()" />
+            <input type="button" value="updateView!" onclick="updateView()" />
+            <input type="button" value="removeView!" onclick="removeView()" />
+            <input type="button" value="sendPopup!" onclick="sendPopup()" />
+    
+            
+        </div>
+        
+		
+    </body>
+</html>
