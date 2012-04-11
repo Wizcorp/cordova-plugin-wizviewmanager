@@ -1,10 +1,11 @@
 /* AppDelegate - EXAMPLE
  *
- * @author WizCorp Inc. [ Incorporated Wizards ] 
- * @copyright 2012
+ * @author Ally Ogilvie
+ * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
  * @file AppDelegate.m
  *
  */
+
 
 #import "AppDelegate.h"
 #import "WizViewManagerPlugin.h"

@@ -1,10 +1,11 @@
-/* WizViewManager - Handle Popup UIViews and communtications.
+/* WizViewManager - Handle Popup UIViews and communications.
  *
- * @author WizCorp Inc. [ Incorporated Wizards ] 
- * @copyright 2011
+ * @author Ally Ogilvie
+ * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
  * @file WizViewManager.h for PhoneGap
  *
- */ 
+ *
+ */
 
 #import <Foundation/Foundation.h>
 #ifdef PHONEGAP_FRAMEWORK

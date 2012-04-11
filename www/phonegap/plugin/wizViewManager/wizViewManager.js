@@ -1,12 +1,14 @@
 /* WizViewManager for PhoneGap - Handle Popup UIViews and communtications.
 *
- * @author WizCorp Inc. [ Incorporated Wizards ] 
- * @copyright 2011
+ * @author Ally Ogilvie
+ * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
  * @file - wizViewManager.js
  * @about - JavaScript PhoneGap bridge for extra utilities 
  *
  *
 */
+
+
 
 
 
