@@ -3,7 +3,7 @@
  * @author Ally Ogilvie
  * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
  * @file WizViewManager.m for PhoneGap
- *
+ * @version 1.1
  *
  */
 
