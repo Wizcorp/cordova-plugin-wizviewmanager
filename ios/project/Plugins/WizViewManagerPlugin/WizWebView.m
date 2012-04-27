@@ -7,7 +7,6 @@
  */ 
 
 #import "WizWebView.h"
-#import "WizDebugLog.h"
 #import "WizViewManagerPlugin.h"
 
 
@@ -15,10 +14,10 @@
 
 @synthesize wizView;
 
-static PGPlugin* viewManager;
+static CDVPlugin* viewManager;
 static BOOL isActive = FALSE;
 
--(UIWebView *)createNewInstanceView:(PGPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src 
+-(UIWebView *)createNewInstanceView:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src 
 {
     
     viewManager = myViewManager;
@@ -33,6 +32,7 @@ static BOOL isActive = FALSE;
     wizView.opaque = NO;
     
     WizLog(@"[WizWebView] ******* building new view");
+
     
     // load source from URI for example
     // /Users/WizardBookPro/Library/Application Support/iPhone Simulator/4.3.2/Applications/14013381-4491-42B9-8A72-30223350C81C/zombiejombie.app/www/test2_index.html
@@ -40,6 +40,7 @@ static BOOL isActive = FALSE;
     if ([NSURL URLWithString:src] == Nil) {
         // load new source
         WizLog(@"SOURCE NOT URL");
+
         NSString *fileString = src;
         
         NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
@@ -82,7 +83,7 @@ static BOOL isActive = FALSE;
 - (void)webViewDidFinishLoad:(UIWebView *)theWebView 
 {
 	// view is loaded
-    WizLog(@"[WizWebView] ******* view is LOADED! " );
+    NSLog(@"[WizWebView] ******* view is LOADED! " );
     
     isActive = TRUE;
     
@@ -90,11 +91,11 @@ static BOOL isActive = FALSE;
      
     NSMutableDictionary * callbackDict = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViewLoadedCallbackId]];
     
-    WizLog(@"[WizViewManager] ******* viewLoadedCallbackId : %@ ", callbackDict); 
+    NSLog(@"[WizViewManager] ******* viewLoadedCallbackId : %@ ", callbackDict); 
     NSString* callbackId = [callbackDict objectForKey:@"viewLoadedCallback"];
     
    
-    PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
 
     
@@ -106,7 +107,7 @@ static BOOL isActive = FALSE;
      
     NSMutableDictionary * viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
     UIWebView* targetWebView = [viewList objectForKey:@"mainView"]; 
-    WizLog(@"[WizWebView] ******* targetWebView... %@", targetWebView);
+    NSLog(@"[WizWebView] ******* targetWebView... %@", targetWebView);
     [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver('%@');", myName]];
      
     */
@@ -121,7 +122,7 @@ static BOOL isActive = FALSE;
     NSString *requestString = [[request URL] absoluteString];
     // get prefix
     NSArray* prefixer = [requestString componentsSeparatedByString:@":"];
-    // WizLog(@"[WizWebView] ******* prefixer is:  %@", prefixer );
+    // NSLog(@"[WizWebView] ******* prefixer is:  %@", prefixer );
     
     // example request string
     // wizMessageView://mainView/{here is our data stringified}
@@ -136,17 +137,17 @@ static BOOL isActive = FALSE;
         
         NSString* targetView = [messageData substringToIndex:range.location];
         
-        WizLog(@"[WizWebView] ******* targetView is:  %@", targetView );
+        NSLog(@"[WizWebView] ******* targetView is:  %@", targetView );
         
         int targetLength = targetView.length;
         
         NSString* postData = [messageData substringFromIndex:targetLength+1];
         
-        // WizLog(@"[WizWebView] ******* postData is:  %@", postData );
+        // NSLog(@"[WizWebView] ******* postData is:  %@", postData );
 
         NSMutableDictionary * viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
         
-        // WizLog(@"[WizWebView] ******* current views... %@", viewList);
+        // NSLog(@"[WizWebView] ******* current views... %@", viewList);
 
         
         if ([viewList objectForKey:targetView]) {

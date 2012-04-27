@@ -7,7 +7,6 @@
  */ 
 
 #import "WizViewManagerPlugin.h"
-#import "WizDebugLog.h"
 #import "WizWebView.h"
 
 
@@ -23,7 +22,7 @@ static int pingCount;
 static BOOL pingSuccess;
 static NSMutableDictionary *isAnimating = nil;
 
--(PGPlugin*) initWithWebView:(UIWebView*)theWebView
+-(CDVPlugin*) initWithWebView:(UIWebView*)theWebView
 {
 
     self = (WizViewManagerPlugin*)[super initWithWebView:theWebView];
@@ -150,10 +149,11 @@ static NSMutableDictionary *isAnimating = nil;
     [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
     
     WizLog(@"[WizViewManager] ******* updateView name : %@ ", viewName); 
+
     
     // wait for callback
     /*
-    PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_NO_RESULT];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
     [pluginResult setKeepCallbackAsBool:YES];
     [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
     */
@@ -169,6 +169,7 @@ static NSMutableDictionary *isAnimating = nil;
             if (src) {
                 
                 if ([NSURL URLWithString:src] == Nil) {
+
                     // load new source
                     WizLog(@"SOURCE NOT URL");
                     NSString *fileString = src;
@@ -198,20 +199,20 @@ static NSMutableDictionary *isAnimating = nil;
             
             
             /*
-            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
              */
             
         } else {
             
-            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - view not found"];
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
             [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
         }
  
     } else {
         
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - nothing to update"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - nothing to update"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
     }
@@ -225,7 +226,7 @@ static NSMutableDictionary *isAnimating = nil;
     NSString *callbackId    = [arguments objectAtIndex:0];
     NSString *viewName    = [arguments objectAtIndex:1];
     
-    WizLog(@"[WizViewManager] ******* removeView name : %@ ", viewName);
+    NSLog(@"[WizViewManager] ******* removeView name : %@ ", viewName);
     
     // search for view
     if ([wizViewList objectForKey:viewName]) {
@@ -241,14 +242,14 @@ static NSMutableDictionary *isAnimating = nil;
         [targetWebView release];
 
         
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
         
         
-         WizLog(@"[WizViewManager] ******* removeView views left : %@ ", wizViewList);
+         NSLog(@"[WizViewManager] ******* removeView views left : %@ ", wizViewList);
     } else {
         
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - view not found"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
     }
     
@@ -553,6 +554,7 @@ static NSMutableDictionary *isAnimating = nil;
     WizLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@", viewName, options);
 
 
+
     WizWebView* _WizWebView = [WizWebView alloc];
     
     if (options) 
@@ -638,10 +640,10 @@ static NSMutableDictionary *isAnimating = nil;
         [self.webView.superview addSubview:newWizView];
     }
 
-    WizLog(@"[WizViewManagerPlugin] ******* current views... %@", wizViewList);
+    NSLog(@"[WizViewManagerPlugin] ******* current views... %@", wizViewList);
 
     
-    PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
      
     
@@ -665,9 +667,9 @@ static NSMutableDictionary *isAnimating = nil;
                     // view is animating - error!
                     
                     // we are already animating something so give error...
-                    PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR];
+                    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
                     NSString* returnString = [NSString stringWithFormat:@"ERROR: View: %@ is Animating. Please wait for callback!", viewName];
-                    WizLog(@"[WizViewManager] ******* %@", returnString);
+                    NSLog(@"[WizViewManager] ******* %@", returnString);
                     [self writeJavascript: [pluginResult toErrorCallbackString:returnString]];
                     return;
                     
@@ -681,7 +683,7 @@ static NSMutableDictionary *isAnimating = nil;
                 
                 if ( animationDict ) {
                     
-                    WizLog(@"[WizViewManager] ******* hideView with options : %@ ", options);
+                    NSLog(@"[WizViewManager] ******* hideView with options : %@ ", options);
                     NSString* type               = [animationDict objectForKey:@"type"];
                     int animateTimeinMilliSecs   = [[animationDict objectForKey:@"duration"] intValue];
                     CGFloat animateTime          = (CGFloat)animateTimeinMilliSecs / 1000;
@@ -689,7 +691,7 @@ static NSMutableDictionary *isAnimating = nil;
                         //default
                         animateTime = 0.3f;
                     }
-                    // WizLog(@"[WizViewManager] ******* hideView animateTime : %f ", animateTime);
+                    // NSLog(@"[WizViewManager] ******* hideView animateTime : %f ", animateTime);
                     if (!type) {
                         
                         // default
@@ -736,20 +738,20 @@ static NSMutableDictionary *isAnimating = nil;
             
         } else {
             // target already hidden do nothing
-            WizLog(@"[WizViewManager] ******* target already hidden! "); 
+            NSLog(@"[WizViewManager] ******* target already hidden! "); 
         }
 
         
         
-        WizLog(@"[WizViewManager] ******* hideView name : %@ targetWebView view : %@", viewName, targetWebView); 
+        NSLog(@"[WizViewManager] ******* hideView name : %@ targetWebView view : %@", viewName, targetWebView); 
         
         // We call straight back because we assume that as we hide the view behind does not want to wait
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
 
     } else {
         
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - view not found"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
     }
@@ -768,7 +770,7 @@ static NSMutableDictionary *isAnimating = nil;
         UIWebView* targetWebView = [wizViewList objectForKey:viewName]; 
         
         
-        WizLog(@"[WizViewManager] ******* showView: %@ targetWebView Info: %@", viewName, targetWebView); 
+        NSLog(@"[WizViewManager] ******* showView: %@ targetWebView Info: %@", viewName, targetWebView); 
         
 
         
@@ -779,9 +781,9 @@ static NSMutableDictionary *isAnimating = nil;
                     // view is animating - error!
                     
                     // we are already animating something so give error...
-                    PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR];
+                    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
                     NSString* returnString = [NSString stringWithFormat:@"ERROR: View: %@ is Animating. Please wait for callback!", viewName];
-                    WizLog(@"[WizViewManager] ******* %@", returnString);
+                    NSLog(@"[WizViewManager] ******* %@", returnString);
                     [self writeJavascript: [pluginResult toErrorCallbackString:returnString]];
                     return;
                     
@@ -802,7 +804,7 @@ static NSMutableDictionary *isAnimating = nil;
                 
                 if ( animationDict ) {
                     
-                    WizLog(@"[WizViewManager] ******* with options : %@ ", options);
+                    NSLog(@"[WizViewManager] ******* with options : %@ ", options);
                     NSString* type               = [animationDict objectForKey:@"type"];
                     int animateTimeinMilliSecs   = [[animationDict objectForKey:@"duration"] intValue];
                     CGFloat animateTime          = (CGFloat)animateTimeinMilliSecs / 1000;
@@ -810,7 +812,7 @@ static NSMutableDictionary *isAnimating = nil;
                         //default
                         animateTime = 0.3f;
                     }
-                    // WizLog(@"[WizViewManager] ******* showView animateTime : %f ", animateTime);
+                    // NSLog(@"[WizViewManager] ******* showView animateTime : %f ", animateTime);
                     
                     if (!type) {
                         
@@ -865,15 +867,15 @@ static NSMutableDictionary *isAnimating = nil;
                 
         } else {
             // target already showing
-            WizLog(@"[WizViewManager] ******* target already shown! "); 
-            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+            NSLog(@"[WizViewManager] ******* target already shown! "); 
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         }
 
         
     } else {
                 
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - view not found"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
     }
 }
@@ -960,13 +962,13 @@ static NSMutableDictionary *isAnimating = nil;
 
 
 - (void) showViewCallbackMethod:(NSString* )callbackId viewName:(NSString* )viewName {
-    // WizLog(@"[WizViewManager] ******* showViewCallbackId options : %@", callbackId);
-    // WizLog(@"[WizViewManagerPlugin] ******* current views... %@", wizViewList);
+    // NSLog(@"[WizViewManager] ******* showViewCallbackId options : %@", callbackId);
+    // NSLog(@"[WizViewManagerPlugin] ******* current views... %@", wizViewList);
     
     // finished animation remove from animate store
     [isAnimating removeObjectForKey:viewName];
     
-    PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
 }
 
@@ -986,7 +988,7 @@ static NSMutableDictionary *isAnimating = nil;
     
 
     
-    PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     [self writeJavascript: [pluginResult toSuccessCallbackString:showViewCallbackId]];
     
 }
