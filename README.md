@@ -50,7 +50,7 @@ project
 				/ wizViewManager
 					/ wizViewManager.js	
 	/ Classes
-		AppDelegate.m
+		MainViewController.m
 	/ Plugins
 		/ wizViewManager
 			/ wizViewManager.h
