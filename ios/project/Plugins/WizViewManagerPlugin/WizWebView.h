@@ -8,10 +8,10 @@
  */
 
 #import <Foundation/Foundation.h>
-#ifdef PHONEGAP_FRAMEWORK
-#import <PhoneGap/PGPlugin.h>
+#ifdef CORDOVA_FRAMEWORK
+#import <Cordova/CDVPlugin.h>
 #else
-#import "PGPlugin.h"
+#import "CDVPlugin.h"
 #endif
 
 @interface WizWebView : UIWebView <UIWebViewDelegate> {
@@ -20,7 +20,7 @@
 
 @property (nonatomic, retain) UIWebView *wizView;
 
--(UIWebView *)createNewInstanceView:(PGPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src;
+-(UIWebView *)createNewInstanceView:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src;
 
 
 @end
