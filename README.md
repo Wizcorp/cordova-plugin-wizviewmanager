@@ -10,7 +10,12 @@ last update : 27/04/2012<br />
 
 # CHANGELOG: 
 <br />
-- First PR from [maxogden](https://github.com/maxogden)
+- First pull request from [maxogden](https://github.com/maxogden) - Thanks Max!
+
+
+# KNOWN ISSUES:
+<br />
+- an outstanding issue where animation options do not work as they throw EXC_BAD_ACCESS errors
 
 
 # DESCRIPTION :
