@@ -1,4 +1,4 @@
-/* WizViewManager - Handle Popup UIViews and communtications.
+/* WizViewManager - Handle Popup UIViews and communications.
  *
  * @author Ally Ogilvie
  * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
@@ -403,10 +403,16 @@ static NSMutableDictionary *isAnimating = nil;
             targetWebView.frame = newRect;
             
             WizLog(@"view resized! %@", targetWebView);
+            
+            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+            [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
 
             
         } else {
             WizLog(@"view not found!");
+            
+            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"view not found!"];
+            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         }
         
 
@@ -416,28 +422,8 @@ static NSMutableDictionary *isAnimating = nil;
         
         WizLog(@"no options!");
         
-        /*
-        // OK default settings apply
-        CGRect screenRect = [[UIScreen mainScreen] bounds];
-        
-        // create new wizView
-        UIWebView *newWizView = [_WizWebView createNewInstanceView:self newBounds:screenRect sourceToLoad:@""];
-        
-        // add view name to our wizard view list
-        [wizViewList setObject:newWizView forKey:viewName];
-        
-        
-        // move view out of display
-        [newWizView setFrame:CGRectMake(
-                                        newWizView.frame.origin.x + viewPadder,
-                                        newWizView.frame.origin.y,
-                                        newWizView.frame.size.width,
-                                        newWizView.frame.size.height
-                                        )];
-        
-        // add view to parent webview
-        [self.webView.superview addSubview:newWizView];
-        */
+        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"noParams"];
+        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
     }
     
     

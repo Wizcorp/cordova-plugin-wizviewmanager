@@ -123,6 +123,7 @@ Change or set the Layout of a view<br />
 <pre><code>
 wizViewManager.setLayout(String viewName, JSONObject options, Function success, Function fail);
     * Height overrides top and bottom. Width overrides left and right.  
+    * Top, bottom,left,right,width,height all take floats (0.25) or string "25%" as percents, int (25) as pixcels.
     * Example options object; 
 
 {
