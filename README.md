@@ -4,15 +4,13 @@
 # PLUGIN: 
 
 phonegap-plugin-wizViewManager<br />
-version : 1.1<br />
+version : 1.7<br />
 last update : 27/04/2012<br />
 
 
 # CHANGELOG: 
 <br />
-- update() is now load(). No Object just String<br />
-- added better URL / URI check for load source<br />
-- added setLayout() method<br />
+- First PR from [maxogden](https://github.com/maxogden)
 
 
 # DESCRIPTION :
@@ -81,10 +79,6 @@ You will also need the json.js (for getting JSON objects)
 
 
 
-
-
-
-# INSTALL (Android coming soon...): #
 
 
 
