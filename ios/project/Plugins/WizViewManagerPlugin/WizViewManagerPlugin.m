@@ -591,7 +591,7 @@ static NSMutableDictionary *isAnimating = nil;
     [view setHidden:FALSE];
     view.alpha = 1.0;
     // now return the view to normal dimension, animating this tranformation
-    [UIView animateWithDuration:secs delay:0.0 options:UIViewAnimationOptionCurveEaseIn
+    [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
                          view.transform = CGAffineTransformTranslate(view.transform, view.frame.origin.x, screenHeight);
                      }
