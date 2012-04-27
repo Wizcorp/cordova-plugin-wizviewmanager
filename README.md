@@ -3,20 +3,29 @@
 
 # PLUGIN: 
 
-phonegap-plugin-wizViewManager
+phonegap-plugin-wizViewManager<br />
+version : 1.1<br />
+last update : 23/04/2012<br />
 
+
+# CHANGELOG: 
+<br />
+- update() is now load(). No Object just String<br />
+- added resize() method.<br />
 
 
 # DESCRIPTION :
 
 PhoneGap plugin for;
 
-creating
-removing
-showing
-hiding
-messaging (cross communication with JSON objects to each and every view)
-animating views
+creating,<br />
+removing,<br />
+showing,<br />
+hiding,<br />
+messaging (cross communication with JSON objects to each and every view),<br />
+animating,<br />
+resizing,<br />
+loading source into views.
 
 
 
@@ -103,18 +112,32 @@ wizViewManager.create(String viewName, JSONObject options, Function success, Fun
 </code></pre>
 
 
-Update a view<br />
+Update a view source<br />
 <pre><code>
-wizViewManager.update(String viewName, JSONObject options, Function success, Function fail);
+wizViewManager.load(String viewName, String URI or URL, Function success, Function fail);
+</code></pre>
+
+
+Resize a view<br />
+<pre><code>
+wizViewManager.resize(String viewName, JSONObject options, Function success, Function fail);
 
     * Example options object; 
 
 {
 
-    "src": "http://google.com" [URL/URI to load] 
+    "height": "300", [pixels - default : fills height] 
+    "width": "300", [pixels - default : fills width] 
+    "x": "0", [pixels - default : 0] 
+    "y": "0", [pixels - default : 0] 
+    "top": "0", [pixels or percent - default : 0]
+    "bottom": "0", [pixels or percent - default : 0] 
+    "left": "0", [pixels or percent - default : 0] 
+    "right": "0", [pixels or percent - default : 0] 
 
 }; 
 </code></pre>
+
 
 
 Remove a view<br />

@@ -1,11 +1,10 @@
 /* WizWebView - Creates Instance of wizard UIWebView.
  *
- * @author Ally Ogilvie
- * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
+ * @author WizCorp Inc. [ Incorporated Wizards ] 
+ * @copyright 2011
  * @file WizWebView.h for PhoneGap
  *
- *
- */
+ */ 
 
 #import <Foundation/Foundation.h>
 #ifdef PHONEGAP_FRAMEWORK

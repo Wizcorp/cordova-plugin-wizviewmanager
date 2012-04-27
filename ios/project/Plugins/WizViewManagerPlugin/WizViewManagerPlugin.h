@@ -1,11 +1,10 @@
-/* WizViewManager - Handle Popup UIViews and communications.
+/* WizViewManager - Handle Popup UIViews and communtications.
  *
  * @author Ally Ogilvie
  * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
  * @file WizViewManager.h for PhoneGap
- * @version 1.1
  *
- */
+ */ 
 
 #import <Foundation/Foundation.h>
 #ifdef PHONEGAP_FRAMEWORK
@@ -25,12 +24,18 @@
 
 + (NSMutableDictionary *)getViews;
 + (NSMutableDictionary *)getViewLoadedCallbackId;
++ (void) pong;
+
+
+- (void)initPing:(NSArray*)arguments withDict:(NSDictionary*)options;
 
 - (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)hideView:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)showView:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options;
+- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)removeView:(NSArray*)arguments withDict:(NSDictionary*)options;
+- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options;
 
 
 

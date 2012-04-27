@@ -1,11 +1,10 @@
-/* WizViewManager - Handle Popup UIViews and communications.
+/* WizViewManager - Handle Popup UIViews and communtications.
  *
  * @author Ally Ogilvie
  * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
  * @file WizViewManager.m for PhoneGap
- * @version 1.1
  *
- */
+ */ 
 
 #import "WizViewManagerPlugin.h"
 #import "WizDebugLog.h"
@@ -19,6 +18,9 @@
 static NSMutableDictionary *wizViewList = nil;
 static CGFloat viewPadder = 9999.0f;
 static NSMutableDictionary *viewLoadedCallbackId = nil;
+static int pongCount;
+static int pingCount;
+static BOOL pingSuccess;
 static NSMutableDictionary *isAnimating = nil;
 
 -(PGPlugin*) initWithWebView:(UIWebView*)theWebView
@@ -44,6 +46,15 @@ static NSMutableDictionary *isAnimating = nil;
     return self;
 }
 
+- (void)initPing:(NSArray*)arguments withDict:(NSDictionary*)options 
+{
+    // init ping
+    pingSuccess = TRUE;
+    
+    // start ping all views
+    [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(ping) userInfo:nil repeats:YES];
+}
+
 
 + (NSMutableDictionary*)getViews
 {
@@ -58,7 +69,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options 
+- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options
 {
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
@@ -66,7 +77,79 @@ static NSMutableDictionary *isAnimating = nil;
     
     [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
     
-    WizLog(@"[WizViewManager] ******* updateView name : %@ with options %@ ", viewName, options); 
+    WizLog(@"[WizViewManager] ******* Load into view : %@ ", viewName); 
+    
+    
+    if (options) 
+	{
+        
+        // search for view
+        if ([wizViewList objectForKey:viewName]) {
+            UIWebView* targetWebView = [wizViewList objectForKey:viewName]; 
+            
+            NSString* src               = [options objectForKey:@"src"];
+            if (src) {
+                
+                if ([NSURL URLWithString:src] == Nil) {
+                    // load new source
+                    WizLog(@"SOURCE NOT URL");
+                    NSString *fileString = src;
+                    
+                    NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
+                    
+                    NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
+                    
+                    [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
+                    
+                    [newHTMLString release];
+                    [newURL release];
+                    
+                } else {
+                    // source is url
+                    WizLog(@"SOURCE IS URL");
+                    NSURL *newURL = [NSURL URLWithString:src];
+                    NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
+                    [targetWebView loadRequest:request];
+                    
+                }
+                
+            }
+            
+        } else {
+            
+            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - view not found"];
+            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+            
+        }
+        
+    } else {
+        
+        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - nothing to update"];
+        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        
+    }
+}
+
+- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options 
+{
+    /*
+     *
+     *
+     * DEPRECIATED - use (void)loadInView:(NSArray*)arguments withDict:(NSDictionary*)options
+     *
+     * or JavaScript wizViewManager.load(String viewName, String URL or URI, success, fail)
+     *
+     *
+     *
+     */
+    
+    // assign arguments
+    NSString *callbackId    = [arguments objectAtIndex:0];
+    NSString *viewName    = [arguments objectAtIndex:1];
+    
+    [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
+    
+    WizLog(@"[WizViewManager] ******* updateView name : %@ ", viewName); 
     
     // wait for callback
     /*
@@ -85,34 +168,28 @@ static NSMutableDictionary *isAnimating = nil;
             NSString* src               = [options objectForKey:@"src"];
             if (src) {
                 
-                
-                NSURL *candidateURL = [NSURL URLWithString:src];
-                if (candidateURL && candidateURL.scheme && candidateURL.host) {
-                    // candidate is a well-formed url with:
-                    //  - a scheme (like http://)
-                    //  - a host (like stackoverflow.com)
-                                        
-                    WizLog(@"[WizViewManager] ******* updateView with URL");
-                    [targetWebView loadRequest:[NSURLRequest requestWithURL:candidateURL]];
-                    
-                    
-                } else {
-                
-                    WizLog(@"[WizViewManager] ******* updateView with local file");
-                    
+                if ([NSURL URLWithString:src] == Nil) {
                     // load new source
+                    WizLog(@"SOURCE NOT URL");
                     NSString *fileString = src;
-                
+                    
                     NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
-                
+                    
                     NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
-                
+                    
                     [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
                     
                     [newHTMLString release];
                     [newURL release];
+                    
+                } else {
+                    // source is url
+                    WizLog(@"SOURCE IS URL");
+                    NSURL *newURL = [NSURL URLWithString:src];
+                    NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
+                    [targetWebView loadRequest:request];
+                    
                 }
-                
                 
             }
             
@@ -177,6 +254,306 @@ static NSMutableDictionary *isAnimating = nil;
     
 }
 
+
+- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options
+{
+    // assign arguments
+    NSString *callbackId    = [arguments objectAtIndex:0];
+    NSString *viewName    = [arguments objectAtIndex:1];
+    
+    WizLog(@"[WizViewManagerPlugin] ******* resizeView name:  %@ withOptions: %@", viewName, options);
+    
+    
+    if (options) 
+	{
+        
+        // define vars
+        int _x;
+        int _y;
+        int _height;
+        int _width;
+        int _left;
+        int _right;
+        int _top;
+        int _bottom;
+        
+        
+        // get Device width and heigh
+        CGRect screenRect = [[UIScreen mainScreen] bounds];
+        CGFloat screenHeight = screenRect.size.height;
+        CGFloat screenWidth = screenRect.size.width;
+        
+        /*
+         *
+         * Assignments - read all as strings run check function for data type
+         *
+         */
+        
+        if ([options objectForKey:@"top"]) {
+            _top = [self getWeakLinker:[options objectForKey:@"top"] ofType:@"top"];
+        }
+        
+        if ([options objectForKey:@"bottom"]) {
+            _bottom = [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"];
+        }
+        
+        if ([options objectForKey:@"left"]) {
+            _left = [self getWeakLinker:[options objectForKey:@"left"] ofType:@"left"];
+        }
+        
+        if ([options objectForKey:@"right"]) {
+            _right = [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"];
+        }
+        
+        if ([options objectForKey:@"width"]) {
+            _width = [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
+        } else {
+            _width = screenWidth;
+        }
+        
+        if ([options objectForKey:@"height"]) {
+            _height = [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
+        } else {
+            _height = screenHeight;
+        }
+
+        if (!_x) {
+            // default
+            _x = 0;
+        } else {
+            _x = [[options objectForKey:@"x"] intValue];
+        }
+        
+        if (!_y) {
+            // default
+            _y = 0;
+        } else {
+            _y = [[options objectForKey:@"y"] intValue];
+        }
+        
+        
+        if (![options objectForKey:@"left"] && ![options objectForKey:@"right"]) {
+            _left = 0;
+            _right = 0;
+        }
+        
+        if (![options objectForKey:@"top"] && ![options objectForKey:@"bottom"]) {
+            _top = 0;
+            _bottom = 0;
+        }
+        
+        
+        // ensure width, with a preference for a left/right combination
+        if ([options objectForKey:@"width"]) {
+            // check for width
+            if ([options objectForKey:@"left"] && [options objectForKey:@"right"]) {
+                // give prefference to left and right!
+                // _width = 0;
+                _left = 0;
+                _right = 0;
+            }
+        } else {
+            // no width given, so fill to device edge (see above) if left/right not given
+            if (![options objectForKey:@"left"]) {
+                _left = 0;
+            }
+            if (![options objectForKey:@"right"]) {
+                _right = 0;
+            }               
+        }
+        
+        
+        
+        // ensure height, with a preference for a top/bottom combination
+        if ([options objectForKey:@"height"]) {
+            // check for height
+            if ([options objectForKey:@"top"] && [options objectForKey:@"bottom"]) {
+                // give prefference to top and bottom!
+                // _height = 0;
+                _top = 0;
+                _bottom = 0;
+            }
+        } else {
+            // no height given, so fill to device edge (see above) if top/bottom not given
+            if (![options objectForKey:@"top"]) {
+                _top = 0;
+            }
+            if (![options objectForKey:@"bottom"]) {
+                _bottom = 0;
+            }
+        }
+        
+        
+        WizLog(@"MY PARAMS _x: %i, _y: %i, _width: %i, _height: %i, _top: %i, _bottom: %i, _left: %i, right: %i", _x,_y,_width,_height,_top,_bottom,_left,_right );
+        
+        if ([wizViewList objectForKey:viewName]) {
+            UIWebView* targetWebView = [wizViewList objectForKey:viewName];
+            WizLog(@"got view! %@", targetWebView);
+            
+            CGRect newRect;
+            
+            if (targetWebView.isHidden) {
+                // if hidden add padding
+                newRect              = CGRectMake(_x+_left+viewPadder, _y+_top, _width-_right-_left, _height-_bottom-_top);
+            } else {
+                newRect              = CGRectMake(_x+_left, _y+_top, _width-_right-_left, _height-_bottom-_top);
+
+            }
+
+            targetWebView.frame = newRect;
+            
+            WizLog(@"view resized! %@", targetWebView);
+
+            
+        } else {
+            WizLog(@"view not found!");
+        }
+        
+
+        
+        
+    } else {
+        
+        WizLog(@"no options!");
+        
+        /*
+        // OK default settings apply
+        CGRect screenRect = [[UIScreen mainScreen] bounds];
+        
+        // create new wizView
+        UIWebView *newWizView = [_WizWebView createNewInstanceView:self newBounds:screenRect sourceToLoad:@""];
+        
+        // add view name to our wizard view list
+        [wizViewList setObject:newWizView forKey:viewName];
+        
+        
+        // move view out of display
+        [newWizView setFrame:CGRectMake(
+                                        newWizView.frame.origin.x + viewPadder,
+                                        newWizView.frame.origin.y,
+                                        newWizView.frame.size.width,
+                                        newWizView.frame.size.height
+                                        )];
+        
+        // add view to parent webview
+        [self.webView.superview addSubview:newWizView];
+        */
+    }
+    
+    
+    
+    
+    
+    
+}
+
+- (int)getWeakLinker:(NSString*)myString ofType:(NSString*)type
+{
+    // do tests to get correct int (we read in as string pointer but infact we are unaware of the var type)
+    int i;
+    
+    if (!myString || !type) {
+        // got null value in method params
+        return i = 0;
+    }
+    
+    WizLog(@"try link : %@ for type: %@", myString, type);
+
+    
+    // get Device width and height
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    CGFloat screenHeight = screenRect.size.height;
+    CGFloat screenWidth = screenRect.size.width;
+    
+    
+    
+    
+    // test for percentage
+    NSArray *percentTest = [self percentTest:myString];
+    
+    if (percentTest) {
+        // it was a percent do calculation and assign value
+        
+        int j = [[percentTest objectAtIndex:0] intValue];
+        
+        if ([type isEqualToString:@"width"] || [type isEqualToString:@"left"] || [type isEqualToString:@"right"]) {
+            float k = j*0.01; // use float here or int is rounded to a 0 int
+            i = k*screenWidth;
+        } else if ([type isEqualToString:@"height"] || [type isEqualToString:@"top"] || [type isEqualToString:@"bottom"]) {
+            float k = j*0.01; // use float here or int is rounded to a 0 int
+            i = k*screenHeight;
+        } else {
+            //invalid type - not supported
+            i = 0;
+        }
+        
+    } else {
+        
+        // test - float
+        BOOL floatTest= [self floatTest:myString];
+        if (floatTest) {
+            // we have a float, check our float range and convert to int
+            
+            float floatValue = [myString floatValue];
+            if (floatValue < 1.0) {
+                if ([type isEqualToString:@"width"] || [type isEqualToString:@"left"] || [type isEqualToString:@"right"]) {
+                    i = (floatValue * screenWidth);
+                } else if ([type isEqualToString:@"height"] || [type isEqualToString:@"top"] || [type isEqualToString:@"bottom"]) {
+                    i = (floatValue * screenHeight);
+                } else {
+                    //invalid type - not supported
+                    i = 0;
+                }
+            } else {
+                // not good float value - defaults to 0
+                i = 0;
+            }
+            
+        } else {
+
+            // Third string test - assume an int?
+            i = [myString intValue];
+        }
+        
+    }
+    
+    WizLog(@"weak linked : %i for type: %@", i, type);
+    return i;
+   
+}
+         
+         
+- (BOOL)floatTest:(NSString*)myString
+{
+    NSString *realString = [[NSString alloc] initWithString:myString];
+    NSArray *floatTest = [realString componentsSeparatedByString:@"."];
+    [realString release];
+    if (floatTest.count > 1) {
+        // found decimal. must be a float
+        return TRUE;
+    } else {
+        // failed test
+        return FALSE;
+    }
+    
+}
+
+- (NSArray*)percentTest:(NSString*)myString
+{
+    NSString *realString = [[NSString alloc] initWithString:myString];
+    NSArray *percentTest = [realString componentsSeparatedByString:@"%"];
+    [realString release];
+
+    if (percentTest.count > 1) {
+        // found percent mark. must be a percent
+        return percentTest;
+    } else {
+        // failed test
+        return NULL;
+    }
+}
+
+
 - (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options 
 {
     
@@ -186,7 +563,7 @@ static NSMutableDictionary *isAnimating = nil;
     NSString *viewName    = [arguments objectAtIndex:1];
     
     
-    // [viewLoadedCallbackId setObject:callbackId forKey:@"updateCallback"];
+    // [viewLoadedCallbackId setObject:callbackId forKey:@"updateCallback"];3
     WizLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@", viewName, options);
 
 
@@ -252,6 +629,7 @@ static NSMutableDictionary *isAnimating = nil;
         
         
     } else {
+        
         // OK default settings apply
         CGRect screenRect = [[UIScreen mainScreen] bounds];
         
@@ -517,6 +895,70 @@ static NSMutableDictionary *isAnimating = nil;
 
 
 
+
+
+
+
+
+
+/**
+ 
+ PING PONG METHODS - test if the views are still alive
+ 
+ **/
+- (void) ping
+{
+    // did we success last ping?
+    
+    if (pingSuccess) {
+        // new ping
+        
+        
+               
+        // reset counters
+        pingCount = 0;
+        pongCount = 0;
+        
+        for (NSString* key in wizViewList) {
+            
+            UIWebView* targetWebView = [wizViewList objectForKey:key];
+            if (![targetWebView isLoading]) {
+                
+                pingCount++;
+                WizLog(@"[PING] ----------------------------------- START PING! ");
+                [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver('%@');", @"ping"]];
+            
+            }
+        }
+        
+    } else {
+        // a view is not responding handle error
+        WizLog(@"BLOODY GREAT BIG ERROR");
+        WizLog(@"BLOODY GREAT BIG ERROR");
+        WizLog(@"BLOODY GREAT BIG ERROR");
+        WizLog(@"BLOODY GREAT BIG ERROR");
+        WizLog(@"BLOODY GREAT BIG ERROR");
+        WizLog(@"BLOODY GREAT BIG ERROR");
+        WizLog(@"BLOODY GREAT BIG ERROR");
+        WizLog(@"BLOODY GREAT BIG ERROR");
+    }
+    
+    
+}
+
++ (void) pong
+{
+    
+    pongCount++;
+    WizLog(@"[PONG] ----------------------------------- PONG!");
+    if (pingCount == pongCount) {
+        pingSuccess = TRUE;
+        WizLog(@"pongCount: %i pingCount: %i",pongCount,pingCount);
+    } else {
+        pingSuccess = FALSE;
+    }
+    
+}
 
 
 
