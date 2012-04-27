@@ -5,13 +5,14 @@
 
 phonegap-plugin-wizViewManager<br />
 version : 1.1<br />
-last update : 23/04/2012<br />
+last update : 27/04/2012<br />
 
 
 # CHANGELOG: 
 <br />
 - update() is now load(). No Object just String<br />
-- added resize() method.<br />
+- added better URL / URI check for load source<br />
+- added setLayout() method<br />
 
 
 # DESCRIPTION :
@@ -112,16 +113,16 @@ wizViewManager.create(String viewName, JSONObject options, Function success, Fun
 </code></pre>
 
 
-Update a view source<br />
+Load source into view<br />
 <pre><code>
 wizViewManager.load(String viewName, String URI or URL, Function success, Function fail);
 </code></pre>
 
 
-Resize a view<br />
+Change or set the Layout of a view<br />
 <pre><code>
-wizViewManager.resize(String viewName, JSONObject options, Function success, Function fail);
-
+wizViewManager.setLayout(String viewName, JSONObject options, Function success, Function fail);
+    * Height overrides top and bottom. Width overrides left and right.  
     * Example options object; 
 
 {
