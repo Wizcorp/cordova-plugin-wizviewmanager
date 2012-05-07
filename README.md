@@ -4,18 +4,18 @@
 # PLUGIN: 
 
 phonegap-plugin-wizViewManager<br />
-version : 1.7<br />
+version : 1.4.1<br />
 last update : 27/04/2012<br />
 
 
 # CHANGELOG: 
 <br />
-- First pull request from [maxogden](https://github.com/maxogden) - Thanks Max!
+- First pull request from [#](https://github.com/#) - Thanks #!
 
 
 # KNOWN ISSUES:
 <br />
-- an outstanding issue where animation options do not work as they throw EXC_BAD_ACCESS errors
+
 
 
 # DESCRIPTION :
