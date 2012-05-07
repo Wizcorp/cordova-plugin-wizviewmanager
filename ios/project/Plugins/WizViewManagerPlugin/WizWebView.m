@@ -37,10 +37,16 @@ static BOOL isActive = FALSE;
     // load source from URI for example
     // /Users/WizardBookPro/Library/Application Support/iPhone Simulator/4.3.2/Applications/14013381-4491-42B9-8A72-30223350C81C/zombiejombie.app/www/test2_index.html
     
-    if ([NSURL URLWithString:src] == Nil) {
+    if ([self validateUrl:src]) {
         // load new source
+        // source is url
+        WizLog(@"SOURCE IS URL");
+        NSURL *newURL = [NSURL URLWithString:src];
+        NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
+        [wizView loadRequest:request];
+        
+    } else {
         WizLog(@"SOURCE NOT URL");
-
         NSString *fileString = src;
         
         NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
@@ -50,16 +56,9 @@ static BOOL isActive = FALSE;
         [wizView loadHTMLString: newHTMLString baseURL: newURL];
         
         [newHTMLString release];
-        [newURL release];
-        
-    } else {
-        // source is url
-        WizLog(@"SOURCE IS URL");
-        NSURL *newURL = [NSURL URLWithString:src];
-        NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
-        [wizView loadRequest:request];
-        
+        [newURL release];                    
     }
+
     
     wizView.bounds = webViewBounds;
     
@@ -79,6 +78,12 @@ static BOOL isActive = FALSE;
     return isActive;
 }
 
+- (BOOL) validateUrl: (NSString *) candidate {
+    NSString *urlRegEx =
+    @"(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+";
+    NSPredicate *urlTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", urlRegEx]; 
+    return [urlTest evaluateWithObject:candidate];
+}
 
 - (void)webViewDidFinishLoad:(UIWebView *)theWebView 
 {

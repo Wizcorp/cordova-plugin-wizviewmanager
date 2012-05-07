@@ -89,8 +89,15 @@ static NSMutableDictionary *isAnimating = nil;
             NSString* src               = [options objectForKey:@"src"];
             if (src) {
                 
-                if ([NSURL URLWithString:src] == Nil) {
+                if ([self validateUrl:src]) {
                     // load new source
+                    // source is url
+                    WizLog(@"SOURCE IS URL");
+                    NSURL *newURL = [NSURL URLWithString:src];
+                    NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
+                    [targetWebView loadRequest:request];
+                    
+                } else {
                     WizLog(@"SOURCE NOT URL");
                     NSString *fileString = src;
                     
@@ -101,15 +108,7 @@ static NSMutableDictionary *isAnimating = nil;
                     [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
                     
                     [newHTMLString release];
-                    [newURL release];
-                    
-                } else {
-                    // source is url
-                    WizLog(@"SOURCE IS URL");
-                    NSURL *newURL = [NSURL URLWithString:src];
-                    NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
-                    [targetWebView loadRequest:request];
-                    
+                    [newURL release];                    
                 }
                 
             }
@@ -123,7 +122,7 @@ static NSMutableDictionary *isAnimating = nil;
         
     } else {
         
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - nothing to update"];
+        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - no options passed"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
     }
@@ -168,9 +167,15 @@ static NSMutableDictionary *isAnimating = nil;
             NSString* src               = [options objectForKey:@"src"];
             if (src) {
                 
-                if ([NSURL URLWithString:src] == Nil) {
-
+                if ([self validateUrl:src]) {
                     // load new source
+                    // source is url
+                    WizLog(@"SOURCE IS URL");
+                    NSURL *newURL = [NSURL URLWithString:src];
+                    NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
+                    [targetWebView loadRequest:request];
+                    
+                } else {
                     WizLog(@"SOURCE NOT URL");
                     NSString *fileString = src;
                     
@@ -181,15 +186,7 @@ static NSMutableDictionary *isAnimating = nil;
                     [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
                     
                     [newHTMLString release];
-                    [newURL release];
-                    
-                } else {
-                    // source is url
-                    WizLog(@"SOURCE IS URL");
-                    NSURL *newURL = [NSURL URLWithString:src];
-                    NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
-                    [targetWebView loadRequest:request];
-                    
+                    [newURL release];                    
                 }
                 
             }
@@ -199,20 +196,20 @@ static NSMutableDictionary *isAnimating = nil;
             
             
             /*
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
             [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
              */
             
         } else {
             
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
+            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - view not found"];
             [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
         }
  
     } else {
         
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - nothing to update"];
+        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - no options passed"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
     }
@@ -509,6 +506,12 @@ static NSMutableDictionary *isAnimating = nil;
    
 }
          
+- (BOOL) validateUrl: (NSString *) candidate {
+    NSString *urlRegEx =
+    @"(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+";
+    NSPredicate *urlTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", urlRegEx]; 
+    return [urlTest evaluateWithObject:candidate];
+}
          
 - (BOOL)floatTest:(NSString*)myString
 {
