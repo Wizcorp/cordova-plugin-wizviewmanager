@@ -8,7 +8,7 @@
 
 #import "WizViewManagerPlugin.h"
 #import "WizWebView.h"
-
+#import "WizDebugLog.h"
 
 @implementation WizViewManagerPlugin
 
@@ -115,14 +115,14 @@ static NSMutableDictionary *isAnimating = nil;
             
         } else {
             
-            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - view not found"];
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
             [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
             
         }
         
     } else {
         
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - no options passed"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
     }
@@ -202,14 +202,14 @@ static NSMutableDictionary *isAnimating = nil;
             
         } else {
             
-            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - view not found"];
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
             [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
         }
  
     } else {
         
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"error - no options passed"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
     }
@@ -402,14 +402,14 @@ static NSMutableDictionary *isAnimating = nil;
             
             WizLog(@"view resized! %@", targetWebView);
             
-            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
             [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
 
             
         } else {
             WizLog(@"view not found!");
             
-            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"view not found!"];
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
             [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         }
         
@@ -420,7 +420,7 @@ static NSMutableDictionary *isAnimating = nil;
         
         WizLog(@"no options!");
         
-        PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_ERROR messageAsString:@"noParams"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"noParams"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
     }
     

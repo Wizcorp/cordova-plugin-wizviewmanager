@@ -8,7 +8,7 @@
 
 #import "WizWebView.h"
 #import "WizViewManagerPlugin.h"
-
+#import "WizDebugLog.h"
 
 @implementation WizWebView
 
