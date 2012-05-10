@@ -15,7 +15,7 @@ last update : 27/04/2012<br />
 
 # KNOWN ISSUES:
 <br />
-- an outstanding issue where animation options do not work as they throw EXC_BAD_ACCESS errors
+- an outstanding issue where animation options do not work as they throw EXC_BAD_ACCESS errors on Simulator only.
 
 
 # DESCRIPTION :
