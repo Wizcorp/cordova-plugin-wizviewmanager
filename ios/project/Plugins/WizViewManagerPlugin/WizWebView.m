@@ -79,10 +79,33 @@ static BOOL isActive = FALSE;
 }
 
 - (BOOL) validateUrl: (NSString *) candidate {
-    NSString *urlRegEx =
-    @"(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+";
-    NSPredicate *urlTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", urlRegEx]; 
-    return [urlTest evaluateWithObject:candidate];
+    /*
+    NSString *string = candidate;
+    
+    NSDataDetector *linkDetector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:nil];
+    NSArray *matches = [linkDetector matchesInString:string options:0 range:NSMakeRange(0, [string length])];
+    
+    for (NSTextCheckingResult *match in matches)
+    {
+        if ([match resultType] == NSTextCheckingTypeLink) 
+        {
+            NSURL *url = [match URL];
+            NSLog(@"found URL %@", url);
+            return TRUE;
+        } else {
+            NSURL *url = [match URL];
+            NSLog(@"no URL match %@",url);
+            return FALSE;
+        }
+    }
+    */
+    
+    
+     NSString *urlRegEx =
+     @"(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+";
+     NSPredicate *urlTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", urlRegEx]; 
+     return [urlTest evaluateWithObject:candidate];
+     
 }
 
 - (void)webViewDidFinishLoad:(UIWebView *)theWebView 

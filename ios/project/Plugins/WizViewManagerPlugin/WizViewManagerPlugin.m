@@ -170,13 +170,13 @@ static NSMutableDictionary *isAnimating = nil;
                 if ([self validateUrl:src]) {
                     // load new source
                     // source is url
-                    WizLog(@"SOURCE IS URL");
+                    WizLog(@"SOURCE IS URL %@", src);
                     NSURL *newURL = [NSURL URLWithString:src];
                     NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
                     [targetWebView loadRequest:request];
                     
                 } else {
-                    WizLog(@"SOURCE NOT URL");
+                    WizLog(@"SOURCE NOT URL %@", src);
                     NSString *fileString = src;
                     
                     NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
@@ -507,10 +507,34 @@ static NSMutableDictionary *isAnimating = nil;
 }
          
 - (BOOL) validateUrl: (NSString *) candidate {
+/*    
+    NSString *string = candidate;
+   
+    NSDataDetector *linkDetector = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:nil];
+    // NSArray *matches = [linkDetector matchesInString:string options:0 range:NSMakeRange(0, [string length])];
+    NSArray *matches = [linkDetector matchesInString:string options:0 range:nil];
+
+    for (NSTextCheckingResult *match in matches)
+    {
+        if ([match resultType] == NSTextCheckingTypeLink) 
+        {
+            NSURL *url = [match URL];
+            NSLog(@"found URL %@", url);
+            return TRUE;
+        } else {
+            NSURL *url = [match URL];
+            NSLog(@"no URL match %@",url);
+            return FALSE;
+        }
+    }
+*/
+    
+    
     NSString *urlRegEx =
     @"(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+";
     NSPredicate *urlTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", urlRegEx]; 
     return [urlTest evaluateWithObject:candidate];
+    
 }
          
 - (BOOL)floatTest:(NSString*)myString
@@ -1285,7 +1309,7 @@ static NSMutableDictionary *isAnimating = nil;
 
 - (void) showWithFadeAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString*)callbackId viewName:(NSString *)viewName
 {
-
+    WizLog(@"view is %@, %@", view, viewName);
 	view.alpha = 0.0;	// make the view transparent
 	// move view into display       
     [view setFrame:CGRectMake(
@@ -1296,6 +1320,7 @@ static NSMutableDictionary *isAnimating = nil;
                               )];
     [view setHidden:FALSE];
     //[self addSubview:view];	// add it
+    
 	[UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
                          view.alpha = 1.0;
