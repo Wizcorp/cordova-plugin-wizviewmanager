@@ -8,7 +8,6 @@
 
 #import "WizWebView.h"
 #import "WizViewManagerPlugin.h"
-#import "WizDebugLog.h"
 
 @implementation WizWebView
 
@@ -17,12 +16,12 @@
 static CDVPlugin* viewManager;
 static BOOL isActive = FALSE;
 
--(UIWebView *)createNewInstanceView:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src 
+-(UIWebView *)createNewInstanceViewFromManager:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src 
 {
     
     viewManager = myViewManager;
     
-    wizView = [UIWebView new];
+    wizView = [[CDVCordovaView alloc] initWithFrame:webViewBounds];
     [wizView scalesPageToFit];
     wizView.delegate = self;
     wizView.multipleTouchEnabled   = YES;
@@ -31,7 +30,7 @@ static BOOL isActive = FALSE;
     wizView.userInteractionEnabled = YES;
     wizView.opaque = NO;
     
-    WizLog(@"[WizWebView] ******* building new view");
+    NSLog(@"[WizWebView] ******* building new view SOURCE IS URL? - %i", [self validateUrl:src]);
 
     
     // load source from URI for example
@@ -40,13 +39,21 @@ static BOOL isActive = FALSE;
     if ([self validateUrl:src]) {
         // load new source
         // source is url
-        WizLog(@"SOURCE IS URL");
+        NSLog(@"SOURCE IS URL %@", src);
         NSURL *newURL = [NSURL URLWithString:src];
-        NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
+
+        // JC- Setting the service type to video somehow seems to
+        // disable the reuse of this connection for pipelining new
+        // HTTP requests, which apparently fixes the tying of these
+        // requests to the ajax connection used for the message streams
+        // (which is initiated from the Javascript realm).
+        NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:newURL];
+        [request setNetworkServiceType:NSURLNetworkServiceTypeVideo];
+
         [wizView loadRequest:request];
         
     } else {
-        WizLog(@"SOURCE NOT URL");
+        NSLog(@"SOURCE NOT URL %@", src);
         NSString *fileString = src;
         
         NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
@@ -79,10 +86,8 @@ static BOOL isActive = FALSE;
 }
 
 - (BOOL) validateUrl: (NSString *) candidate {
-    NSString *urlRegEx =
-    @"(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+";
-    NSPredicate *urlTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", urlRegEx]; 
-    return [urlTest evaluateWithObject:candidate];
+    NSString* lowerCased = [candidate lowercaseString];
+    return [lowerCased hasPrefix:@"http://"] || [lowerCased hasPrefix:@"https://"];
 }
 
 - (void)webViewDidFinishLoad:(UIWebView *)theWebView 
@@ -97,12 +102,18 @@ static BOOL isActive = FALSE;
     NSMutableDictionary * callbackDict = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViewLoadedCallbackId]];
     
     NSLog(@"[WizViewManager] ******* viewLoadedCallbackId : %@ ", callbackDict); 
-    NSString* callbackId = [callbackDict objectForKey:@"viewLoadedCallback"];
     
-   
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
-
+    if ([callbackDict objectForKey:@"viewLoadedCallback"]) {
+        NSString* callbackId = [callbackDict objectForKey:@"viewLoadedCallback"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
+    }
+    
+    if ([callbackDict objectForKey:@"updateCallback"]) {
+        NSString* callbackId = [callbackDict objectForKey:@"updateCallback"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
+    }
     
     [callbackDict release];
     
@@ -126,7 +137,7 @@ static BOOL isActive = FALSE;
     
     NSString *requestString = [[request URL] absoluteString];
     // get prefix
-    NSArray* prefixer = [requestString componentsSeparatedByString:@":"];
+    NSArray *prefixer = [requestString componentsSeparatedByString:@":"];
     // NSLog(@"[WizWebView] ******* prefixer is:  %@", prefixer );
     
     // example request string
@@ -135,35 +146,38 @@ static BOOL isActive = FALSE;
     // do insensitive compare to support SDK >5
     if ([(NSString*)[prefixer objectAtIndex:0] caseInsensitiveCompare:@"wizMessageView"] == 0) {
         
-        NSArray* components = [requestString componentsSeparatedByString:@"://"];
-        NSString* messageData = (NSString*)[components objectAtIndex:1];
+        NSArray *components = [requestString componentsSeparatedByString:@"://"];
+        NSString *messageData = [[NSString alloc] initWithString:(NSString*)[components objectAtIndex:1]];
                 
         NSRange range = [messageData rangeOfString:@"?"];
         
-        NSString* targetView = [messageData substringToIndex:range.location];
+        NSString *targetView = [messageData substringToIndex:range.location];
         
         NSLog(@"[WizWebView] ******* targetView is:  %@", targetView );
         
         int targetLength = targetView.length;
         
-        NSString* postData = [messageData substringFromIndex:targetLength+1];
+        NSString *postData = [messageData substringFromIndex:targetLength+1];
         
         // NSLog(@"[WizWebView] ******* postData is:  %@", postData );
 
-        NSMutableDictionary * viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
+        NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
         
         // NSLog(@"[WizWebView] ******* current views... %@", viewList);
 
         
         if ([viewList objectForKey:targetView]) {
-            UIWebView* targetWebView = [viewList objectForKey:targetView]; 
+            UIWebView *targetWebView = [viewList objectForKey:targetView]; 
             NSString *postDataEscaped = [postData stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
             [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver('%@');", postDataEscaped]];
+            
         }
-        
+
         // TODO: error handle
         // no error handle,...
-
+        
+        [messageData release];
+        messageData = nil;
         [viewList release];
         
         return NO;

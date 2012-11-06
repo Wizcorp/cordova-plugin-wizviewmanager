@@ -9,17 +9,19 @@
 #import <Foundation/Foundation.h>
 #ifdef CORDOVA_FRAMEWORK
 #import <Cordova/CDVPlugin.h>
+#import <Cordova/CDVCordovaView.h>
 #else
 #import "CDVPlugin.h"
+#import "CDVCordovaView.h"
 #endif
 
-@interface WizWebView : UIWebView <UIWebViewDelegate> {
+@interface WizWebView : NSObject <UIWebViewDelegate> {
 
 }
 
 @property (nonatomic, retain) UIWebView *wizView;
 
--(UIWebView *)createNewInstanceView:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src;
+-(UIWebView *)createNewInstanceViewFromManager:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src;
 
 
 @end

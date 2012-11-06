@@ -4,8 +4,8 @@
 # PLUGIN: 
 
 phonegap-plugin-wizViewManager<br />
-version : 1.7<br />
-last update : 27/04/2012<br />
+version : 1.9<br />
+last update : 06/11/2012<br />
 
 
 # CHANGELOG: 

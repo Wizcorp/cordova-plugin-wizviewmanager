@@ -46,7 +46,7 @@ var wizViewManager = {
             }
         }
         
-        return PhoneGap.exec(s, f, "WizViewManagerPlugin", "setLayout", [viewName, options]);                      
+        return cordova.exec(s, f, "WizViewManagerPlugin", "setLayout", [viewName, options]);                      
     },
     
     remove:  function(viewName, s, f) {
@@ -54,7 +54,7 @@ var wizViewManager = {
     },
     
     initPing:  function() {
-        return PhoneGap.exec(null, null, "WizViewManagerPlugin", "initPing", []);                      
+        return cordova.exec(null, null, "WizViewManagerPlugin", "initPing", []);                      
     }
     
 	
