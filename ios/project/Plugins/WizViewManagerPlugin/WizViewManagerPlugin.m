@@ -272,59 +272,48 @@ static NSMutableDictionary *isAnimating = nil;
         
         if ([options objectForKey:@"top"]) {
             top = [self getWeakLinker:[options objectForKey:@"top"] ofType:@"top"];
-        }
-        else if ([options objectForKey:@"y"]) {
+        } else if ([options objectForKey:@"y"]) {
             // backward compatibility
             top = [self getWeakLinker:[options objectForKey:@"y"] ofType:@"top"];
-        }
-        else if ([options objectForKey:@"height"] && [options objectForKey:@"bottom"]) {
+        } else if ([options objectForKey:@"height"] && [options objectForKey:@"bottom"]) {
             top = screenHeight - [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"]
             - [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
-        }
-        else {
+        } else {
             top = 0;
         }
         // NSLog(@"TOP: %i", top);
         
         if ([options objectForKey:@"left"]) {
             left = [self getWeakLinker:[options objectForKey:@"left"] ofType:@"left"];
-        }
-        else if ([options objectForKey:@"x"]) {
+        } else if ([options objectForKey:@"x"]) {
             // backward compatibility
             left = [self getWeakLinker:[options objectForKey:@"x"] ofType:@"left"];
-        }
-        else if ([options objectForKey:@"width"] && [options objectForKey:@"right"]) {
+        } else if ([options objectForKey:@"width"] && [options objectForKey:@"right"]) {
             left = screenWidth - [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"]
             - [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
-        }
-        else {
+        } else {
             left = 0;
         }
         // NSLog(@"LEFT: %i", left);
         
         if ([options objectForKey:@"height"]) {
             height = [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
-        }
-        else if ([options objectForKey:@"bottom"]) {
+        } else if ([options objectForKey:@"bottom"]) {
             height = screenHeight - [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"] - top;
-        }
-        else {
+        } else {
             height = screenHeight;
         }
         // NSLog(@"HEIGHT: %i", height);
         
         if ([options objectForKey:@"width"]) {
             width = [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
-        }
-        else if ([options objectForKey:@"right"]) {
+        } else if ([options objectForKey:@"right"]) {
             width = screenWidth - [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"] - left;
-        }
-        else {
+        } else {
             width = screenWidth;
         }
         // NSLog(@"WIDTH: %i", width);
-    }
-    else {
+    } else {
         top = 0;
         left = 0;
         height = screenHeight;
