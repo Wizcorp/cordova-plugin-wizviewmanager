@@ -1,9 +1,9 @@
-/* WizViewManager for cordova - Handle Popup UIViews and communtications.
+/* WizViewManager for cordova - Handle Popup UIViews create/remove/show/hide.
 *
  * @author Ally Ogilvie  
  * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
  * @file - wizViewManager.js
- * @about - JavaScript cordova bridge for extra utilities 
+ * @about - JavaScript cordova bridge for view management
  *
  *
 */
@@ -51,11 +51,6 @@ var wizViewManager = {
     
     remove:  function(viewName, s, f) {
         return cordova.exec(s, f, "WizViewManagerPlugin", "removeView", [viewName]);                       
-    },
-    
-    initPing:  function() {
-        return cordova.exec(null, null, "WizViewManagerPlugin", "initPing", []);                      
     }
-    
 	
 };

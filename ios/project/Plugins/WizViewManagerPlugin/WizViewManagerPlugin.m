@@ -1350,7 +1350,7 @@ static NSMutableDictionary *isAnimating = nil;
         if ([viewList objectForKey:targetView]) {
             UIWebView* targetWebView = [viewList objectForKey:targetView]; 
             NSString *postDataEscaped = [postData stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
-            [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver('%@');", postDataEscaped]];
+            [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
             
             // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);
         }
