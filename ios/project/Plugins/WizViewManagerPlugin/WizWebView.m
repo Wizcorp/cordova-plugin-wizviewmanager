@@ -16,8 +16,7 @@
 static CDVPlugin* viewManager;
 static BOOL isActive = FALSE;
 
--(UIWebView *)createNewInstanceViewFromManager:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src 
-{
+-(UIWebView *)createNewInstanceViewFromManager:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src {
     
     viewManager = myViewManager;
     
@@ -80,8 +79,7 @@ static BOOL isActive = FALSE;
     return wizView;
 }
 
-+ (BOOL) isActive
-{
++ (BOOL) isActive {
     return isActive;
 }
 
@@ -90,8 +88,7 @@ static BOOL isActive = FALSE;
     return [lowerCased hasPrefix:@"http://"] || [lowerCased hasPrefix:@"https://"];
 }
 
-- (void)webViewDidFinishLoad:(UIWebView *)theWebView 
-{
+- (void)webViewDidFinishLoad:(UIWebView *)theWebView {
 	// view is loaded
     NSLog(@"[WizWebView] ******* view is LOADED! " );
     
@@ -132,8 +129,7 @@ static BOOL isActive = FALSE;
 
 
 
-- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSMutableURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType 
-{
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSMutableURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType {
     
     NSString *requestString = [[request URL] absoluteString];
     // get prefix

@@ -22,8 +22,7 @@ static CGFloat viewPadder = 9999.0f;
 static NSMutableDictionary *viewLoadedCallbackId = nil;
 static NSMutableDictionary *isAnimating = nil;
 
--(CDVPlugin*) initWithWebView:(UIWebView*)theWebView
-{
+-(CDVPlugin*) initWithWebView:(UIWebView*)theWebView {
 
     self = (WizViewManagerPlugin*)[super initWithWebView:theWebView];
     if (self) 
@@ -52,21 +51,18 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-+ (NSMutableDictionary*)getViews
-{
++ (NSMutableDictionary*)getViews {
     // return instance of current view list
     return wizViewList;
 }
 
-+ (NSMutableDictionary*)getViewLoadedCallbackId
-{
++ (NSMutableDictionary*)getViewLoadedCallbackId {
     // return instance of updateCallbackId
     return viewLoadedCallbackId;
 }
 
 
-- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options
-{
+- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options {
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
     NSString *viewName    = [arguments objectAtIndex:1];
@@ -133,8 +129,7 @@ static NSMutableDictionary *isAnimating = nil;
     }
 }
 
-- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options 
-{
+- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options {
     /*
      *
      *
@@ -217,8 +212,7 @@ static NSMutableDictionary *isAnimating = nil;
 }   
 
 
-- (void)removeView:(NSArray*)arguments withDict:(NSDictionary*)options
-{
+- (void)removeView:(NSArray*)arguments withDict:(NSDictionary*)options {
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
     NSString *viewName    = [arguments objectAtIndex:1];
@@ -254,8 +248,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-- (CGRect) frameWithOptions:(NSDictionary*)options
-{
+- (CGRect) frameWithOptions:(NSDictionary*)options {
     // get Device width and height
     CGRect screenRect = [[UIScreen mainScreen] bounds];
     int screenHeight = (int) screenRect.size.height;
@@ -326,8 +319,7 @@ static NSMutableDictionary *isAnimating = nil;
     return CGRectMake(left, top, width, height);
 }
 
-- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options
-{
+- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options {
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
     NSString *viewName    = [arguments objectAtIndex:1];
@@ -361,8 +353,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-- (int)getWeakLinker:(NSString*)myString ofType:(NSString*)type
-{
+- (int)getWeakLinker:(NSString*)myString ofType:(NSString*)type {
     // do tests to get correct int (we read in as string pointer but infact we are unaware of the var type)
     int i;
     
@@ -441,8 +432,7 @@ static NSMutableDictionary *isAnimating = nil;
     return [lowerCased hasPrefix:@"http://"] || [lowerCased hasPrefix:@"https://"];
 }
          
-- (BOOL)floatTest:(NSString*)myString
-{
+- (BOOL)floatTest:(NSString*)myString {
     NSString *realString = [[NSString alloc] initWithString:myString];
     NSArray *floatTest = [realString componentsSeparatedByString:@"."];
     [realString release];
@@ -456,8 +446,7 @@ static NSMutableDictionary *isAnimating = nil;
     
 }
 
-- (NSArray*)percentTest:(NSString*)myString
-{
+- (NSArray*)percentTest:(NSString*)myString {
     NSString *realString = [[NSString alloc] initWithString:myString];
     NSArray *percentTest = [realString componentsSeparatedByString:@"%"];
     [realString release];
@@ -472,8 +461,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-- (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options 
-{
+- (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options {
     
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
@@ -857,8 +845,7 @@ static NSMutableDictionary *isAnimating = nil;
  
  **/
 
-- (UIColor *) colorWithHexString: (NSString *) hexString
-{
+- (UIColor *) colorWithHexString: (NSString *) hexString {
     NSString *colorString = [[hexString stringByReplacingOccurrencesOfString: @"#" withString: @""] uppercaseString];
     CGFloat alpha, red, blue, green;
     switch ([colorString length]) {
@@ -928,8 +915,7 @@ static NSMutableDictionary *isAnimating = nil;
 
 
 
-- (void) showWithNoAnimation:(UIView *)view
-{
+- (void) showWithNoAnimation:(UIView *)view {
     // move view into display       
     [view setFrame:CGRectMake(
                               view.frame.origin.x - viewPadder,
@@ -942,8 +928,7 @@ static NSMutableDictionary *isAnimating = nil;
     
 }
 
-- (void) hideWithNoAnimation:(UIView *)view
-{
+- (void) hideWithNoAnimation:(UIView *)view {
     view.alpha = 0.0;
     // move view out of display
     [view setFrame:CGRectMake(
@@ -957,8 +942,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-- (void) showWithSlideInFromTopAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithSlideInFromTopAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName {
     
     CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
     
@@ -983,8 +967,7 @@ static NSMutableDictionary *isAnimating = nil;
                      }];
 }
 
-- (void) hideWithSlideOutToTopAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithSlideOutToTopAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
     CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
     
@@ -1011,8 +994,7 @@ static NSMutableDictionary *isAnimating = nil;
                      }];
 }
 
-- (void) showWithSlideInFromBottomAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithSlideInFromBottomAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName {
     
     CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
     
@@ -1037,8 +1019,7 @@ static NSMutableDictionary *isAnimating = nil;
                      }];
 }
 
-- (void) hideWithSlideOutToBottomAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithSlideOutToBottomAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
     CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
     
@@ -1065,8 +1046,7 @@ static NSMutableDictionary *isAnimating = nil;
                      }];
 }
 
-- (void) showWithSlideInFromRightAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithSlideInFromRightAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName {
     
     CGFloat screenWidth = [[UIScreen mainScreen] bounds].size.width;
     
@@ -1091,8 +1071,7 @@ static NSMutableDictionary *isAnimating = nil;
                      }];
 }
 
-- (void) hideWithSlideOutToRightAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithSlideOutToRightAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
     CGFloat screenWidth = [[UIScreen mainScreen] bounds].size.width;
     
@@ -1120,8 +1099,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-- (void) showWithSlideInFromLeftAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithSlideInFromLeftAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName {
 
     CGFloat screenWidth = [[UIScreen mainScreen] bounds].size.width;
     
@@ -1149,8 +1127,7 @@ static NSMutableDictionary *isAnimating = nil;
      
 }
 
-- (void) hideWithSlideOutToLeftAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithSlideOutToLeftAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
     CGFloat screenWidth = [[UIScreen mainScreen] bounds].size.width;
     
@@ -1178,8 +1155,7 @@ static NSMutableDictionary *isAnimating = nil;
                 
 }
 
-- (void) showWithZoomInAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString*)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithZoomInAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString*)callbackId viewName:(NSString *)viewName {
 
     // first reduce the view to 1/100th of its original dimension
     CGAffineTransform trans = CGAffineTransformScale(view.transform, 0.01, 0.01);
@@ -1209,8 +1185,7 @@ static NSMutableDictionary *isAnimating = nil;
 
 
 
-- (void) hideWithZoomOutAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithZoomOutAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
 	[UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
@@ -1236,8 +1211,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-- (void) showWithFadeAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString*)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithFadeAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString*)callbackId viewName:(NSString *)viewName {
     
     WizLog(@"SHOW FADE view is %@, %@", view, viewName);
 
@@ -1279,8 +1253,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 // [self performSelector:@selector(_userLoggedIn) withObject:nil afterDelay:0.010f];
 
-- (void) hideWithFadeAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithFadeAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     WizLog(@"HIDE FADE view is %@, %@", view, viewName);
     // about to animate so add to animate store
     
@@ -1326,23 +1299,19 @@ static NSMutableDictionary *isAnimating = nil;
  * Extend CordovaView URL request handler
  *
  */
-- (void) webViewDidStartLoad:(UIWebView*)theWebView
-{
+- (void) webViewDidStartLoad:(UIWebView*)theWebView {
     return [self.webviewDelegate webViewDidStartLoad:theWebView];
 }
 
-- (void) webViewDidFinishLoad:(UIWebView*)theWebView 
-{
+- (void) webViewDidFinishLoad:(UIWebView*)theWebView {
     return [self.webviewDelegate webViewDidFinishLoad:theWebView];
 }
 
-- (void) webView:(UIWebView*)theWebView didFailLoadWithError:(NSError*)error 
-{
+- (void) webView:(UIWebView*)theWebView didFailLoadWithError:(NSError*)error {
     return [self.webviewDelegate webView:theWebView didFailLoadWithError:error];
 }
 
--(BOOL) webView:(UIWebView*)theWebView shouldStartLoadWithRequest:(NSURLRequest*)request navigationType:(UIWebViewNavigationType)navigationType
-{
+-(BOOL) webView:(UIWebView*)theWebView shouldStartLoadWithRequest:(NSURLRequest*)request navigationType:(UIWebViewNavigationType)navigationType {
     
 
     BOOL superValue = [ self.webviewDelegate webView:theWebView shouldStartLoadWithRequest:request navigationType:navigationType ];
@@ -1401,8 +1370,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
--(void) timedRestart:(UIWebView*)theWebView
-{
+-(void) timedRestart:(UIWebView*)theWebView {
     // gives time for our JS method to execute splash
     
     
