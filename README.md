@@ -4,8 +4,8 @@
 # PLUGIN: 
 
 phonegap-plugin-wizViewManager<br />
-version : 1.7<br />
-last update : 27/04/2012<br />
+version : 1.9<br />
+last update : 06/11/2012<br />
 
 
 # CHANGELOG: 
@@ -26,7 +26,7 @@ creating,<br />
 removing,<br />
 showing,<br />
 hiding,<br />
-messaging (cross communication with JSON objects to each and every view),<br />
+messaging (cross communication of strings to each and every view),<br />
 animating,<br />
 resizing,<br />
 loading source into views.
@@ -42,45 +42,35 @@ Project tree<br />
 <pre><code>
 project
 	/ www
-		-index.html
-		-newview.html
-		-json.js
 		/ phonegap
 			/ plugin
 				/ wizViewManager
 					/ wizViewManager.js	
-	/ Classes
-		MainViewController.m
-	/ Plugins
-		/ wizViewManager
-			/ wizViewManager.h
-			/ wizViewManager.m
-	-project.xcodeproj
+					/ wizViewMessenger.js	
+	/ ios
+		/ project
+			/ Plugins
+				/ wizViewManager
+					/ wizViewManager.h
+					/ wizViewManager.m
 </code></pre>
 
 
 
 1 ) Arrange files to structure seen above.
 
-2 ) Add to phonegap.plist in the plugins array;<br />
+2 ) Add to Cordova.plist in the plugins array;<br />
 Key : wizViewManager<br />
 Type : String<br />
 Value : wizViewManager<br />
 
-
-3 ) Configure your AppDelegate.m
-
-See the example AppDelegate.m
-(just add/copy \#import and shouldStartLoadWithRequest function)
-
-
-4 ) Add \<script\> tag to your index.html<br />
+3 ) Add \<script\> tag to your index.html<br />
 \<script type="text/javascript" charset="utf-8" src="phonegap/plugin/wizViewManager/wizViewManager.js"\>\</script\><br />
+\<script type="text/javascript" charset="utf-8" src="phonegap/plugin/wizViewManager/wizViewMessenger.js"\>\</script\><br />
 (assuming your index.html is setup like tree above)
-You will also need the json.js (for getting JSON objects)
 
 
-5 ) Follow example code below.
+4 ) Follow example code below.
 
 
 
@@ -196,39 +186,23 @@ animation : {
 </code></pre>
 
 Message a view<br />
+To send a messsage to a view, add this to the html you wish to send from use...
+<pre><code>
+wizViewMessenger.message(targetView, message);
+	* targetView is the string name of the target view.
+	* message is the message string
+    * To send a JSON object as the message, stringify it before sending using:  message = JSON.stringify(myObject)
+</code></pre>
+
 add a receiver to your html that gets the message...
 <pre><code>
-function wizMessageReceiver(data) 
+function wizMessageReceiver(message) 
 {
-                        
     // your data comes in here
-    console.log('i got :' + data);
+    console.log('i got :' + message);
                         
 }
+	* message is the message string
+    * To receive a JSON object as the message, parse the object after receiving using:  myObject = JSON.parse(message)
 </code></pre>
 
-to send a messsage, add this to the html you wish to send from use...
-<pre><code>
-function sendExample()
-{
-    
-    var targetView = 'newView';
-    var action = 'message';
-    var params = { 'x' : 500 };
-    
-    
-    postEvent(targetView, action, params );
-    
-}
-
-function postEvent(targetView, action, params) 
-{
-    var msg = { 'event' : action , 'params' : params };
-    
-    var iframe = document.createElement('IFRAME');
-    iframe.setAttribute('src', 'wizMessageView://'+ window.encodeURIComponent(targetView)+ '?'+ window.encodeURIComponent(JSON.stringify(msg)) );
-    document.documentElement.appendChild(iframe);
-    iframe.parentNode.removeChild(iframe);
-    iframe = null;
-}
-</code></pre>

@@ -19,15 +19,14 @@
 
 }
 
-@property (nonatomic, copy) NSString* showViewCallbackId;
+@property (nonatomic, retain) NSString* showViewCallbackId;
+@property (nonatomic, retain) NSString* hideViewCallbackId;
+@property (nonatomic, readwrite, assign) id<UIWebViewDelegate> webviewDelegate;
 
 
 + (NSMutableDictionary *)getViews;
 + (NSMutableDictionary *)getViewLoadedCallbackId;
-+ (void) pong;
 
-
-- (void)initPing:(NSArray*)arguments withDict:(NSDictionary*)options;
 
 - (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)hideView:(NSArray*)arguments withDict:(NSDictionary*)options;
@@ -61,3 +60,17 @@
 - (void) hideWithSlideOutToBottomAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString*)viewName;
 
 @end
+
+/*
+#ifdef CORDOVA_FRAMEWORK
+#import <Cordova/CDVViewController.h>
+#else
+#import "CDVViewController.h"
+#endif
+@interface CDVViewController(urlListener)
+
+
+-(BOOL) webView:(UIWebView*)theWebView shouldStartLoadWithRequest:(NSURLRequest*)request navigationType:(UIWebViewNavigationType)navigationType;
+
+@end
+*/
