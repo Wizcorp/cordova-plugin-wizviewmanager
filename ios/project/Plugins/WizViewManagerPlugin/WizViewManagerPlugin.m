@@ -1366,11 +1366,7 @@ static NSMutableDictionary *isAnimating = nil;
     if ([(NSString*)[prefixer objectAtIndex:0] caseInsensitiveCompare:@"rebootapp"] == 0) {
         
         // perform restart a second later
-        NSTimer *nTimer = [NSTimer 
-                           scheduledTimerWithTimeInterval:1.0f 
-                           target:self 
-                           selector:@selector(timedRestart:) 
-                           userInfo:theWebView repeats:NO];
+        [self performSelector:@selector(timedRestart) withObject:theWebView afterDelay:1.0f];
         
         return NO;
 		
@@ -1416,7 +1412,7 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
--(void) timedRestart:(NSTimer*)theTimer
+-(void) timedRestart:(UIWebView*)theWebView
 {
     // gives time for our JS method to execute splash
     
@@ -1435,7 +1431,7 @@ static NSMutableDictionary *isAnimating = nil;
     // resize mainView to normal
     [self setLayout:[NSArray arrayWithObjects:@"", @"mainView", nil] withDict:NULL];
     
-    [[theTimer userInfo] reload];
+    [theWebView reload];
 }
 
 @end
