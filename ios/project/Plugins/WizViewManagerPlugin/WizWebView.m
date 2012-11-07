@@ -182,10 +182,7 @@ static BOOL isActive = FALSE;
         
         return NO;
         
-	} else if ([(NSString*)[prefixer objectAtIndex:0] caseInsensitiveCompare:@"wizPongView"] == 0) {
-        [WizViewManagerPlugin pong];
-        return NO;
-    }
+	}
     
     // Accept any other URLs
 	return YES;

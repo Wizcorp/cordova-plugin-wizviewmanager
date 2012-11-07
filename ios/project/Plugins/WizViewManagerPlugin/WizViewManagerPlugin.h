@@ -26,10 +26,7 @@
 
 + (NSMutableDictionary *)getViews;
 + (NSMutableDictionary *)getViewLoadedCallbackId;
-+ (void) pong;
 
-
-- (void)initPing:(NSArray*)arguments withDict:(NSDictionary*)options;
 
 - (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)hideView:(NSArray*)arguments withDict:(NSDictionary*)options;
