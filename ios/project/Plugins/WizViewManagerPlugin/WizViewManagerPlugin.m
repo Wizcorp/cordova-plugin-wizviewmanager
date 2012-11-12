@@ -9,26 +9,28 @@
 #import "WizViewManagerPlugin.h"
 #import "WizWebView.h"
 #import "WizDebugLog.h"
+#import <QuartzCore/QuartzCore.h>
+
 
 @implementation WizViewManagerPlugin
 
-@synthesize showViewCallbackId;
+@synthesize showViewCallbackId, hideViewCallbackId, webviewDelegate;
+
 
 static NSMutableDictionary *wizViewList = nil;
 static CGFloat viewPadder = 9999.0f;
 static NSMutableDictionary *viewLoadedCallbackId = nil;
-static int pongCount;
-static int pingCount;
-static BOOL pingSuccess;
 static NSMutableDictionary *isAnimating = nil;
 
--(CDVPlugin*) initWithWebView:(UIWebView*)theWebView
-{
+-(CDVPlugin*) initWithWebView:(UIWebView*)theWebView {
 
     self = (WizViewManagerPlugin*)[super initWithWebView:theWebView];
     if (self) 
 	{
 		originalWebViewBounds = theWebView.bounds;
+        
+        self.webviewDelegate = theWebView.delegate;
+        theWebView.delegate = self;
         
     }
     
@@ -41,42 +43,33 @@ static NSMutableDictionary *isAnimating = nil;
     // this holds any views that are animating
     isAnimating = [[NSMutableDictionary alloc ] init];
 
+    // init at nil
+    self.showViewCallbackId = nil;
+    self.hideViewCallbackId = nil;
     
     return self;
 }
 
-- (void)initPing:(NSArray*)arguments withDict:(NSDictionary*)options 
-{
-    // init ping
-    pingSuccess = TRUE;
-    
-    // start ping all views
-    [NSTimer scheduledTimerWithTimeInterval:5.0 target:self selector:@selector(ping) userInfo:nil repeats:YES];
-}
 
-
-+ (NSMutableDictionary*)getViews
-{
++ (NSMutableDictionary*)getViews {
     // return instance of current view list
     return wizViewList;
 }
 
-+ (NSMutableDictionary*)getViewLoadedCallbackId
-{
++ (NSMutableDictionary*)getViewLoadedCallbackId {
     // return instance of updateCallbackId
     return viewLoadedCallbackId;
 }
 
 
-- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options
-{
+- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options {
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
     NSString *viewName    = [arguments objectAtIndex:1];
     
     [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
     
-    WizLog(@"[WizViewManager] ******* Load into view : %@ ", viewName); 
+    // NSLog(@"[WizViewManager] ******* Load into view : %@ - viewlist -> %@ options %@", viewName, wizViewList, options); 
     
     
     if (options) 
@@ -84,21 +77,29 @@ static NSMutableDictionary *isAnimating = nil;
         
         // search for view
         if ([wizViewList objectForKey:viewName]) {
-            UIWebView* targetWebView = [wizViewList objectForKey:viewName]; 
+            UIWebView *targetWebView = [wizViewList objectForKey:viewName]; 
             
-            NSString* src               = [options objectForKey:@"src"];
+            NSString *src               = [options objectForKey:@"src"];
             if (src) {
                 
                 if ([self validateUrl:src]) {
                     // load new source
                     // source is url
-                    WizLog(@"SOURCE IS URL");
+                    // NSLog(@"SOURCE IS URL %@", src);
                     NSURL *newURL = [NSURL URLWithString:src];
-                    NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
+
+                    // JC- Setting the service type to video somehow seems to
+                    // disable the reuse of this connection for pipelining new
+                    // HTTP requests, which apparently fixes the tying of these
+                    // requests to the ajax connection used for the message streams
+                    // (which is initiated from the Javascript realm).
+                    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:newURL];
+                    [request setNetworkServiceType:NSURLNetworkServiceTypeVideo];
+
                     [targetWebView loadRequest:request];
                     
                 } else {
-                    WizLog(@"SOURCE NOT URL");
+                    // NSLog(@"SOURCE NOT URL %@", src);
                     NSString *fileString = src;
                     
                     NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
@@ -115,21 +116,20 @@ static NSMutableDictionary *isAnimating = nil;
             
         } else {
             
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
             [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
             
         }
         
     } else {
         
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
     }
 }
 
-- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options 
-{
+- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options {
     /*
      *
      *
@@ -147,15 +147,10 @@ static NSMutableDictionary *isAnimating = nil;
     
     [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
     
-    WizLog(@"[WizViewManager] ******* updateView name : %@ ", viewName); 
+    // NSLog(@"[WizViewManager] ******* updateView name : %@ ", viewName); 
 
     
     // wait for callback
-    /*
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_NO_RESULT];
-    [pluginResult setKeepCallbackAsBool:YES];
-    [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
-    */
     
     if (options) 
 	{
@@ -170,13 +165,21 @@ static NSMutableDictionary *isAnimating = nil;
                 if ([self validateUrl:src]) {
                     // load new source
                     // source is url
-                    WizLog(@"SOURCE IS URL");
+                    // NSLog(@"SOURCE IS URL %@", src);
                     NSURL *newURL = [NSURL URLWithString:src];
-                    NSURLRequest *request = [NSURLRequest requestWithURL:newURL];
+
+                    // JC- Setting the service type to video somehow seems to
+                    // disable the reuse of this connection for pipelining new
+                    // HTTP requests, which apparently fixes the tying of these
+                    // requests to the ajax connection used for the message streams
+                    // (which is initiated from the Javascript realm).
+                    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:newURL];
+                    [request setNetworkServiceType:NSURLNetworkServiceTypeVideo];
+
                     [targetWebView loadRequest:request];
                     
                 } else {
-                    WizLog(@"SOURCE NOT URL");
+                    // NSLog(@"SOURCE NOT URL %@", src);
                     NSString *fileString = src;
                     
                     NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
@@ -191,25 +194,17 @@ static NSMutableDictionary *isAnimating = nil;
                 
             }
             
-
-            
-            
-            
-            /*
-            PluginResult* pluginResult = [PluginResult resultWithStatus:PGCommandStatus_OK];
-            [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
-             */
             
         } else {
             
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
             [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
         }
  
     } else {
         
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
     }
@@ -217,8 +212,7 @@ static NSMutableDictionary *isAnimating = nil;
 }   
 
 
-- (void)removeView:(NSArray*)arguments withDict:(NSDictionary*)options
-{
+- (void)removeView:(NSArray*)arguments withDict:(NSDictionary*)options {
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
     NSString *viewName    = [arguments objectAtIndex:1];
@@ -227,212 +221,139 @@ static NSMutableDictionary *isAnimating = nil;
     
     // search for view
     if ([wizViewList objectForKey:viewName]) {
-        UIWebView* targetWebView = [wizViewList objectForKey:viewName]; 
+        UIWebView *targetWebView = [wizViewList objectForKey:viewName]; 
         
         // remove the view from wizViewList
         [wizViewList removeObjectForKey:viewName];
         
         // remove the view!
         [targetWebView removeFromSuperview];
+        [targetWebView release];
         targetWebView.delegate = nil;
         targetWebView = nil;
-        [targetWebView release];
+        
 
         
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
         
         
          NSLog(@"[WizViewManager] ******* removeView views left : %@ ", wizViewList);
     } else {
         
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
     }
     
 }
 
 
-- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options
-{
+- (CGRect) frameWithOptions:(NSDictionary*)options {
+    // get Device width and height
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    int screenHeight = (int) screenRect.size.height;
+    int screenWidth = (int) screenRect.size.width;
+    
+    // define vars
+    int top;
+    int left;
+    int width;
+    int height;
+    
+    if (options) {
+        // NSLog(@"SIZING OPTIONS: %@", options);
+        
+        if ([options objectForKey:@"top"]) {
+            top = [self getWeakLinker:[options objectForKey:@"top"] ofType:@"top"];
+        } else if ([options objectForKey:@"y"]) {
+            // backward compatibility
+            top = [self getWeakLinker:[options objectForKey:@"y"] ofType:@"top"];
+        } else if ([options objectForKey:@"height"] && [options objectForKey:@"bottom"]) {
+            top = screenHeight - [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"]
+            - [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
+        } else {
+            top = 0;
+        }
+        // NSLog(@"TOP: %i", top);
+        
+        if ([options objectForKey:@"left"]) {
+            left = [self getWeakLinker:[options objectForKey:@"left"] ofType:@"left"];
+        } else if ([options objectForKey:@"x"]) {
+            // backward compatibility
+            left = [self getWeakLinker:[options objectForKey:@"x"] ofType:@"left"];
+        } else if ([options objectForKey:@"width"] && [options objectForKey:@"right"]) {
+            left = screenWidth - [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"]
+            - [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
+        } else {
+            left = 0;
+        }
+        // NSLog(@"LEFT: %i", left);
+        
+        if ([options objectForKey:@"height"]) {
+            height = [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
+        } else if ([options objectForKey:@"bottom"]) {
+            height = screenHeight - [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"] - top;
+        } else {
+            height = screenHeight;
+        }
+        // NSLog(@"HEIGHT: %i", height);
+        
+        if ([options objectForKey:@"width"]) {
+            width = [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
+        } else if ([options objectForKey:@"right"]) {
+            width = screenWidth - [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"] - left;
+        } else {
+            width = screenWidth;
+        }
+        // NSLog(@"WIDTH: %i", width);
+    } else {
+        top = 0;
+        left = 0;
+        height = screenHeight;
+        width = screenWidth;
+        // NSLog(@"TOP: 0\nLEFT: 0\nHEIGHT: %i\nWIDTH: %i", height, width);
+    }
+    
+    // NSLog(@"MY PARAMS left: %i, top: %i, width: %i, height: %i", left, top, width,height);
+    
+    return CGRectMake(left, top, width, height);
+}
+
+- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options {
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
     NSString *viewName    = [arguments objectAtIndex:1];
     
-    WizLog(@"[WizViewManagerPlugin] ******* resizeView name:  %@ withOptions: %@", viewName, options);
+    // NSLog(@"[WizViewManagerPlugin] ******* resizeView name:  %@ withOptions: %@", viewName, options);
     
-    
-    if (options) 
-	{
+    if ([wizViewList objectForKey:viewName]) {
+        UIWebView* targetWebView = [wizViewList objectForKey:viewName];
+        // NSLog(@"got view! %@", targetWebView);
         
-        // define vars
-        int _x;
-        int _y;
-        int _height;
-        int _width;
-        int _left;
-        int _right;
-        int _top;
-        int _bottom;
-        
-        
-        // get Device width and heigh
-        CGRect screenRect = [[UIScreen mainScreen] bounds];
-        CGFloat screenHeight = screenRect.size.height;
-        CGFloat screenWidth = screenRect.size.width;
-        
-        /*
-         *
-         * Assignments - read all as strings run check function for data type
-         *
-         */
-        
-        if ([options objectForKey:@"top"]) {
-            _top = [self getWeakLinker:[options objectForKey:@"top"] ofType:@"top"];
+        CGRect newRect = [self frameWithOptions:options];
+        if (targetWebView.isHidden) {
+            // if hidden add padding
+            newRect.origin = CGPointMake(newRect.origin.x + viewPadder, newRect.origin.y);
         }
         
-        if ([options objectForKey:@"bottom"]) {
-            _bottom = [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"];
-        }
+        targetWebView.frame = newRect;
         
-        if ([options objectForKey:@"left"]) {
-            _left = [self getWeakLinker:[options objectForKey:@"left"] ofType:@"left"];
-        }
+        // NSLog(@"view resized! %@", targetWebView);
         
-        if ([options objectForKey:@"right"]) {
-            _right = [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"];
-        }
-        
-        if ([options objectForKey:@"width"]) {
-            _width = [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
-        } else {
-            _width = screenWidth;
-        }
-        
-        if ([options objectForKey:@"height"]) {
-            _height = [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
-        } else {
-            _height = screenHeight;
-        }
-
-        if (!_x) {
-            // default
-            _x = 0;
-        } else {
-            _x = [[options objectForKey:@"x"] intValue];
-        }
-        
-        if (!_y) {
-            // default
-            _y = 0;
-        } else {
-            _y = [[options objectForKey:@"y"] intValue];
-        }
-        
-        
-        if (![options objectForKey:@"left"] && ![options objectForKey:@"right"]) {
-            _left = 0;
-            _right = 0;
-        }
-        
-        if (![options objectForKey:@"top"] && ![options objectForKey:@"bottom"]) {
-            _top = 0;
-            _bottom = 0;
-        }
-        
-        
-        // ensure width, with a preference for a left/right combination
-        if ([options objectForKey:@"width"]) {
-            // check for width
-            if ([options objectForKey:@"left"] && [options objectForKey:@"right"]) {
-                // give prefference to left and right!
-                // _width = 0;
-                _left = 0;
-                _right = 0;
-            }
-        } else {
-            // no width given, so fill to device edge (see above) if left/right not given
-            if (![options objectForKey:@"left"]) {
-                _left = 0;
-            }
-            if (![options objectForKey:@"right"]) {
-                _right = 0;
-            }               
-        }
-        
-        
-        
-        // ensure height, with a preference for a top/bottom combination
-        if ([options objectForKey:@"height"]) {
-            // check for height
-            if ([options objectForKey:@"top"] && [options objectForKey:@"bottom"]) {
-                // give prefference to top and bottom!
-                // _height = 0;
-                _top = 0;
-                _bottom = 0;
-            }
-        } else {
-            // no height given, so fill to device edge (see above) if top/bottom not given
-            if (![options objectForKey:@"top"]) {
-                _top = 0;
-            }
-            if (![options objectForKey:@"bottom"]) {
-                _bottom = 0;
-            }
-        }
-        
-        
-        WizLog(@"MY PARAMS _x: %i, _y: %i, _width: %i, _height: %i, _top: %i, _bottom: %i, _left: %i, right: %i", _x,_y,_width,_height,_top,_bottom,_left,_right );
-        
-        if ([wizViewList objectForKey:viewName]) {
-            UIWebView* targetWebView = [wizViewList objectForKey:viewName];
-            WizLog(@"got view! %@", targetWebView);
-            
-            CGRect newRect;
-            
-            if (targetWebView.isHidden) {
-                // if hidden add padding
-                newRect              = CGRectMake(_x+_left+viewPadder, _y+_top, _width-_right-_left, _height-_bottom-_top);
-            } else {
-                newRect              = CGRectMake(_x+_left, _y+_top, _width-_right-_left, _height-_bottom-_top);
-
-            }
-
-            targetWebView.frame = newRect;
-            
-            WizLog(@"view resized! %@", targetWebView);
-            
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-            [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
-
-            
-        } else {
-            WizLog(@"view not found!");
-            
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
-            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
-        }
-        
-
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
         
         
     } else {
+        // NSLog(@"view not found!");
         
-        WizLog(@"no options!");
-        
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"noParams"];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
     }
-    
-    
-    
-    
-    
-    
 }
 
-- (int)getWeakLinker:(NSString*)myString ofType:(NSString*)type
-{
+
+- (int)getWeakLinker:(NSString*)myString ofType:(NSString*)type {
     // do tests to get correct int (we read in as string pointer but infact we are unaware of the var type)
     int i;
     
@@ -441,7 +362,7 @@ static NSMutableDictionary *isAnimating = nil;
         return i = 0;
     }
     
-    WizLog(@"try link : %@ for type: %@", myString, type);
+    // NSLog(@"try link : %@ for type: %@", myString, type);
 
     
     // get Device width and height
@@ -501,20 +422,17 @@ static NSMutableDictionary *isAnimating = nil;
         
     }
     
-    WizLog(@"weak linked : %i for type: %@", i, type);
+    // NSLog(@"weak linked : %i for type: %@", i, type);
     return i;
    
 }
          
 - (BOOL) validateUrl: (NSString *) candidate {
-    NSString *urlRegEx =
-    @"(http|https)://((\\w)*|([0-9]*)|([-|_])*)+([\\.|/]((\\w)*|([0-9]*)|([-|_])*))+";
-    NSPredicate *urlTest = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", urlRegEx]; 
-    return [urlTest evaluateWithObject:candidate];
+    NSString* lowerCased = [candidate lowercaseString];
+    return [lowerCased hasPrefix:@"http://"] || [lowerCased hasPrefix:@"https://"];
 }
          
-- (BOOL)floatTest:(NSString*)myString
-{
+- (BOOL)floatTest:(NSString*)myString {
     NSString *realString = [[NSString alloc] initWithString:myString];
     NSArray *floatTest = [realString componentsSeparatedByString:@"."];
     [realString release];
@@ -528,8 +446,7 @@ static NSMutableDictionary *isAnimating = nil;
     
 }
 
-- (NSArray*)percentTest:(NSString*)myString
-{
+- (NSArray*)percentTest:(NSString*)myString {
     NSString *realString = [[NSString alloc] initWithString:myString];
     NSArray *percentTest = [realString componentsSeparatedByString:@"%"];
     [realString release];
@@ -544,26 +461,19 @@ static NSMutableDictionary *isAnimating = nil;
 }
 
 
-- (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options 
-{
-    
+- (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options {
     
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName    = [arguments objectAtIndex:1];
+    NSString *viewName      = [arguments objectAtIndex:1];    
     
-    
-    // [viewLoadedCallbackId setObject:callbackId forKey:@"updateCallback"];3
-    WizLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@", viewName, options);
+    [viewLoadedCallbackId setObject:callbackId forKey:@"updateCallback"];
+    NSLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@", viewName, options);
 
-
-
-    WizWebView* _WizWebView = [WizWebView alloc];
-    
-    if (options) 
-	{
+    UIWebView *newWizView;
+    if (options) {
        
-        NSString* src               = [options objectForKey:@"src"];
+        NSString *src               = [options objectForKey:@"src"];
         if (!src) {
             // default
             src = @"";
@@ -599,7 +509,7 @@ static NSMutableDictionary *isAnimating = nil;
         CGRect newRect              = CGRectMake(_x, _y, _width, _height);
         
         // create new wizView
-        UIWebView *newWizView = [_WizWebView createNewInstanceView:self newBounds:newRect sourceToLoad:src];
+        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect sourceToLoad:src];
         
         // add view name to our wizard view list
         [wizViewList setObject:newWizView forKey:viewName];
@@ -616,8 +526,15 @@ static NSMutableDictionary *isAnimating = nil;
         // add view to parent webview
         [self.webView.superview addSubview:newWizView];
         
-        
-        
+        // set a background colour if given one
+        if ([options objectForKey:@"backgroundColor"]) {
+            NSString *backgroundColor = [options objectForKey:@"backgroundColor"];
+            if ([backgroundColor isEqualToString:@"transparent"]) {
+                newWizView.backgroundColor = [UIColor clearColor];
+            } else {
+                newWizView.backgroundColor = [self colorWithHexString:backgroundColor];
+            }
+        }
         
     } else {
         
@@ -625,7 +542,7 @@ static NSMutableDictionary *isAnimating = nil;
         CGRect screenRect = [[UIScreen mainScreen] bounds];
         
         // create new wizView
-        UIWebView *newWizView = [_WizWebView createNewInstanceView:self newBounds:screenRect sourceToLoad:@""];
+        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:screenRect sourceToLoad:@""];
         
         // add view name to our wizard view list
         [wizViewList setObject:newWizView forKey:viewName];
@@ -645,10 +562,7 @@ static NSMutableDictionary *isAnimating = nil;
 
     NSLog(@"[WizViewManagerPlugin] ******* current views... %@", wizViewList);
 
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
-     
+    // callbacks handled after content is loaded into wizWebView
     
 }
 
@@ -657,36 +571,52 @@ static NSMutableDictionary *isAnimating = nil;
         
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
+    NSLog(@"START hideView with callback :  %@", callbackId);
     NSString* viewName = [arguments objectAtIndex:1];
     
+    CDVPluginResult* pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     
     if ([wizViewList objectForKey:viewName]) {
         UIWebView* targetWebView = [wizViewList objectForKey:viewName]; 
         
-        if (!targetWebView.isHidden) {
-            
-            if (isAnimating) {
-                if ([isAnimating objectForKey:viewName]) {
-                    // view is animating - error!
-                    
-                    // we are already animating something so give error...
-                    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-                    NSString* returnString = [NSString stringWithFormat:@"ERROR: View: %@ is Animating. Please wait for callback!", viewName];
-                    NSLog(@"[WizViewManager] ******* %@", returnString);
-                    [self writeJavascript: [pluginResult toErrorCallbackString:returnString]];
+        NSLog(@"[WizViewManager] ******* hideView animating Views : %@ is hidden? %i", isAnimating, !targetWebView.isHidden);
+
+        
+        if (!targetWebView.isHidden || [isAnimating objectForKey:viewName]) {
+                       
+            if ([isAnimating objectForKey:viewName]) {
+                // view is animating - stop current animation can release previous callback
+                //[isAnimating removeObjectForKey:viewName];
+
+                NSLog(@"[WizViewManager] ******* hideView hideViewCallbackId %@", self.hideViewCallbackId);
+                NSLog(@"[WizViewManager] ******* hideView showViewCallbackId %@", self.showViewCallbackId);
+                if (self.hideViewCallbackId.length > 0) {
+                    NSLog(@"[WizViewManager] ******* hideView, callback to hide - %@", self.hideViewCallbackId);
+                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.hideViewCallbackId]];
+                    self.hideViewCallbackId = nil;
+                    // we are hiding when hiding, exit.
+                    NSLog(@"returning - already hiding animation");
                     return;
-                    
+                }
+                if (self.showViewCallbackId.length > 0) {
+                    NSLog(@"[WizViewManager] ******* showView, callback to show - %@", self.showViewCallbackId);
+                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.showViewCallbackId]];
+                    self.showViewCallbackId = nil;
                 }
                 
             }
             
+            // about to animate (even if we are not) so add to animate store
+            // [isAnimating setObject:targetWebView forKey:viewName];
+            
+            self.hideViewCallbackId = callbackId;
+
             if (options) 
             {
                 NSDictionary* animationDict = [options objectForKey:@"animation"];
                 
                 if ( animationDict ) {
                     
-                    NSLog(@"[WizViewManager] ******* hideView with options : %@ ", options);
                     NSString* type               = [animationDict objectForKey:@"type"];
                     int animateTimeinMilliSecs   = [[animationDict objectForKey:@"duration"] intValue];
                     CGFloat animateTime          = (CGFloat)animateTimeinMilliSecs / 1000;
@@ -698,64 +628,67 @@ static NSMutableDictionary *isAnimating = nil;
                     if (!type) {
                         
                         // default
-                        [self hideWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut viewName:viewName];
+                        [self hideWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut|UIViewAnimationOptionBeginFromCurrentState viewName:viewName];
                         
                     } else if ([type isEqualToString:@"zoomOut"]) {
                         
-                        [self hideWithZoomOutAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut viewName:viewName];
+                        [self hideWithZoomOutAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut|UIViewAnimationOptionBeginFromCurrentState viewName:viewName];
                         
                     } else if ([type isEqualToString:@"fadeOut"]) {
                         
-                        [self hideWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut viewName:viewName];
+                        [self hideWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut|UIViewAnimationOptionBeginFromCurrentState viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideOutToLeft"]) {
                         
-                        [self hideWithSlideOutToLeftAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut viewName:viewName];
+                        [self hideWithSlideOutToLeftAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut|UIViewAnimationOptionBeginFromCurrentState viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideOutToRight"]) {
                         
-                        [self hideWithSlideOutToRightAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut viewName:viewName];
+                        [self hideWithSlideOutToRightAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut|UIViewAnimationOptionBeginFromCurrentState viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideOutToTop"]) {
                         
-                        [self hideWithSlideOutToTopAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut viewName:viewName];
+                        [self hideWithSlideOutToTopAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut|UIViewAnimationOptionBeginFromCurrentState viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideOutToBottom"]) {
                         
-                        [self hideWithSlideOutToBottomAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut viewName:viewName];
+                        [self hideWithSlideOutToBottomAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseOut|UIViewAnimationOptionBeginFromCurrentState viewName:viewName];
                         
                     } else {
                         // not found do "none"
                         [self hideWithNoAnimation:targetWebView];
+                        // no animate so remove from animate store
+                        [isAnimating removeObjectForKey:viewName];
                     }
                     
                 } else {
                     // not found do "none"
                     [self hideWithNoAnimation:targetWebView];
+                    // no animate so remove from animate store
+                    [isAnimating removeObjectForKey:viewName];
                 }
                 
             } else {
                 // not found do "none"
                 [self hideWithNoAnimation:targetWebView];
+                // no animate so remove from animate store
+                [isAnimating removeObjectForKey:viewName];
             }
             
         } else {
             // target already hidden do nothing
-            NSLog(@"[WizViewManager] ******* target already hidden! "); 
+            NSLog(@"[WizViewManager] ******* target already hidden! ");
+            [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
         }
 
+        // Other callbacks come from after view is added to animation object
         
         
-        NSLog(@"[WizViewManager] ******* hideView name : %@ targetWebView view : %@", viewName, targetWebView); 
-        
-        // We call straight back because we assume that as we hide the view behind does not want to wait
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
 
     } else {
         
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
+        [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
         
     }
 }
@@ -765,39 +698,52 @@ static NSMutableDictionary *isAnimating = nil;
         
     // assign arguments
     NSString* callbackId = [arguments objectAtIndex:0];
+    NSLog(@"START showView with callback :  %@", callbackId);
     NSString* viewName = [arguments objectAtIndex:1];
     
+    CDVPluginResult* pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    CDVPluginResult* pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+
 
     
     if ([wizViewList objectForKey:viewName]) {
         UIWebView* targetWebView = [wizViewList objectForKey:viewName]; 
         
         
-        NSLog(@"[WizViewManager] ******* showView: %@ targetWebView Info: %@", viewName, targetWebView); 
+        NSLog(@"[WizViewManager] ******* showView animating object : %@ is hidden? %i", isAnimating, targetWebView.isHidden); 
         
 
         
-        if (targetWebView.isHidden) {
+        if (targetWebView.isHidden || [isAnimating objectForKey:viewName]) {
             
-            if (isAnimating) {
-                if ([isAnimating objectForKey:viewName]) {
-                    // view is animating - error!
-                    
-                    // we are already animating something so give error...
-                    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-                    NSString* returnString = [NSString stringWithFormat:@"ERROR: View: %@ is Animating. Please wait for callback!", viewName];
-                    NSLog(@"[WizViewManager] ******* %@", returnString);
-                    [self writeJavascript: [pluginResult toErrorCallbackString:returnString]];
+            if ([isAnimating objectForKey:viewName]) {
+                // view is animating - stop current animation can release previous callback
+                
+                //[isAnimating removeObjectForKey:viewName];
+
+                
+                NSLog(@"[WizViewManager] ******* showView hideViewCallbackId %@", self.hideViewCallbackId);
+                NSLog(@"[WizViewManager] ******* showView showViewCallbackId %@", self.showViewCallbackId);
+                if (self.hideViewCallbackId.length > 0) {
+                    NSLog(@"[WizViewManager] ******* showView, callback to hide - %@", self.hideViewCallbackId);
+                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.hideViewCallbackId]];
+                    self.hideViewCallbackId = nil;
+                }
+                if (self.showViewCallbackId.length > 0) {
+                    NSLog(@"[WizViewManager] ******* showView, callback to show - %@", self.showViewCallbackId);
+                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.showViewCallbackId]];
+                    self.showViewCallbackId = nil;
+                    // we are showing when showing, exit.
+                    NSLog(@"returning - already showing animation");
                     return;
-                    
                 }
                 
             }
+                
             
-            showViewCallbackId = callbackId;
+            self.showViewCallbackId = callbackId;
             
-            // about to animate so add to animate store
-            [isAnimating setObject:targetWebView forKey:viewName];
+
             
            
             if (options) 
@@ -820,37 +766,39 @@ static NSMutableDictionary *isAnimating = nil;
                     if (!type) {
                         
                         // default
-                        [self showWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"zoomIn"]) {
                         
-                        [self showWithZoomInAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithZoomInAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"fadeIn"]) {
                         
-                        [self showWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideInFromLeft"]) {
                         
-                        [self showWithSlideInFromLeftAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithSlideInFromLeftAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideInFromRight"]) {
                         
-                        [self showWithSlideInFromRightAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithSlideInFromRightAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideInFromTop"]) {
                         
-                        [self showWithSlideInFromTopAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithSlideInFromTopAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideInFromBottom"]) {
                         
-                        [self showWithSlideInFromBottomAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithSlideInFromBottomAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
                         
                     } else {
                         // not found do "none"
                         [self showWithNoAnimation:targetWebView];
                         // no animate so remove from animate store
                         [isAnimating removeObjectForKey:viewName];
+                        [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+                        self.showViewCallbackId = nil;
                     }
                     
                 } else {
@@ -858,6 +806,8 @@ static NSMutableDictionary *isAnimating = nil;
                     [self showWithNoAnimation:targetWebView];
                     // no animate so remove from animate store
                     [isAnimating removeObjectForKey:viewName];
+                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+                    self.showViewCallbackId = nil;
                 }
 
                 
@@ -866,92 +816,78 @@ static NSMutableDictionary *isAnimating = nil;
                 [self showWithNoAnimation:targetWebView];
                 // no animate so remove from animate store
                 [isAnimating removeObjectForKey:viewName];
+                [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+                self.showViewCallbackId = nil;
             }
                 
         } else {
             // target already showing
             NSLog(@"[WizViewManager] ******* target already shown! "); 
-            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+            [self writeJavascript: [pluginResultERROR toErrorCallbackString:callbackId]];
+            self.showViewCallbackId = nil;
+            
         }
 
         
     } else {
                 
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
+        [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
     }
 }
-
-
-
-
-
-
-
 
 
 
 /**
  
- PING PONG METHODS - test if the views are still alive
+ COLOUR CALCULATOR
+ 
  
  **/
-- (void) ping
-{
-    // did we success last ping?
-    
-    if (pingSuccess) {
-        // new ping
-        
-        
-               
-        // reset counters
-        pingCount = 0;
-        pongCount = 0;
-        
-        for (NSString* key in wizViewList) {
-            
-            UIWebView* targetWebView = [wizViewList objectForKey:key];
-            if (![targetWebView isLoading]) {
-                
-                pingCount++;
-                WizLog(@"[PING] ----------------------------------- START PING! ");
-                [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver('%@');", @"ping"]];
-            
-            }
-        }
-        
-    } else {
-        // a view is not responding handle error
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
-        WizLog(@"BLOODY GREAT BIG ERROR");
+
+- (UIColor *) colorWithHexString: (NSString *) hexString {
+    NSString *colorString = [[hexString stringByReplacingOccurrencesOfString: @"#" withString: @""] uppercaseString];
+    CGFloat alpha, red, blue, green;
+    switch ([colorString length]) {
+        case 3: // #RGB
+            alpha = 1.0f;
+            red   = [self colorComponentFrom: colorString start: 0 length: 1];
+            green = [self colorComponentFrom: colorString start: 1 length: 1];
+            blue  = [self colorComponentFrom: colorString start: 2 length: 1];
+            break;
+        case 4: // #ARGB
+            alpha = [self colorComponentFrom: colorString start: 0 length: 1];
+            red   = [self colorComponentFrom: colorString start: 1 length: 1];
+            green = [self colorComponentFrom: colorString start: 2 length: 1];
+            blue  = [self colorComponentFrom: colorString start: 3 length: 1];          
+            break;
+        case 6: // #RRGGBB
+            alpha = 1.0f;
+            red   = [self colorComponentFrom: colorString start: 0 length: 2];
+            green = [self colorComponentFrom: colorString start: 2 length: 2];
+            blue  = [self colorComponentFrom: colorString start: 4 length: 2];                      
+            break;
+        case 8: // #AARRGGBB
+            alpha = [self colorComponentFrom: colorString start: 0 length: 2];
+            red   = [self colorComponentFrom: colorString start: 2 length: 2];
+            green = [self colorComponentFrom: colorString start: 4 length: 2];
+            blue  = [self colorComponentFrom: colorString start: 6 length: 2];                      
+            break;
+        default:
+            [NSException raise:@"Invalid color value" format: @"Color value %@ is invalid.  It should be a hex value of the form #RGB, #ARGB, #RRGGBB, or #AARRGGBB", hexString];
+            break;
     }
-    
-    
+    return [UIColor colorWithRed: red green: green blue: blue alpha: alpha];
 }
 
-+ (void) pong
+- (CGFloat) colorComponentFrom: (NSString *) string start: (NSUInteger) start length: (NSUInteger) length 
 {
-    
-    pongCount++;
-    WizLog(@"[PONG] ----------------------------------- PONG!");
-    if (pingCount == pongCount) {
-        pingSuccess = TRUE;
-        WizLog(@"pongCount: %i pingCount: %i",pongCount,pingCount);
-    } else {
-        pingSuccess = FALSE;
-    }
-    
+    NSString *substring = [string substringWithRange: NSMakeRange(start, length)];
+    NSString *fullHex = length == 2 ? substring : [NSString stringWithFormat: @"%@%@", substring, substring];
+    unsigned hexComponent;
+    [[NSScanner scannerWithString: fullHex] scanHexInt: &hexComponent];
+    return hexComponent / 255.0;
 }
-
-
 
 
 
@@ -965,20 +901,21 @@ static NSMutableDictionary *isAnimating = nil;
 
 
 - (void) showViewCallbackMethod:(NSString* )callbackId viewName:(NSString* )viewName {
-    // NSLog(@"[WizViewManager] ******* showViewCallbackId options : %@", callbackId);
-    // NSLog(@"[WizViewManagerPlugin] ******* current views... %@", wizViewList);
     
-    // finished animation remove from animate store
-    [isAnimating removeObjectForKey:viewName];
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
+    if (self.showViewCallbackId.length > 0) {
+        // we are still animating without iteruption so continue callback
+        NSString* callback = self.showViewCallbackId;
+        self.showViewCallbackId = nil;
+        NSLog(@"[SHOW] callback to %@", callback);
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self writeJavascript: [pluginResult toSuccessCallbackString:callback]];
+    }
+
 }
 
 
 
-- (void) showWithNoAnimation:(UIView *)view
-{
+- (void) showWithNoAnimation:(UIView *)view {
     // move view into display       
     [view setFrame:CGRectMake(
                               view.frame.origin.x - viewPadder,
@@ -989,15 +926,9 @@ static NSMutableDictionary *isAnimating = nil;
     [view setHidden:FALSE];
     view.alpha = 1.0;
     
-
-    
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self writeJavascript: [pluginResult toSuccessCallbackString:showViewCallbackId]];
-    
 }
 
-- (void) hideWithNoAnimation:(UIView *)view
-{
+- (void) hideWithNoAnimation:(UIView *)view {
     view.alpha = 0.0;
     // move view out of display
     [view setFrame:CGRectMake(
@@ -1006,12 +937,12 @@ static NSMutableDictionary *isAnimating = nil;
                               view.frame.size.width,
                               view.frame.size.height
                               )];
+    self.hideViewCallbackId = nil;
     
 }
 
 
-- (void) showWithSlideInFromTopAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithSlideInFromTopAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName {
     
     CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
     
@@ -1030,15 +961,13 @@ static NSMutableDictionary *isAnimating = nil;
                          view.transform = CGAffineTransformTranslate(view.transform, view.frame.origin.x, screenHeight);
                      }
                      completion:^(BOOL finished) {
-                         if (callbackId != nil) {
+                         if (finished) {
                              [self showViewCallbackMethod:callbackId viewName:viewName];
                          }
-                         
                      }];
 }
 
-- (void) hideWithSlideOutToTopAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithSlideOutToTopAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
     CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
     
@@ -1047,24 +976,25 @@ static NSMutableDictionary *isAnimating = nil;
                          view.transform = CGAffineTransformTranslate(view.transform, view.frame.origin.x, -screenHeight);
                      }
                      completion:^(BOOL finished) { 
-                         
-                         [view setHidden:TRUE];
-                         
-                         // move view out of display
-                         [view setFrame:CGRectMake(
-                                                   view.frame.origin.x + viewPadder,
-                                                   (view.frame.origin.y + screenHeight),
-                                                   view.frame.size.width,
-                                                   view.frame.size.height
-                                                   )];
-                         
-                         // no animate so remove from animate store
-                         [isAnimating removeObjectForKey:viewName];
+                         if (finished) {
+                             [view setHidden:TRUE];
+                             
+                             // move view out of display
+                             [view setFrame:CGRectMake(
+                                                       view.frame.origin.x + viewPadder,
+                                                       (view.frame.origin.y + screenHeight),
+                                                       view.frame.size.width,
+                                                       view.frame.size.height
+                                                       )];
+                             
+                             // no animate so remove from animate store
+                             [isAnimating removeObjectForKey:viewName];
+                             self.hideViewCallbackId = nil;
+                         }
                      }];
 }
 
-- (void) showWithSlideInFromBottomAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithSlideInFromBottomAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName {
     
     CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
     
@@ -1083,15 +1013,13 @@ static NSMutableDictionary *isAnimating = nil;
                          view.transform = CGAffineTransformTranslate(view.transform, view.frame.origin.x, -screenHeight);
                      }
                      completion:^(BOOL finished) {
-                         if (callbackId != nil) {
+                         if (finished) {
                              [self showViewCallbackMethod:callbackId viewName:viewName];
                          }
-                         
                      }];
 }
 
-- (void) hideWithSlideOutToBottomAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithSlideOutToBottomAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
     CGFloat screenHeight = [[UIScreen mainScreen] bounds].size.height;
     
@@ -1100,24 +1028,25 @@ static NSMutableDictionary *isAnimating = nil;
                          view.transform = CGAffineTransformTranslate(view.transform, view.frame.origin.x, screenHeight);
                      }
                      completion:^(BOOL finished) { 
-                         
-                         [view setHidden:TRUE];
-                         
-                         // move view out of display
-                         [view setFrame:CGRectMake(
-                                                   view.frame.origin.x + viewPadder,
-                                                   (view.frame.origin.y - screenHeight),
-                                                   view.frame.size.width,
-                                                   view.frame.size.height
-                                                   )];
-                         
-                         // no animate so remove from animate store
-                         [isAnimating removeObjectForKey:viewName];
+                         if (finished) {
+                             [view setHidden:TRUE];
+                             
+                             // move view out of display
+                             [view setFrame:CGRectMake(
+                                                       view.frame.origin.x + viewPadder,
+                                                       (view.frame.origin.y - screenHeight),
+                                                       view.frame.size.width,
+                                                       view.frame.size.height
+                                                       )];
+                             
+                             // no animate so remove from animate store
+                             [isAnimating removeObjectForKey:viewName];
+                             self.hideViewCallbackId = nil;
+                         }
                      }];
 }
 
-- (void) showWithSlideInFromRightAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithSlideInFromRightAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName {
     
     CGFloat screenWidth = [[UIScreen mainScreen] bounds].size.width;
     
@@ -1136,15 +1065,13 @@ static NSMutableDictionary *isAnimating = nil;
                          view.transform = CGAffineTransformTranslate(view.transform, -screenWidth, view.frame.origin.y);
                      }
                      completion:^(BOOL finished) {
-                         if (callbackId != nil) {
+                         if (finished) {
                              [self showViewCallbackMethod:callbackId viewName:viewName];
                          }
-                         
                      }];
 }
 
-- (void) hideWithSlideOutToRightAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithSlideOutToRightAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
     CGFloat screenWidth = [[UIScreen mainScreen] bounds].size.width;
     
@@ -1153,25 +1080,26 @@ static NSMutableDictionary *isAnimating = nil;
                          view.transform = CGAffineTransformTranslate(view.transform, screenWidth, view.frame.origin.y);
                      }
                      completion:^(BOOL finished) { 
-                         
-                         [view setHidden:TRUE];
-                         
-                         // move view out of display
-                         [view setFrame:CGRectMake(
-                                                   (view.frame.origin.x - screenWidth) + viewPadder,
-                                                   view.frame.origin.y,
-                                                   view.frame.size.width,
-                                                   view.frame.size.height
-                                                   )];
-                         
-                         // no animate so remove from animate store
-                         [isAnimating removeObjectForKey:viewName];
+                         if (finished) {
+                             [view setHidden:TRUE];
+                             
+                             // move view out of display
+                             [view setFrame:CGRectMake(
+                                                       (view.frame.origin.x - screenWidth) + viewPadder,
+                                                       view.frame.origin.y,
+                                                       view.frame.size.width,
+                                                       view.frame.size.height
+                                                       )];
+                             
+                             // no animate so remove from animate store
+                             [isAnimating removeObjectForKey:viewName];
+                             self.hideViewCallbackId = nil;
+                         }
                      }];
 }
 
 
-- (void) showWithSlideInFromLeftAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithSlideInFromLeftAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString *)callbackId viewName:(NSString *)viewName {
 
     CGFloat screenWidth = [[UIScreen mainScreen] bounds].size.width;
     
@@ -1192,16 +1120,14 @@ static NSMutableDictionary *isAnimating = nil;
                          view.transform = CGAffineTransformTranslate(view.transform, screenWidth, view.frame.origin.y);
                      }
                      completion:^(BOOL finished) {
-                         if (callbackId != nil) {
+                         if (finished) {
                              [self showViewCallbackMethod:callbackId viewName:viewName];
                          }
-                         
                      }];
      
 }
 
-- (void) hideWithSlideOutToLeftAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithSlideOutToLeftAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
     CGFloat screenWidth = [[UIScreen mainScreen] bounds].size.width;
     
@@ -1210,25 +1136,26 @@ static NSMutableDictionary *isAnimating = nil;
                          view.transform = CGAffineTransformTranslate(view.transform, -screenWidth, view.frame.origin.y);
                      }
                      completion:^(BOOL finished) { 
-
-                         [view setHidden:TRUE];
-                         
-                         // move view out of display
-                         [view setFrame:CGRectMake(
-                                                   (view.frame.origin.x + screenWidth) + viewPadder,
-                                                   view.frame.origin.y,
-                                                   view.frame.size.width,
-                                                   view.frame.size.height
-                                                   )];
-                         
-                         // no animate so remove from animate store
-                         [isAnimating removeObjectForKey:viewName];
+                         if (finished) {
+                             [view setHidden:TRUE];
+                             
+                             // move view out of display
+                             [view setFrame:CGRectMake(
+                                                       (view.frame.origin.x + screenWidth) + viewPadder,
+                                                       view.frame.origin.y,
+                                                       view.frame.size.width,
+                                                       view.frame.size.height
+                                                       )];
+                             
+                             // no animate so remove from animate store
+                             [isAnimating removeObjectForKey:viewName];
+                             self.hideViewCallbackId = nil;
+                         }
                      }];
                 
 }
 
-- (void) showWithZoomInAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString*)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithZoomInAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString*)callbackId viewName:(NSString *)viewName {
 
     // first reduce the view to 1/100th of its original dimension
     CGAffineTransform trans = CGAffineTransformScale(view.transform, 0.01, 0.01);
@@ -1248,10 +1175,9 @@ static NSMutableDictionary *isAnimating = nil;
                          view.transform = CGAffineTransformScale(view.transform, 100.0, 100.0);
                      }
                      completion:^(BOOL finished) {
-                         if (callbackId != nil) {
+                         if (finished) {
                              [self showViewCallbackMethod:callbackId viewName:viewName];
                          }
-                         
                      }];	
 }
 
@@ -1259,81 +1185,210 @@ static NSMutableDictionary *isAnimating = nil;
 
 
 
-- (void) hideWithZoomOutAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithZoomOutAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     
 	[UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
                          view.transform = CGAffineTransformScale(view.transform, 0.01, 0.01);
                      }
                      completion:^(BOOL finished) { 
-                         // [self removeFromSuperview]; 
-                         [view setHidden:TRUE];
-                         // move view out of display
-                         [view setFrame:CGRectMake(
-                                    view.frame.origin.x + viewPadder,
-                                    view.frame.origin.y,
-                                    view.frame.size.width,
-                                    view.frame.size.height
-                                    )];
-                         
-                         // no animate so remove from animate store
-                         [isAnimating removeObjectForKey:viewName];
+                         if (finished) {
+                             // [self removeFromSuperview]; 
+                             [view setHidden:TRUE];
+                             // move view out of display
+                             [view setFrame:CGRectMake(
+                                        view.frame.origin.x + viewPadder,
+                                        view.frame.origin.y,
+                                        view.frame.size.width,
+                                        view.frame.size.height
+                                        )];
+                             
+                             // no animate so remove from animate store
+                             [isAnimating removeObjectForKey:viewName];
+                             self.hideViewCallbackId = nil;
+                         }
                      }];
 }
 
 
-- (void) showWithFadeAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString*)callbackId viewName:(NSString *)viewName
-{
+- (void) showWithFadeAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option showViewCallbackId:(NSString*)callbackId viewName:(NSString *)viewName {
+    
+    WizLog(@"SHOW FADE view is %@, %@", view, viewName);
 
-	view.alpha = 0.0;	// make the view transparent
-	// move view into display       
-    [view setFrame:CGRectMake(
-                              view.frame.origin.x - viewPadder,
-                              view.frame.origin.y,
-                              view.frame.size.width,
-                              view.frame.size.height
-                              )];
+    // check frame x co ordinate is the same (in case of mid animation), if different we need to reset frame
+
+    if (![isAnimating objectForKey:viewName]) {
+        WizLog(@"move view ");
+        view.alpha = 0.0;
+        // move view into display       
+        [view setFrame:CGRectMake(
+                                  view.frame.origin.x - viewPadder,
+                                  view.frame.origin.y,
+                                  view.frame.size.width,
+                                  view.frame.size.height
+                                  )];
+    }
+    
+    // about to animate so add to animate store
+    [isAnimating setObject:view forKey:viewName];
+
     [view setHidden:FALSE];
-    //[self addSubview:view];	// add it
+    WizLog(@"START show animate");
 	[UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
                          view.alpha = 1.0;
                      }
                      completion:^(BOOL finished) {
-                         if (callbackId != nil) {
-                             [self showViewCallbackMethod:callbackId viewName:viewName];
-                         }
+                        if (finished) {
+                            WizLog(@"FINISHED show animate %i", finished);
+                            // finished animation remove from animate store
+                            [isAnimating removeObjectForKey:viewName];
+                            [self showViewCallbackMethod:callbackId viewName:viewName];
+                        }
+                         
                      }];
+    
     
 
 }
 // [self performSelector:@selector(_userLoggedIn) withObject:nil afterDelay:0.010f];
 
-- (void) hideWithFadeAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName
-{
+- (void) hideWithFadeAnimation:(UIView*)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
+    WizLog(@"HIDE FADE view is %@, %@", view, viewName);
+    // about to animate so add to animate store
     
-	view.alpha = 1.0;	// make the view transparent
+    if (![isAnimating objectForKey:viewName]) {
+        view.alpha = 1.0;	// make the view transparent
+    }
+    
+    [isAnimating setObject:view forKey:viewName];
+    
+    CDVPluginResult* pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.hideViewCallbackId]];
+    
     //[self addSubview:view];	// add it
 	[UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{view.alpha = 0.0;}
                      completion:^(BOOL finished) { 
-                         // [self removeFromSuperview]; 
-                         [view setHidden:TRUE];
-                         // move view out of display
-                         [view setFrame:CGRectMake(
-                                                   view.frame.origin.x + viewPadder,
-                                                   view.frame.origin.y,
-                                                   view.frame.size.width,
-                                                   view.frame.size.height
-                                                   )];
-                         // no animate so remove from animate store
-                         [isAnimating removeObjectForKey:viewName];
+                         if (finished) {
+                             WizLog(@"finished HIDE animate %i", finished);
+
+                             [view setHidden:TRUE];
+                             // move view out of display
+                             [view setFrame:CGRectMake(
+                                                       view.frame.origin.x + viewPadder,
+                                                       view.frame.origin.y,
+                                                       view.frame.size.width,
+                                                       view.frame.size.height
+                                                       )];
+                             // no animate so remove from animate store
+                             [isAnimating removeObjectForKey:viewName];
+                             self.hideViewCallbackId = nil;
+                         }
                          
                      }];	// animate the return to visible 
 }
 
 
 
+
+
+
+
+/*
+ * Extend CordovaView URL request handler
+ *
+ */
+- (void) webViewDidStartLoad:(UIWebView*)theWebView {
+    return [self.webviewDelegate webViewDidStartLoad:theWebView];
+}
+
+- (void) webViewDidFinishLoad:(UIWebView*)theWebView {
+    return [self.webviewDelegate webViewDidFinishLoad:theWebView];
+}
+
+- (void) webView:(UIWebView*)theWebView didFailLoadWithError:(NSError*)error {
+    return [self.webviewDelegate webView:theWebView didFailLoadWithError:error];
+}
+
+-(BOOL) webView:(UIWebView*)theWebView shouldStartLoadWithRequest:(NSURLRequest*)request navigationType:(UIWebViewNavigationType)navigationType {
+    
+
+    BOOL superValue = [ self.webviewDelegate webView:theWebView shouldStartLoadWithRequest:request navigationType:navigationType ];
+
+    // If get this request reboot...
+    NSString *requestString = [[request URL] absoluteString];
+    NSArray* prefixer = [requestString componentsSeparatedByString:@":"];
+        
+    // do insensitive compare to support SDK >5
+    if ([(NSString*)[prefixer objectAtIndex:0] caseInsensitiveCompare:@"rebootapp"] == 0) {
+        
+        // perform restart a second later
+        [self performSelector:@selector(timedRestart) withObject:theWebView afterDelay:1.0f];
+        
+        return NO;
+		
+	} else if ([(NSString*)[prefixer objectAtIndex:0] caseInsensitiveCompare:@"wizMessageView"] == 0) {
+        
+        NSArray *components = [requestString componentsSeparatedByString:@"://"];
+        NSString *messageData = [[NSString alloc] initWithString:(NSString*)[components objectAtIndex:1]];
+        
+        NSRange range = [messageData rangeOfString:@"?"];
+        
+        NSString *targetView = [messageData substringToIndex:range.location];
+        
+        NSLog(@"[WizWebView] ******* targetView is:  %@", targetView );
+        
+        int targetLength = targetView.length;
+        
+        NSString *postData = [messageData substringFromIndex:targetLength+1];
+        
+        // NSLog(@"[AppDelegate wizMessageView()] ******* postData is:  %@", postData );
+        
+        NSMutableDictionary * viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
+        
+        if ([viewList objectForKey:targetView]) {
+            UIWebView* targetWebView = [viewList objectForKey:targetView]; 
+            NSString *postDataEscaped = [postData stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+            [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
+            
+            // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);
+        }
+        
+        [messageData release];
+        messageData = nil;
+        [viewList release];
+        
+        
+        return NO;
+        
+ 	} else {
+        // let Cordova handle everything else
+        return superValue;
+    }
+
+}
+
+
+-(void) timedRestart:(UIWebView*)theWebView {
+    // gives time for our JS method to execute splash
+    
+    
+    // remove all views
+    NSArray *allKeys = [NSArray arrayWithArray:[wizViewList allKeys]];
+    
+    for (int i = 0; i<[allKeys count]; i++) {
+        
+        if (![[allKeys objectAtIndex:i] isEqualToString:@"mainView"]) {
+            [self removeView:[NSArray arrayWithObjects:@"", [allKeys objectAtIndex:i], nil] withDict:NULL];
+        }
+        
+    }
+    
+    // resize mainView to normal
+    [self setLayout:[NSArray arrayWithObjects:@"", @"mainView", nil] withDict:NULL];
+    
+    [theWebView reload];
+}
 
 @end

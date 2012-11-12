@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<!--
+#
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing,
+# software distributed under the License is distributed on an
+# "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+#  KIND, either express or implied.  See the License for the
+# specific language governing permissions and limitations
+# under the License.
+#
+-->
+  <head>
+  <title></title>
+  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no;" />
+	<meta charset="utf-8">
+
+
+	<!-- iPad/iPhone specific css below, add after your main css >
+	<link rel="stylesheet" media="only screen and (max-device-width: 1024px)" href="ipad.css" type="text/css" />		
+	<link rel="stylesheet" media="only screen and (max-device-width: 480px)" href="iphone.css" type="text/css" />		
+	-->
+	<!-- If your application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here -->
+	<script type="text/javascript" charset="utf-8" src="cordova-1.9.0.js"></script>
+    <script type="text/javascript" charset="utf-8" src="phonegap/plugin/wizViewManager/wizViewManager.js"></script>
+    <script type="text/javascript" charset="utf-8" src="phonegap/plugin/wizViewManager/wizViewMessenger.js"></script>
+    <script type="text/javascript">
+
+
+	// If you want to prevent dragging, uncomment this section
+	/*
+	function preventBehavior(e) 
+	{ 
+      e.preventDefault(); 
+    };
+	document.addEventListener("touchmove", preventBehavior, false);
+	*/
+	
+	/* If you are supporting your own protocol, the var invokeString will contain any arguments to the app launch.
+	see http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
+	for more details -jm */
+	/*
+	function handleOpenURL(url)
+	{
+		// TODO: do something with the url passed in.
+	}
+	*/
+	
+	function onBodyLoad()
+	{		
+		document.addEventListener("deviceready", onDeviceReady, false);
+	}
+	
+	/* When this function is called, Cordova has been initialized and is ready to roll */
+	/* If you are supporting your own protocol, the var invokeString will contain any arguments to the app launch.
+	see http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
+	for more details -jm */
+	function onDeviceReady()
+	{
+        if (!window.wizViewManager) {
+            alert("Could not find wizViewManager");
+        }
+
+        if (!window.wizViewMessenger) {
+            alert("Could not find wizViewMessenger");
+        }
+	}
+        
+        // TODO: Change this path to match the location where the www/newview.html file lives.
+        // On the simulator this is a location on your machine.
+        // On the device, this is a location in your app bundle.
+        var customViewInstallPath = "/Users/cwynn/Library/Application Support/iPhone Simulator/6.0/Applications/1A45E0BF-86F6-47B6-8FAB-6B0A26560AFB/exampleWizViewManager.app/www/customview.html";
+    
+        function onCreateSuccess( data ) {
+            document.getElementById("create_button").disabled = true;
+            document.getElementById("remove_button").disabled = false;
+            document.getElementById("show_button").disabled = false;
+            document.getElementById("show_mode").disabled = false;
+            document.getElementById("uri_mode").disabled = false;
+            document.getElementById("layout_mode").disabled = false;
+        }
+        
+        function onRemoveSuccess( data ) {
+            document.getElementById("create_button").disabled = false;
+            document.getElementById("remove_button").disabled = true;
+            document.getElementById("show_button").disabled = true;
+            document.getElementById("show_mode").disabled = true;
+            document.getElementById("hide_button").disabled = true;
+            document.getElementById("hide_mode").disabled = true;
+            document.getElementById("uri_mode").disabled = true;
+            document.getElementById("layout_mode").disabled = true;
+        }
+        
+        function createView()
+        {
+            var e = document.getElementById("uri_mode");
+            var uri = e.options[e.selectedIndex].value;
+            wizViewManager.create("newView", { "src" : uri, "height" : 120, "width" : 320, "y" : 340 }, onCreateSuccess, onFail);
+        }
+        
+        function removeView()
+        {
+            wizViewManager.remove("newView", onRemoveSuccess, onFail);
+        }
+        
+        function onShowSuccess( data ) {
+            document.getElementById("show_button").disabled = true;
+            document.getElementById("show_mode").disabled = true;
+            document.getElementById("hide_button").disabled = false;
+            document.getElementById("hide_mode").disabled = false;
+        }
+        
+        function onHideSuccess( data ) {
+            document.getElementById("show_button").disabled = false;
+            document.getElementById("show_mode").disabled = false;
+            document.getElementById("hide_button").disabled = true;
+            document.getElementById("hide_mode").disabled = true;
+        }
+        
+        function showView() {
+            var e = document.getElementById("show_mode");
+            var type = e.options[e.selectedIndex].value;
+            var animation = {
+                "type" : type,
+                "duration" : 2000
+            };
+            wizViewManager.show("newView", { "animation" : animation }, onShowSuccess, null);
+        }
+        
+        function hideView() {
+            var e = document.getElementById("hide_mode");
+            var type = e.options[e.selectedIndex].value;
+            var animation = {
+                "type" : type,
+                "duration" : 2000
+            };
+            wizViewManager.hide("newView", { "animation" : animation }, onHideSuccess, null);
+        }
+        
+        function loadURI( sel ) {
+            var uri = sel.options[sel.selectedIndex].value;
+            if ( uri === "customViewInstallPath" ) {
+                uri = customViewInstallPath;
+                document.getElementById("message_mode").disabled = false;
+            } else {
+                document.getElementById("message_mode").disabled = true;
+            }
+            wizViewManager.load("newView", uri, null, onFail);
+        }
+        
+        function setLayout( sel ) {
+            var useOffset = sel.options[sel.selectedIndex].value;
+            var layout;
+            if (useOffset === "true" ) {
+                layout = { height : 120, width : 160, y : 0, x : 80 };
+            } else {
+                layout = { height : 120, width : 320, y : 340, x : 0.0 };
+            }
+            wizViewManager.setLayout("newView", layout, null, onFail);
+        }
+        
+        function sendMessage( sel )
+        {
+            var color = sel.options[sel.selectedIndex].value;
+            var targetView = "newView";
+            var params = { 'color' : color };
+            
+            wizViewMessenger.message(targetView, JSON.stringify(params));
+        }
+        
+        var onSuccess = function (data) {
+            alert("success " + data);
+            
+        }
+        
+        var onFail = function (e) {
+            alert("error = "+e);
+        }
+        
+        function wizMessageReceiver(data) {
+            hideView();
+        }
+        
+    	</script>
+    </head>
+    <body onload="onBodyLoad()">
+        <h1>wizViewManager plugin!</h1>
+        <p>Experiment by pressing the buttons to create/show/hide/remove a view, load content in the view, or layout the view.<br />
+        <div id="viewManager">
+            <input type="button" id="create_button" value="Create View" onclick="createView()" />
+            <input type="button" id="remove_button" value="Remove View" onclick="removeView()" disabled="true" />
+            </br>
+            <input type="button" id="show_button" value="Show View" onclick="showView()" disabled="true" />
+            <select id="show_mode" disabled="true">
+                <option value="fadeIn">Fade In</option>
+                <option value="zoomIn">Zoom In</option>
+                <option value="slideInFromTop">Slide In from Top</option>
+                <option value="slideInFromBottom">Slide In from Bottom</option>
+                <option value="slideInFromLeft">Slide In from Left</option>
+                <option value="slideInFromRight">Slide In from Right</option>
+            </select>
+            <input type="button" id="hide_button" value="Hide View" onclick="hideView()" disabled="true" />
+            <select id="hide_mode" disabled="true">
+                <option value="fadeOut">Fade Out</option>
+                <option value="zoomOut">Zoom Out</option>
+                <option value="slideOutToTop">Slide Out to Top</option>
+                <option value="slideOutToBottom">Slide Out to Bottom</option>
+                <option value="slideOutToLeft">Slide Out to Left</option>
+                <option value="slideOutToRight">Slide Out to Right</option>
+            </select>
+            </br>
+            Load URI
+            <select id="uri_mode" onchange="loadURI(this)" disabled="true">
+                <option value="http://www.wizcorp.jp/">Wizcorp</option>
+                <option value="customViewInstallPath"/>Custom View (can receive messages)</option>
+                <option value="http://www.apple.com/">Apple</option>
+                <option value="https://www.google.com/">Google</option>
+            </select>
+            </br>
+            Set Layout
+            <select id="layout_mode" onchange="setLayout(this)" disabled="true">
+                <option value="false">Normal</option>
+                <option value="true">Upper Center</option>
+            </select>
+            </br>
+            Send Message
+            <select id="message_mode" onchange="sendMessage(this)" disabled="true">
+                <option value="red">Red</option>
+                <option value="green"/>Green</option>
+                <option value="blue">Blue</option>
+            </select>
+        </div>
+    </body>
+</html>
