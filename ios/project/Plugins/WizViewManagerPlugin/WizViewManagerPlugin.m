@@ -479,34 +479,7 @@ static NSMutableDictionary *isAnimating = nil;
             src = @"";
         }
         
-        int _height                 = [[options objectForKey:@"height"] intValue];
-        if (!_height) {
-            // default
-            CGRect screenRect = [[UIScreen mainScreen] bounds];
-            _height = screenRect.size.height;
-        }
-        
-        int _width                  = [[options objectForKey:@"width"] intValue];
-        if (!_width) {
-            // default
-            CGRect screenRect = [[UIScreen mainScreen] bounds];
-            _width = screenRect.size.width;
-        }
-        
-        int _x                      = [[options objectForKey:@"x"] intValue];
-        if (!_x) {
-            // default
-            _x = 0;
-        }
-        
-        int _y                      = [[options objectForKey:@"y"] intValue];
-        if (!_y) {
-            // default
-            _y = 0;
-        }
-        
-        
-        CGRect newRect              = CGRectMake(_x, _y, _width, _height);
+        CGRect newRect = [self frameWithOptions:options];
         
         // create new wizView
         newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect sourceToLoad:src];

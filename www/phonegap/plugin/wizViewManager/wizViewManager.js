@@ -13,6 +13,14 @@
 var wizViewManager = {
 
     create: function(viewName, options, s, f) {
+
+        // stringify all vars
+        for (var i in options) {
+            if (options.hasOwnProperty(i)) {
+                options[i] = options[i].toString();
+            }
+        }
+
         return cordova.exec(s, f, "WizViewManagerPlugin", "createView", [viewName, options]);                      
     },
     
