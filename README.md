@@ -88,15 +88,21 @@ Creating a view<br />
 <pre><code>
 wizViewManager.create(String viewName, JSONObject options, Function success, Function fail);
 
+    * Height overrides top and bottom. Width overrides left and right.
+    * Top, bottom,left,right,width,height all take floats (0.25) or string "25%" as percents, int (25) as pixcels.
     * Example options object; 
 
 {
 
+    "src": "http://google.com" [URL/URI to load]
     "height": "300", [pixels - default : fills height] 
     "width": "300", [pixels - default : fills width] 
     "x": "0", [pixels - default : 0] 
     "y": "0", [pixels - default : 0] 
-    "src": "http://google.com" [URL/URI to load] 
+    "top": "0", [pixels or percent - default : 0]
+    "bottom": "0", [pixels or percent - default : 0]
+    "left": "0", [pixels or percent - default : 0]
+    "right": "0", [pixels or percent - default : 0]
 
 }; 
 </code></pre>
