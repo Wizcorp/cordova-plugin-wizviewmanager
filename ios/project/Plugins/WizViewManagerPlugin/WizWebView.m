@@ -21,13 +21,23 @@ static BOOL isActive = FALSE;
     viewManager = myViewManager;
     
     wizView = [[CDVCordovaView alloc] initWithFrame:webViewBounds];
-    [wizView scalesPageToFit];
     wizView.delegate = self;
     wizView.multipleTouchEnabled   = YES;
     wizView.autoresizesSubviews    = YES;
     wizView.hidden                 = NO;
     wizView.userInteractionEnabled = YES;
     wizView.opaque = NO;
+    
+    // Set scales to fit setting based on Cordova settings.
+    NSString *path = [[NSBundle mainBundle] pathForResource:@"Cordova" ofType:@"plist"];
+    NSMutableDictionary *cordovaConfig = [NSMutableDictionary dictionaryWithContentsOfFile:path];
+    NSNumber *scaleToFit = [cordovaConfig objectForKey:@"EnableViewportScale"];
+    if ( scaleToFit ) {
+        wizView.scalesPageToFit = [scaleToFit boolValue];
+    } else {
+        wizView.scalesPageToFit = NO;
+        NSLog(@"[WizWebView] ******* WARNING  - EnableViewportScale was not specified in Cordova.plist");
+    }
     
     NSLog(@"[WizWebView] ******* building new view SOURCE IS URL? - %i", [self validateUrl:src]);
 
