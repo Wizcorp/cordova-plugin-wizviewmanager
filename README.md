@@ -1,4 +1,3 @@
-
 # PLUGIN: 
 
 phonegap-plugin-wizViewManager<br />
@@ -78,7 +77,7 @@ Value : wizViewManager<br />
 (assuming your index.html is setup like tree above)
 
 
-4 ) Add the following to header AND library search paths in Xcode Build Settings
+4 ) Add the following to header AND library search paths in Xcode Build Settings<br />
 "$(SRCROOT)/modules/phonegap-plugin-wizViewManager/ios/project/Plugins/WizViewManagerPlugin"
 
 5 ) Follow example code below.
