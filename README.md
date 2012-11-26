@@ -1,21 +1,21 @@
 
 
-
 # PLUGIN: 
 
 phonegap-plugin-wizViewManager<br />
-version : 1.9<br />
-last update : 06/11/2012<br />
+version : 1.9 (Canvas beta)<br />
+last update : 26/11/2012<br />
 
 
 # CHANGELOG: 
 <br />
-- First pull request from [maxogden](https://github.com/maxogden) - Thanks Max!
+- New canvas view!
 
 
 # KNOWN ISSUES:
 <br />
-- an outstanding issue where animation options do not work as they throw EXC_BAD_ACCESS errors on Simulator only.
+- For canvas; show() and hide() do not support animations.
+- Probably super buggy!
 
 
 # DESCRIPTION :
@@ -46,13 +46,22 @@ project
 			/ plugin
 				/ wizViewManager
 					/ wizViewManager.js	
-					/ wizViewMessenger.js	
+					/ wizViewMessenger.js
+					/ wizViewCanvasManager.js
+					/ ejecta.js
+
 	/ ios
 		/ project
 			/ Plugins
 				/ wizViewManager
 					/ wizViewManager.h
 					/ wizViewManager.m
+					/ wizCanvasView.h
+					/ wizCanvasView.m
+					/ wizWebView.h
+					/ wizWebView.m
+					/ JavaScriptCore /
+					/ lodepng /
 </code></pre>
 
 
@@ -95,6 +104,7 @@ wizViewManager.create(String viewName, JSONObject options, Function success, Fun
 {
 
     "src": "http://google.com" [URL/URI to load]
+    "type": "canvas" [view component to create - webview / canvas / default is webview]
     "height": "300", [pixels - default : fills height] 
     "width": "300", [pixels - default : fills width] 
     "x": "0", [pixels - default : 0] 
