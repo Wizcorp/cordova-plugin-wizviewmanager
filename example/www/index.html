@@ -75,6 +75,9 @@
         if (!window.wizViewMessenger) {
             alert("Could not find wizViewMessenger");
         }
+        
+        
+        createCanvasView();
 	}
         
         // TODO: Change this path to match the location where the www/newview.html file lives.
@@ -102,15 +105,44 @@
             document.getElementById("layout_mode").disabled = true;
         }
         
-        function createView()
-        {
-            var e = document.getElementById("uri_mode");
-            var uri = e.options[e.selectedIndex].value;
-            wizViewManager.create("newView", { "src" : uri, "height" : 120, "width" : 320, "y" : 340 }, onCreateSuccess, onFail);
+        function createCanvasView() {
+            wizViewManager.create("newCanvas", { type: "canvas", src: "assets/canvas/index.js", height: 200, width: 320, y: 280 }, onCanvasSuccess, onFail);
         }
         
-        function removeView()
-        {
+        var onCanvasSuccess = function() {
+            console.log("Created canvas!");
+            
+            // Show the canvas
+            showCanvasView();
+        }
+        
+        function showCanvasView() {
+            wizViewManager.show("newCanvas", {}, console.log("Show canvas success"), onFail);
+        }
+        
+        
+        function messageCanvasView() {
+            var params = { color: "blue :)" };
+            wizViewMessenger.message("newCanvas", JSON.stringify(params));
+        }
+        
+        function layoutCanvasView() {
+            var params = { height: 200, width: 320, y: 50 };
+            wizViewManager.setLayout("newCanvas", params, null, null);
+        }
+        
+        function hideCanvasView() {
+            var params = {};
+            wizViewManager.hide("newCanvas", params, null, null);
+        }
+        
+        function createView() {
+            var e = document.getElementById("uri_mode");
+            var uri = e.options[e.selectedIndex].value;
+            wizViewManager.create("newView", { type: "webview", src: uri, height: 120, width: 320, y: 340 }, onCreateSuccess, onFail);
+        }
+        
+        function removeView() {
             wizViewManager.remove("newView", onRemoveSuccess, onFail);
         }
         
@@ -132,20 +164,20 @@
             var e = document.getElementById("show_mode");
             var type = e.options[e.selectedIndex].value;
             var animation = {
-                "type" : type,
-                "duration" : 2000
+                type: type,
+                duration: 2000
             };
-            wizViewManager.show("newView", { "animation" : animation }, onShowSuccess, null);
+            wizViewManager.show("newView", { animation: animation }, onShowSuccess, null);
         }
         
         function hideView() {
             var e = document.getElementById("hide_mode");
             var type = e.options[e.selectedIndex].value;
             var animation = {
-                "type" : type,
-                "duration" : 2000
+                type: type,
+                duration: 2000
             };
-            wizViewManager.hide("newView", { "animation" : animation }, onHideSuccess, null);
+            wizViewManager.hide("newView", { animation: animation }, onHideSuccess, null);
         }
         
         function loadURI( sel ) {
@@ -163,9 +195,9 @@
             var useOffset = sel.options[sel.selectedIndex].value;
             var layout;
             if (useOffset === "true" ) {
-                layout = { height : 120, width : 160, y : 0, x : 80 };
+                layout = { height: 120, width: 160, y: 0, x: 80 };
             } else {
-                layout = { height : 120, width : 320, y : 340, x : 0.0 };
+                layout = { height: 120, width: 320, y: 340, x: 0.0 };
             }
             wizViewManager.setLayout("newView", layout, null, onFail);
         }
@@ -174,7 +206,7 @@
         {
             var color = sel.options[sel.selectedIndex].value;
             var targetView = "newView";
-            var params = { 'color' : color };
+            var params = { color: color };
             
             wizViewMessenger.message(targetView, JSON.stringify(params));
         }
@@ -189,6 +221,11 @@
         }
         
         function wizMessageReceiver(data) {
+            alert("Recieved message on mainView");
+            var parsedData = JSON.parse(data);
+            if (parsedData.message) {
+                alert(parsedData.message);
+            }
             hideView();
         }
         
@@ -198,6 +235,11 @@
         <h1>wizViewManager plugin!</h1>
         <p>Experiment by pressing the buttons to create/show/hide/remove a view, load content in the view, or layout the view.<br />
         <div id="viewManager">
+            <input type="button" value="Create Canvas" onclick="createCanvasView()" />
+            <input type="button" value="Message Canvas" onclick="messageCanvasView()" />
+            <input type="button" value="New Layout Canvas" onclick="layoutCanvasView()" />
+            <input type="button" value="Hide Canvas" onclick="hideCanvasView()" />
+            <hr />
             <input type="button" id="create_button" value="Create View" onclick="createView()" />
             <input type="button" id="remove_button" value="Remove View" onclick="removeView()" disabled="true" />
             </br>

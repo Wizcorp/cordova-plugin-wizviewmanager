@@ -8,19 +8,22 @@
 
 #import "WizViewManagerPlugin.h"
 #import "WizWebView.h"
+#import "WizCanvasView.h"
 #import "WizDebugLog.h"
 #import <QuartzCore/QuartzCore.h>
 
+#import <Cordova/CDVViewController.h>
 
 @implementation WizViewManagerPlugin
 
-@synthesize showViewCallbackId, hideViewCallbackId, webviewDelegate;
+@synthesize showViewCallbackId, hideViewCallbackId, webviewDelegate, canvasView;
 
 
 static NSMutableDictionary *wizViewList = nil;
 static CGFloat viewPadder = 9999.0f;
 static NSMutableDictionary *viewLoadedCallbackId = nil;
 static NSMutableDictionary *isAnimating = nil;
+static WizViewManagerPlugin * wizViewManagerInstance = NULL;
 
 -(CDVPlugin*) initWithWebView:(UIWebView*)theWebView {
 
@@ -32,6 +35,7 @@ static NSMutableDictionary *isAnimating = nil;
         self.webviewDelegate = theWebView.delegate;
         theWebView.delegate = self;
         
+        wizViewManagerInstance = self;
     }
     
     // this holds all our views, first we add MainView to our view list by default
@@ -61,418 +65,18 @@ static NSMutableDictionary *isAnimating = nil;
     return viewLoadedCallbackId;
 }
 
-
-- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options {
-    // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName    = [arguments objectAtIndex:1];
-    
-    [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
-    
-    // NSLog(@"[WizViewManager] ******* Load into view : %@ - viewlist -> %@ options %@", viewName, wizViewList, options); 
-    
-    
-    if (options) 
-	{
-        
-        // search for view
-        if ([wizViewList objectForKey:viewName]) {
-            UIWebView *targetWebView = [wizViewList objectForKey:viewName]; 
-            
-            NSString *src               = [options objectForKey:@"src"];
-            if (src) {
-                
-                if ([self validateUrl:src]) {
-                    // load new source
-                    // source is url
-                    // NSLog(@"SOURCE IS URL %@", src);
-                    NSURL *newURL = [NSURL URLWithString:src];
-
-                    // JC- Setting the service type to video somehow seems to
-                    // disable the reuse of this connection for pipelining new
-                    // HTTP requests, which apparently fixes the tying of these
-                    // requests to the ajax connection used for the message streams
-                    // (which is initiated from the Javascript realm).
-                    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:newURL];
-                    [request setNetworkServiceType:NSURLNetworkServiceTypeVideo];
-
-                    [targetWebView loadRequest:request];
-                    
-                } else {
-                    // NSLog(@"SOURCE NOT URL %@", src);
-                    NSString *fileString = src;
-                    
-                    NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
-                    
-                    NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
-                    
-                    [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
-                    
-                    [newHTMLString release];
-                    [newURL release];                    
-                }
-                
-            }
-            
-        } else {
-            
-            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
-            
-        }
-        
-    } else {
-        
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
-        
-    }
-}
-
-- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options {
-    /*
-     *
-     *
-     * DEPRECIATED - use (void)loadInView:(NSArray*)arguments withDict:(NSDictionary*)options
-     *
-     * or JavaScript wizViewManager.load(String viewName, String URL or URI, success, fail)
-     *
-     *
-     *
-     */
-    
-    // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName    = [arguments objectAtIndex:1];
-    
-    [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
-    
-    // NSLog(@"[WizViewManager] ******* updateView name : %@ ", viewName); 
-
-    
-    // wait for callback
-    
-    if (options) 
-	{
-            
-        // search for view
-        if ([wizViewList objectForKey:viewName]) {
-            UIWebView* targetWebView = [wizViewList objectForKey:viewName]; 
-            
-            NSString* src               = [options objectForKey:@"src"];
-            if (src) {
-                
-                if ([self validateUrl:src]) {
-                    // load new source
-                    // source is url
-                    // NSLog(@"SOURCE IS URL %@", src);
-                    NSURL *newURL = [NSURL URLWithString:src];
-
-                    // JC- Setting the service type to video somehow seems to
-                    // disable the reuse of this connection for pipelining new
-                    // HTTP requests, which apparently fixes the tying of these
-                    // requests to the ajax connection used for the message streams
-                    // (which is initiated from the Javascript realm).
-                    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:newURL];
-                    [request setNetworkServiceType:NSURLNetworkServiceTypeVideo];
-
-                    [targetWebView loadRequest:request];
-                    
-                } else {
-                    // NSLog(@"SOURCE NOT URL %@", src);
-                    NSString *fileString = src;
-                    
-                    NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
-                    
-                    NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
-                    
-                    [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
-                    
-                    [newHTMLString release];
-                    [newURL release];                    
-                }
-                
-            }
-            
-            
-        } else {
-            
-            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
-        
-        }
- 
-    } else {
-        
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
-        
-    }
-      
-}   
-
-
-- (void)removeView:(NSArray*)arguments withDict:(NSDictionary*)options {
-    // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName    = [arguments objectAtIndex:1];
-    
-    NSLog(@"[WizViewManager] ******* removeView name : %@ ", viewName);
-    
-    // search for view
-    if ([wizViewList objectForKey:viewName]) {
-        UIWebView *targetWebView = [wizViewList objectForKey:viewName]; 
-        
-        // remove the view from wizViewList
-        [wizViewList removeObjectForKey:viewName];
-        
-        // remove the view!
-        [targetWebView removeFromSuperview];
-        [targetWebView release];
-        targetWebView.delegate = nil;
-        targetWebView = nil;
-        
-
-        
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
-        
-        
-         NSLog(@"[WizViewManager] ******* removeView views left : %@ ", wizViewList);
-    } else {
-        
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
-    }
-    
++ (WizViewManagerPlugin *)instance {
+	return wizViewManagerInstance;
 }
 
 
-- (CGRect) frameWithOptions:(NSDictionary*)options {
-    // get Device width and height
-    CGRect screenRect = [[UIScreen mainScreen] bounds];
-    int screenHeight = (int) screenRect.size.height;
-    int screenWidth = (int) screenRect.size.width;
+- (void)createWebView:(NSString*)viewName withOptions:(NSDictionary*)options {
+    // Create a new wizWebView with options (if specified)
     
-    // define vars
-    int top;
-    int left;
-    int width;
-    int height;
-    
-    if (options) {
-        // NSLog(@"SIZING OPTIONS: %@", options);
-        
-        if ([options objectForKey:@"top"]) {
-            top = [self getWeakLinker:[options objectForKey:@"top"] ofType:@"top"];
-        } else if ([options objectForKey:@"y"]) {
-            // backward compatibility
-            top = [self getWeakLinker:[options objectForKey:@"y"] ofType:@"top"];
-        } else if ([options objectForKey:@"height"] && [options objectForKey:@"bottom"]) {
-            top = screenHeight - [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"]
-            - [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
-        } else {
-            top = 0;
-        }
-        // NSLog(@"TOP: %i", top);
-        
-        if ([options objectForKey:@"left"]) {
-            left = [self getWeakLinker:[options objectForKey:@"left"] ofType:@"left"];
-        } else if ([options objectForKey:@"x"]) {
-            // backward compatibility
-            left = [self getWeakLinker:[options objectForKey:@"x"] ofType:@"left"];
-        } else if ([options objectForKey:@"width"] && [options objectForKey:@"right"]) {
-            left = screenWidth - [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"]
-            - [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
-        } else {
-            left = 0;
-        }
-        // NSLog(@"LEFT: %i", left);
-        
-        if ([options objectForKey:@"height"]) {
-            height = [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
-        } else if ([options objectForKey:@"bottom"]) {
-            height = screenHeight - [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"] - top;
-        } else {
-            height = screenHeight;
-        }
-        // NSLog(@"HEIGHT: %i", height);
-        
-        if ([options objectForKey:@"width"]) {
-            width = [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
-        } else if ([options objectForKey:@"right"]) {
-            width = screenWidth - [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"] - left;
-        } else {
-            width = screenWidth;
-        }
-        // NSLog(@"WIDTH: %i", width);
-    } else {
-        top = 0;
-        left = 0;
-        height = screenHeight;
-        width = screenWidth;
-        // NSLog(@"TOP: 0\nLEFT: 0\nHEIGHT: %i\nWIDTH: %i", height, width);
-    }
-    
-    // NSLog(@"MY PARAMS left: %i, top: %i, width: %i, height: %i", left, top, width,height);
-    
-    return CGRectMake(left, top, width, height);
-}
-
-- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options {
-    // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName    = [arguments objectAtIndex:1];
-    
-    // NSLog(@"[WizViewManagerPlugin] ******* resizeView name:  %@ withOptions: %@", viewName, options);
-    
-    if ([wizViewList objectForKey:viewName]) {
-        UIWebView* targetWebView = [wizViewList objectForKey:viewName];
-        // NSLog(@"got view! %@", targetWebView);
-        
-        CGRect newRect = [self frameWithOptions:options];
-        if (targetWebView.isHidden) {
-            // if hidden add padding
-            newRect.origin = CGPointMake(newRect.origin.x + viewPadder, newRect.origin.y);
-        }
-        
-        targetWebView.frame = newRect;
-        
-        // NSLog(@"view resized! %@", targetWebView);
-        
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
-        
-        
-    } else {
-        // NSLog(@"view not found!");
-        
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
-    }
-}
-
-
-- (int)getWeakLinker:(NSString*)myString ofType:(NSString*)type {
-    // do tests to get correct int (we read in as string pointer but infact we are unaware of the var type)
-    int i;
-    
-    if (!myString || !type) {
-        // got null value in method params
-        return i = 0;
-    }
-    
-    // NSLog(@"try link : %@ for type: %@", myString, type);
-
-    
-    // get Device width and height
-    CGRect screenRect = [[UIScreen mainScreen] bounds];
-    CGFloat screenHeight = screenRect.size.height;
-    CGFloat screenWidth = screenRect.size.width;
-    
-    
-    
-    
-    // test for percentage
-    NSArray *percentTest = [self percentTest:myString];
-    
-    if (percentTest) {
-        // it was a percent do calculation and assign value
-        
-        int j = [[percentTest objectAtIndex:0] intValue];
-        
-        if ([type isEqualToString:@"width"] || [type isEqualToString:@"left"] || [type isEqualToString:@"right"]) {
-            float k = j*0.01; // use float here or int is rounded to a 0 int
-            i = k*screenWidth;
-        } else if ([type isEqualToString:@"height"] || [type isEqualToString:@"top"] || [type isEqualToString:@"bottom"]) {
-            float k = j*0.01; // use float here or int is rounded to a 0 int
-            i = k*screenHeight;
-        } else {
-            //invalid type - not supported
-            i = 0;
-        }
-        
-    } else {
-        
-        // test - float
-        BOOL floatTest= [self floatTest:myString];
-        if (floatTest) {
-            // we have a float, check our float range and convert to int
-            
-            float floatValue = [myString floatValue];
-            if (floatValue < 1.0) {
-                if ([type isEqualToString:@"width"] || [type isEqualToString:@"left"] || [type isEqualToString:@"right"]) {
-                    i = (floatValue * screenWidth);
-                } else if ([type isEqualToString:@"height"] || [type isEqualToString:@"top"] || [type isEqualToString:@"bottom"]) {
-                    i = (floatValue * screenHeight);
-                } else {
-                    //invalid type - not supported
-                    i = 0;
-                }
-            } else {
-                // not good float value - defaults to 0
-                i = 0;
-            }
-            
-        } else {
-
-            // Third string test - assume an int?
-            i = [myString intValue];
-        }
-        
-    }
-    
-    // NSLog(@"weak linked : %i for type: %@", i, type);
-    return i;
-   
-}
-         
-- (BOOL) validateUrl: (NSString *) candidate {
-    NSString* lowerCased = [candidate lowercaseString];
-    return [lowerCased hasPrefix:@"http://"] || [lowerCased hasPrefix:@"https://"];
-}
-         
-- (BOOL)floatTest:(NSString*)myString {
-    NSString *realString = [[NSString alloc] initWithString:myString];
-    NSArray *floatTest = [realString componentsSeparatedByString:@"."];
-    [realString release];
-    if (floatTest.count > 1) {
-        // found decimal. must be a float
-        return TRUE;
-    } else {
-        // failed test
-        return FALSE;
-    }
-    
-}
-
-- (NSArray*)percentTest:(NSString*)myString {
-    NSString *realString = [[NSString alloc] initWithString:myString];
-    NSArray *percentTest = [realString componentsSeparatedByString:@"%"];
-    [realString release];
-
-    if (percentTest.count > 1) {
-        // found percent mark. must be a percent
-        return percentTest;
-    } else {
-        // failed test
-        return NULL;
-    }
-}
-
-
-- (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options {
-    
-    // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName      = [arguments objectAtIndex:1];    
-    
-    [viewLoadedCallbackId setObject:callbackId forKey:@"updateCallback"];
-    NSLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@", viewName, options);
-
     UIWebView *newWizView;
+    
     if (options) {
-       
+        
         NSString *src               = [options objectForKey:@"src"];
         if (!src) {
             // default
@@ -523,24 +127,193 @@ static NSMutableDictionary *isAnimating = nil;
         
         // move view out of display
         [newWizView setFrame:CGRectMake(
-                                     newWizView.frame.origin.x + viewPadder,
-                                     newWizView.frame.origin.y,
-                                     newWizView.frame.size.width,
-                                     newWizView.frame.size.height
-                                     )];
+                                        newWizView.frame.origin.x + viewPadder,
+                                        newWizView.frame.origin.y,
+                                        newWizView.frame.size.width,
+                                        newWizView.frame.size.height
+                                        )];
         
         // add view to parent webview
         [self.webView.superview addSubview:newWizView];
     }
-
-    NSLog(@"[WizViewManagerPlugin] ******* current views... %@", wizViewList);
-
-    // callbacks handled after content is loaded into wizWebView
     
 }
 
 
+- (void)createCanvasView:(NSString*)viewName withOptions:(NSDictionary*)options {
+    // Create a new wizCanvasView with options (if specified)
+    NSString* src               = [options objectForKey:@"src"];
+    CGRect newRect              = [self frameWithOptions:options];
+    
+    // Check view already exists?
+    if ([wizViewList objectForKey:viewName]) {
+        // Already exists run setLayout for new layout params
+        
+        // Is view hidden already? Apply padding
+        WizCanvasView *canvas = [wizViewList objectForKey:viewName];
+        if (canvas.window.isHidden) {
+            // If hidden, add padding
+            newRect.origin = CGPointMake(newRect.origin.x + viewPadder, newRect.origin.y);
+        }
+        
+        canvas.window.frame = newRect;
+    }
+    
+    
+    
+    canvasView = [[UIView alloc] initWithFrame:newRect];
+    WizCanvasView* canvas = [[WizCanvasView alloc] initWithWindow:canvasView name:viewName sourceToLoad:src];
+
+    
+    
+    // Defaults
+    
+    canvasView.backgroundColor        = [UIColor blackColor];
+    // canvasView.opaque                 = NO;
+    // canvasView.autoresizesSubviews    = YES;
+    // canvasView.alpha                  = 1;
+    // canvasView.multipleTouchEnabled   = YES;
+    // canvasView.userInteractionEnabled = YES;
+    
+    // move view out of display
+    [canvasView setFrame:CGRectMake(
+                                    canvasView.frame.origin.x + viewPadder,
+                                    canvasView.frame.origin.y,
+                                    canvasView.frame.size.width,
+                                    canvasView.frame.size.height
+                                    )];
+    [canvasView setHidden:TRUE];
+    
+    canvasView.hidden                 = YES;
+
+
+    // add view name to our wizard view list
+    [wizViewList setObject:canvas forKey:viewName];
+    // add view to parent webview
+    [self.webView.superview addSubview:canvasView];
+
+    
+    
+}
+
+
+- (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options {
+    
+    // assign arguments
+    NSString *callbackId    = [arguments objectAtIndex:0];
+    NSString *viewName      = [arguments objectAtIndex:1];    
+    
+    NSLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@", viewName, options);
+
+    NSString *type              = [options objectForKey:@"type"]; 
+    
+    
+    if ([type isEqualToString:@"webview"]) {
+        
+        // For a webview we should push the callbackId to stack to use later after source
+        // is loaded.
+        [viewLoadedCallbackId setObject:callbackId forKey:@"updateCallback"];
+        [self createWebView:viewName withOptions:options];
+        
+    } else if ([type isEqualToString:@"canvas"]) {
+        
+        // For the canvasView creation is so fast we dont need to stack callbackId.
+        [self createCanvasView:viewName withOptions:options];
+        CDVPluginResult* pluginResultSuccess = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self writeJavascript: [pluginResultSuccess toSuccessCallbackString:callbackId]];
+    } else {
+        
+        // Unspecified type do warn
+        NSLog(@"Error : Unspecified view type!");
+        
+        // Return to JS with error
+        CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+        [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
+    
+    }
+
+    NSLog(@"[WizViewManagerPlugin] ******* current views... %@", wizViewList);
+}
+
 - (void)hideView:(NSArray*)arguments withDict:(NSDictionary*)options {
+    
+    // Asign params
+    NSString *callbackId = [arguments objectAtIndex:0];
+    NSString *viewName = [arguments objectAtIndex:1];
+    NSString *viewType = [self checkView:[wizViewList objectForKey:viewName]];
+    
+    if ([wizViewList objectForKey:viewName]) {
+        
+        if ([viewType isEqualToString:@"webview"]) {
+            
+            // Hide the web view
+            [self hideWebView:arguments withDict:options];
+            
+        } else if ([viewType isEqualToString:@"canvas"]) {
+            
+            // Hide the canvas view
+            [self hideCanvasView:arguments withDict:options];
+            
+        } else {
+            
+            // Unspecified type do warn
+            NSLog(@"Error : Unspecified view type!");
+            
+            // Return to JS with error
+            CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+            [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
+            
+        }
+    } else {
+        
+        // View not found
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
+        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        return;
+        
+    }
+}
+
+- (void)hideCanvasView:(NSArray*)arguments withDict:(NSDictionary*)options {
+    // Hide a canvas view type
+    // Assign arguments
+    NSString *callbackId = [arguments objectAtIndex:0];
+    NSLog(@"START hideCanvasView with callback :  %@", callbackId);
+    NSString *viewName = [arguments objectAtIndex:1];
+    
+    CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    CDVPluginResult *pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+    
+    WizCanvasView* targetCanvasView = [wizViewList objectForKey:viewName];
+    
+    if (!targetCanvasView.window.isHidden || [isAnimating objectForKey:viewName]) {
+        
+        if ([isAnimating objectForKey:viewName]) {
+            // TODO: view is animating - stop current animation can release previous callback
+            
+            
+        }
+        
+        // TODO current default
+        
+        // not found do "none"
+        [self hideWithNoAnimation:targetCanvasView.window];
+        // no animate so remove from animate store
+        // [isAnimating removeObjectForKey:viewName];
+        [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+        // self.showViewCallbackId = nil;
+        
+    } else {
+        
+        // target already hidden
+        NSLog(@"[WizViewManager] ******* target already hidden! ");
+        [self writeJavascript: [pluginResultERROR toErrorCallbackString:callbackId]];
+        // self.showViewCallbackId = nil;
+        
+    }
+}
+
+- (void)hideWebView:(NSArray*)arguments withDict:(NSDictionary*)options {
         
     // assign arguments
     NSString *callbackId    = [arguments objectAtIndex:0];
@@ -668,14 +441,93 @@ static NSMutableDictionary *isAnimating = nil;
 
 
 - (void)showView:(NSArray*)arguments withDict:(NSDictionary*)options {
+    
+    // Asign params
+    NSString *callbackId = [arguments objectAtIndex:0];
+    NSString *viewName = [arguments objectAtIndex:1];
+    NSString *viewType = [self checkView:[wizViewList objectForKey:viewName]];
+    
+    if ([wizViewList objectForKey:viewName]) {
         
-    // assign arguments
+        if ([viewType isEqualToString:@"webview"]) {
+            
+            // Show the web view
+            [self showWebView:arguments withDict:options];
+            
+        } else if ([viewType isEqualToString:@"canvas"]) {
+            
+            // Show the canvas view
+            [self showCanvasView:arguments withDict:options];
+        
+        } else {
+            
+            // Unspecified type do warn
+            NSLog(@"Error : Unspecified view type!");
+            
+            // Return to JS with error
+            CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+            [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
+            
+        }
+    } else {
+        
+        // View not found
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
+        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        return;
+        
+    }
+}
+
+- (void)showCanvasView:(NSArray*)arguments withDict:(NSDictionary*)options {
+    // Show a web view type
+    // Assign arguments
     NSString* callbackId = [arguments objectAtIndex:0];
-    NSLog(@"START showView with callback :  %@", callbackId);
+    NSLog(@"START showCanvasView with callback :  %@", callbackId);
     NSString* viewName = [arguments objectAtIndex:1];
     
-    CDVPluginResult* pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    CDVPluginResult* pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+    CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    CDVPluginResult *pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
+    
+    WizCanvasView* targetCanvasView = [wizViewList objectForKey:viewName];
+    
+    if (targetCanvasView.window.isHidden || [isAnimating objectForKey:viewName]) {
+        
+        if ([isAnimating objectForKey:viewName]) {
+            // TODO: view is animating - stop current animation can release previous callback
+        
+            
+        }
+        
+        // TODO current default
+        
+        // not found do "none"
+        [self showWithNoAnimation:targetCanvasView.window];
+        // no animate so remove from animate store
+        // [isAnimating removeObjectForKey:viewName];
+        [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+        // self.showViewCallbackId = nil;
+        
+    } else {
+        
+        // target already showing
+        NSLog(@"[WizViewManager] ******* target already shown! ");
+        [self writeJavascript: [pluginResultERROR toErrorCallbackString:callbackId]];
+        // self.showViewCallbackId = nil;
+        
+    }
+}
+
+
+- (void)showWebView:(NSArray*)arguments withDict:(NSDictionary*)options {
+    // Show a web view type
+    // Assign arguments
+    NSString* callbackId = [arguments objectAtIndex:0];
+    NSLog(@"START showWebView with callback :  %@", callbackId);
+    NSString* viewName = [arguments objectAtIndex:1];
+    
+    CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    CDVPluginResult *pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
 
 
     
@@ -806,6 +658,463 @@ static NSMutableDictionary *isAnimating = nil;
                 
         CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
         [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
+    }
+}
+
+
+- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options {
+    // assign arguments
+    NSString *callbackId    = [arguments objectAtIndex:0];
+    NSString *viewName    = [arguments objectAtIndex:1];
+    
+    [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
+    
+    // NSLog(@"[WizViewManager] ******* Load into view : %@ - viewlist -> %@ options %@", viewName, wizViewList, options);
+    
+    
+    if (options)
+	{
+        
+        // search for view
+        if ([wizViewList objectForKey:viewName]) {
+            UIWebView *targetWebView = [wizViewList objectForKey:viewName];
+            
+            NSString *src               = [options objectForKey:@"src"];
+            if (src) {
+                
+                if ([self validateUrl:src]) {
+                    // load new source
+                    // source is url
+                    // NSLog(@"SOURCE IS URL %@", src);
+                    NSURL *newURL = [NSURL URLWithString:src];
+                    
+                    // JC- Setting the service type to video somehow seems to
+                    // disable the reuse of this connection for pipelining new
+                    // HTTP requests, which apparently fixes the tying of these
+                    // requests to the ajax connection used for the message streams
+                    // (which is initiated from the Javascript realm).
+                    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:newURL];
+                    [request setNetworkServiceType:NSURLNetworkServiceTypeVideo];
+                    
+                    [targetWebView loadRequest:request];
+                    
+                } else {
+                    // NSLog(@"SOURCE NOT URL %@", src);
+                    NSString *fileString = src;
+                    
+                    NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
+                    
+                    NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
+                    
+                    [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
+                    
+                    [newHTMLString release];
+                    [newURL release];
+                }
+                
+            }
+            
+        } else {
+            
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
+            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+            
+        }
+        
+    } else {
+        
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
+        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        
+    }
+}
+
+- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options {
+    /*
+     *
+     *
+     * DEPRECIATED - use (void)loadInView:(NSArray*)arguments withDict:(NSDictionary*)options
+     *
+     * or JavaScript wizViewManager.load(String viewName, String URL or URI, success, fail)
+     *
+     *
+     *
+     */
+    
+    // assign arguments
+    NSString *callbackId    = [arguments objectAtIndex:0];
+    NSString *viewName    = [arguments objectAtIndex:1];
+    
+    [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
+    
+    // NSLog(@"[WizViewManager] ******* updateView name : %@ ", viewName);
+    
+    
+    // wait for callback
+    
+    if (options)
+	{
+        
+        // search for view
+        if ([wizViewList objectForKey:viewName]) {
+            UIWebView* targetWebView = [wizViewList objectForKey:viewName];
+            
+            NSString* src               = [options objectForKey:@"src"];
+            if (src) {
+                
+                if ([self validateUrl:src]) {
+                    // load new source
+                    // source is url
+                    // NSLog(@"SOURCE IS URL %@", src);
+                    NSURL *newURL = [NSURL URLWithString:src];
+                    
+                    // JC- Setting the service type to video somehow seems to
+                    // disable the reuse of this connection for pipelining new
+                    // HTTP requests, which apparently fixes the tying of these
+                    // requests to the ajax connection used for the message streams
+                    // (which is initiated from the Javascript realm).
+                    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:newURL];
+                    [request setNetworkServiceType:NSURLNetworkServiceTypeVideo];
+                    
+                    [targetWebView loadRequest:request];
+                    
+                } else {
+                    // NSLog(@"SOURCE NOT URL %@", src);
+                    NSString *fileString = src;
+                    
+                    NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
+                    
+                    NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
+                    
+                    [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
+                    
+                    [newHTMLString release];
+                    [newURL release];
+                }
+                
+            }
+            
+            
+        } else {
+            
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
+            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+            
+        }
+        
+    } else {
+        
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
+        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        
+    }
+    
+}
+
+
+- (void)removeView:(NSArray*)arguments withDict:(NSDictionary*)options {
+    // assign arguments
+    NSString *callbackId    = [arguments objectAtIndex:0];
+    NSString *viewName    = [arguments objectAtIndex:1];
+    
+    NSLog(@"[WizViewManager] ******* removeView name : %@ ", viewName);
+    
+    // search for view
+    if ([wizViewList objectForKey:viewName]) {
+        UIWebView *targetWebView = [wizViewList objectForKey:viewName];
+        
+        // remove the view from wizViewList
+        [wizViewList removeObjectForKey:viewName];
+        
+        // remove the view!
+        [targetWebView removeFromSuperview];
+        [targetWebView release];
+        targetWebView.delegate = nil;
+        targetWebView = nil;
+        
+        
+        
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
+        
+        
+        NSLog(@"[WizViewManager] ******* removeView views left : %@ ", wizViewList);
+    } else {
+        
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
+        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+    }
+    
+}
+
+
+- (CGRect) frameWithOptions:(NSDictionary*)options {
+    // get Device width and height
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    int screenHeight = (int) screenRect.size.height;
+    int screenWidth = (int) screenRect.size.width;
+    
+    // define vars
+    int top;
+    int left;
+    int width;
+    int height;
+    
+    if (options) {
+        // NSLog(@"SIZING OPTIONS: %@", options);
+        
+        if ([options objectForKey:@"top"]) {
+            top = [self getWeakLinker:[options objectForKey:@"top"] ofType:@"top"];
+        } else if ([options objectForKey:@"y"]) {
+            // backward compatibility
+            top = [self getWeakLinker:[options objectForKey:@"y"] ofType:@"top"];
+        } else if ([options objectForKey:@"height"] && [options objectForKey:@"bottom"]) {
+            top = screenHeight - [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"]
+            - [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
+        } else {
+            top = 0;
+        }
+        // NSLog(@"TOP: %i", top);
+        
+        if ([options objectForKey:@"left"]) {
+            left = [self getWeakLinker:[options objectForKey:@"left"] ofType:@"left"];
+        } else if ([options objectForKey:@"x"]) {
+            // backward compatibility
+            left = [self getWeakLinker:[options objectForKey:@"x"] ofType:@"left"];
+        } else if ([options objectForKey:@"width"] && [options objectForKey:@"right"]) {
+            left = screenWidth - [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"]
+            - [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
+        } else {
+            left = 0;
+        }
+        // NSLog(@"LEFT: %i", left);
+        
+        if ([options objectForKey:@"height"]) {
+            height = [self getWeakLinker:[options objectForKey:@"height"] ofType:@"height"];
+        } else if ([options objectForKey:@"bottom"]) {
+            height = screenHeight - [self getWeakLinker:[options objectForKey:@"bottom"] ofType:@"bottom"] - top;
+        } else {
+            height = screenHeight;
+        }
+        // NSLog(@"HEIGHT: %i", height);
+        
+        if ([options objectForKey:@"width"]) {
+            width = [self getWeakLinker:[options objectForKey:@"width"] ofType:@"width"];
+        } else if ([options objectForKey:@"right"]) {
+            width = screenWidth - [self getWeakLinker:[options objectForKey:@"right"] ofType:@"right"] - left;
+        } else {
+            width = screenWidth;
+        }
+        // NSLog(@"WIDTH: %i", width);
+    } else {
+        // Defaults to full screen fill
+        top = 0;
+        left = 0;
+        height = screenHeight;
+        width = screenWidth;
+        // NSLog(@"TOP: 0\nLEFT: 0\nHEIGHT: %i\nWIDTH: %i", height, width);
+    }
+    
+    // NSLog(@"MY PARAMS left: %i, top: %i, width: %i, height: %i", left, top, width,height);
+    
+    return CGRectMake(left, top, width, height);
+}
+
+- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options {
+    // assign arguments
+    NSString *callbackId    = [arguments objectAtIndex:0];
+    NSString *viewName    = [arguments objectAtIndex:1];
+    
+    // NSLog(@"[WizViewManagerPlugin] ******* resizeView name:  %@ withOptions: %@", viewName, options);
+    
+    if ([wizViewList objectForKey:viewName]) {
+        
+        NSString *viewType = [self checkView:[wizViewList objectForKey:viewName]];
+        
+        if ([viewType isEqualToString:@"webview"]) {
+            
+            // SetLayout webview
+            UIWebView* targetWebView = [wizViewList objectForKey:viewName];
+            
+            CGRect newRect = [self frameWithOptions:options];
+            if (targetWebView.isHidden) {
+                // if hidden add padding
+                newRect.origin = CGPointMake(newRect.origin.x + viewPadder, newRect.origin.y);
+            }
+            
+            targetWebView.frame = newRect;
+            
+        } else if ([viewType isEqualToString:@"canvas"]) {
+            
+            // SetLayout canvas view
+            WizCanvasView *targetCanvasView = [wizViewList objectForKey:viewName];
+            CGRect newRect = [self frameWithOptions:options];
+            if (targetCanvasView.window.isHidden) {
+                // if hidden add padding
+                newRect.origin = CGPointMake(newRect.origin.x + viewPadder, newRect.origin.y);
+            }
+            
+            targetCanvasView.window.frame = newRect;
+            
+        } else {
+            
+            // View not found
+            CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
+            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+            return;
+        }
+        
+
+        // NSLog(@"view resized! %@", targetWebView);
+        
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];       
+        
+    } else {
+        // NSLog(@"view not found!");
+        
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
+        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+    }
+}
+
+
+- (void)sendMessage:(NSString*)viewName withMessage:(NSString*)message {
+    // Send a message to a view
+       
+    if ([wizViewList objectForKey:viewName]) {
+        // Found view send message
+        
+        NSString *viewType = [self checkView:[wizViewList objectForKey:viewName]];
+
+        // Escape the message
+        NSString *postDataEscaped = [message stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+        
+        if ([viewType isEqualToString:@"webview"]) {
+            
+            // Message webview
+            UIWebView* targetWebView = [wizViewList objectForKey:viewName];
+            [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
+            
+        } else if ([viewType isEqualToString:@"canvas"]) {
+            
+            // Message canvas view
+            WizCanvasView *targetCanvasView = [wizViewList objectForKey:viewName];
+            [targetCanvasView evaluateScript:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
+        
+        } else {
+            NSLog(@"Message failed! This view cannot not accept messages : %@", viewName);
+        }
+               
+    } else {
+        NSLog(@"Message failed! View not found!");
+    }
+}
+
+- (int)getWeakLinker:(NSString*)myString ofType:(NSString*)type {
+    // do tests to get correct int (we read in as string pointer but infact we are unaware of the var type)
+    int i;
+    
+    if (!myString || !type) {
+        // got null value in method params
+        return i = 0;
+    }
+    
+    // NSLog(@"try link : %@ for type: %@", myString, type);
+    
+    
+    // get Device width and height
+    CGRect screenRect = [[UIScreen mainScreen] bounds];
+    CGFloat screenHeight = screenRect.size.height;
+    CGFloat screenWidth = screenRect.size.width;
+    
+    
+    
+    
+    // test for percentage
+    NSArray *percentTest = [self percentTest:myString];
+    
+    if (percentTest) {
+        // it was a percent do calculation and assign value
+        
+        int j = [[percentTest objectAtIndex:0] intValue];
+        
+        if ([type isEqualToString:@"width"] || [type isEqualToString:@"left"] || [type isEqualToString:@"right"]) {
+            float k = j*0.01; // use float here or int is rounded to a 0 int
+            i = k*screenWidth;
+        } else if ([type isEqualToString:@"height"] || [type isEqualToString:@"top"] || [type isEqualToString:@"bottom"]) {
+            float k = j*0.01; // use float here or int is rounded to a 0 int
+            i = k*screenHeight;
+        } else {
+            //invalid type - not supported
+            i = 0;
+        }
+        
+    } else {
+        
+        // test - float
+        BOOL floatTest= [self floatTest:myString];
+        if (floatTest) {
+            // we have a float, check our float range and convert to int
+            
+            float floatValue = [myString floatValue];
+            if (floatValue < 1.0) {
+                if ([type isEqualToString:@"width"] || [type isEqualToString:@"left"] || [type isEqualToString:@"right"]) {
+                    i = (floatValue * screenWidth);
+                } else if ([type isEqualToString:@"height"] || [type isEqualToString:@"top"] || [type isEqualToString:@"bottom"]) {
+                    i = (floatValue * screenHeight);
+                } else {
+                    //invalid type - not supported
+                    i = 0;
+                }
+            } else {
+                // not good float value - defaults to 0
+                i = 0;
+            }
+            
+        } else {
+            
+            // Third string test - assume an int?
+            i = [myString intValue];
+        }
+        
+    }
+    
+    // NSLog(@"weak linked : %i for type: %@", i, type);
+    return i;
+    
+}
+
+- (BOOL) validateUrl: (NSString *) candidate {
+    NSString* lowerCased = [candidate lowercaseString];
+    return [lowerCased hasPrefix:@"http://"] || [lowerCased hasPrefix:@"https://"];
+}
+
+- (BOOL)floatTest:(NSString*)myString {
+    NSString *realString = [[NSString alloc] initWithString:myString];
+    NSArray *floatTest = [realString componentsSeparatedByString:@"."];
+    [realString release];
+    if (floatTest.count > 1) {
+        // found decimal. must be a float
+        return TRUE;
+    } else {
+        // failed test
+        return FALSE;
+    }
+    
+}
+
+- (NSArray*)percentTest:(NSString*)myString {
+    NSString *realString = [[NSString alloc] initWithString:myString];
+    NSArray *percentTest = [realString componentsSeparatedByString:@"%"];
+    [realString release];
+    
+    if (percentTest.count > 1) {
+        // found percent mark. must be a percent
+        return percentTest;
+    } else {
+        // failed test
+        return NULL;
     }
 }
 
@@ -1321,9 +1630,23 @@ static NSMutableDictionary *isAnimating = nil;
         NSMutableDictionary * viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
         
         if ([viewList objectForKey:targetView]) {
-            UIWebView* targetWebView = [viewList objectForKey:targetView]; 
+            // check view type
+            NSString* viewType = [self checkView:[viewList objectForKey:targetView]];
             NSString *postDataEscaped = [postData stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
-            [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
+            
+            if ([viewType isEqualToString:@"canvas"]) {
+                // using canvas view
+                WizCanvasView *targetCanvasView = [viewList objectForKey:targetView];
+                [targetCanvasView evaluateScript:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
+                
+            } else if ([viewType isEqualToString:@"webview"]) {
+                // treat as webview
+               UIWebView* targetWebView = [viewList objectForKey:targetView]; 
+                [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
+            } else {
+                NSLog(@"[WizWebView] ******* targetView is unknown type! :  %@", targetView );
+            }
+            
             
             // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);
         }
@@ -1364,4 +1687,15 @@ static NSMutableDictionary *isAnimating = nil;
     [theWebView reload];
 }
 
+- (NSString*)checkView:(NSObject*)view {
+    
+    if ([view isMemberOfClass:[WizCanvasView class]]) {
+        return @"canvas";
+    }
+    if ([view isMemberOfClass:[UIWebView class]] || [view isMemberOfClass:[CDVCordovaView class]]) {
+        return @"webview";
+    }
+
+    return @"unknown";
+}
 @end

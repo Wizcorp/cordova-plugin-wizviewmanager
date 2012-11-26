@@ -7,6 +7,15 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		411FA62616550CB100411ABE /* Cordova.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62516550CB100411ABE /* Cordova.framework */; };
+		411FA62D16551D1D00411ABE /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62B16551D1D00411ABE /* OpenAL.framework */; };
+		411FA62E16551D1D00411ABE /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62C16551D1D00411ABE /* OpenGLES.framework */; };
+		411FA63016551D3200411ABE /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62F16551D3200411ABE /* libstdc++.dylib */; };
+		411FA63216551D3B00411ABE /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA63116551D3B00411ABE /* libicucore.dylib */; };
+		411FA63416551D7100411ABE /* libJavaScriptCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA63316551D7100411ABE /* libJavaScriptCore.a */; };
+		41ADA02F165648FF004F93A6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADA02E165648FE004F93A6 /* CoreText.framework */; };
+		41ADA0311656492D004F93A6 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADA0301656492C004F93A6 /* GameKit.framework */; };
+		41ADA0331656499F004F93A6 /* iAd.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADA0321656499F004F93A6 /* iAd.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		F60BBF831647C4900085B8FF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F60BBF821647C4900085B8FF /* Foundation.framework */; };
 		F60BBF851647C4900085B8FF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F60BBF841647C4900085B8FF /* UIKit.framework */; };
 		F60BBF871647C4900085B8FF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F60BBF861647C4900085B8FF /* CoreGraphics.framework */; };
@@ -22,7 +31,6 @@
 		F60BBF9B1647C4900085B8FF /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F60BBF9A1647C4900085B8FF /* CoreMedia.framework */; };
 		F60BBFA11647C4900085B8FF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = F60BBF9F1647C4900085B8FF /* InfoPlist.strings */; };
 		F60BBFA31647C4910085B8FF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = F60BBFA21647C4910085B8FF /* main.m */; };
-		F60BBFA61647C4910085B8FF /* Cordova.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F60BBFA51647C4910085B8FF /* Cordova.framework */; };
 		F60BBFAB1647C4910085B8FF /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F60BBFA91647C4910085B8FF /* Localizable.strings */; };
 		F60BBFAF1647C4910085B8FF /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F60BBFAD1647C4910085B8FF /* Localizable.strings */; };
 		F60BBFB31647C4910085B8FF /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = F60BBFB11647C4910085B8FF /* Localizable.strings */; };
@@ -38,12 +46,19 @@
 		F60BBFCE1647C4910085B8FF /* MainViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = F60BBFCD1647C4910085B8FF /* MainViewController.m */; };
 		F60BBFD01647C4910085B8FF /* MainViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = F60BBFCF1647C4910085B8FF /* MainViewController.xib */; };
 		F60BBFE31647C7970085B8FF /* www in Resources */ = {isa = PBXBuildFile; fileRef = F60BBFE21647C7970085B8FF /* www */; };
-		F60BBFEA1647C7F40085B8FF /* WizViewManagerPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = F60BBFE71647C7F40085B8FF /* WizViewManagerPlugin.m */; };
-		F60BBFEB1647C7F40085B8FF /* WizWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = F60BBFE91647C7F40085B8FF /* WizWebView.m */; };
 		F60BBFF81647C9D00085B8FF /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F60BBFF71647C9D00085B8FF /* Default-568h@2x.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		411FA62516550CB100411ABE /* Cordova.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cordova.framework; path = exampleWizViewManager/Framework/Cordova.framework; sourceTree = "<group>"; };
+		411FA62B16551D1D00411ABE /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
+		411FA62C16551D1D00411ABE /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
+		411FA62F16551D3200411ABE /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/libstdc++.dylib"; sourceTree = SDKROOT; };
+		411FA63116551D3B00411ABE /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
+		411FA63316551D7100411ABE /* libJavaScriptCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libJavaScriptCore.a; path = exampleWizViewManager/Framework/libJavaScriptCore.a; sourceTree = "<group>"; };
+		41ADA02E165648FE004F93A6 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
+		41ADA0301656492C004F93A6 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
+		41ADA0321656499F004F93A6 /* iAd.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = iAd.framework; path = System/Library/Frameworks/iAd.framework; sourceTree = SDKROOT; };
 		F60BBF7E1647C4900085B8FF /* exampleWizViewManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = exampleWizViewManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F60BBF821647C4900085B8FF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		F60BBF841647C4900085B8FF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
@@ -62,7 +77,6 @@
 		F60BBFA01647C4900085B8FF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		F60BBFA21647C4910085B8FF /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		F60BBFA41647C4910085B8FF /* exampleWizViewManager-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "exampleWizViewManager-Prefix.pch"; sourceTree = "<group>"; };
-		F60BBFA51647C4910085B8FF /* Cordova.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cordova.framework; path = /Users/Shared/Cordova/Frameworks/Cordova.framework; sourceTree = "<absolute>"; };
 		F60BBFAA1647C4910085B8FF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = Resources/en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F60BBFAE1647C4910085B8FF /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = Resources/es.lproj/Localizable.strings; sourceTree = "<group>"; };
 		F60BBFB21647C4910085B8FF /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = Resources/de.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -82,11 +96,6 @@
 		F60BBFD21647C4910085B8FF /* README */ = {isa = PBXFileReference; lastKnownFileType = text; name = README; path = Plugins/README; sourceTree = "<group>"; };
 		F60BBFD31647C4910085B8FF /* verify.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = verify.sh; sourceTree = "<group>"; };
 		F60BBFE21647C7970085B8FF /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; name = www; path = ../www; sourceTree = "<group>"; };
-		F60BBFE61647C7F40085B8FF /* WizViewManagerPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizViewManagerPlugin.h; sourceTree = "<group>"; };
-		F60BBFE71647C7F40085B8FF /* WizViewManagerPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WizViewManagerPlugin.m; sourceTree = "<group>"; };
-		F60BBFE81647C7F40085B8FF /* WizWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizWebView.h; sourceTree = "<group>"; };
-		F60BBFE91647C7F40085B8FF /* WizWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WizWebView.m; sourceTree = "<group>"; };
-		F60BBFEC1647C88D0085B8FF /* WizDebugLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizDebugLog.h; sourceTree = "<group>"; };
 		F60BBFF71647C9D00085B8FF /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "Resources/splash/Default-568h@2x.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -95,6 +104,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				41ADA0331656499F004F93A6 /* iAd.framework in Frameworks */,
+				41ADA0311656492D004F93A6 /* GameKit.framework in Frameworks */,
+				41ADA02F165648FF004F93A6 /* CoreText.framework in Frameworks */,
+				411FA63216551D3B00411ABE /* libicucore.dylib in Frameworks */,
+				411FA63016551D3200411ABE /* libstdc++.dylib in Frameworks */,
+				411FA62D16551D1D00411ABE /* OpenAL.framework in Frameworks */,
+				411FA62E16551D1D00411ABE /* OpenGLES.framework in Frameworks */,
 				F60BBF831647C4900085B8FF /* Foundation.framework in Frameworks */,
 				F60BBF851647C4900085B8FF /* UIKit.framework in Frameworks */,
 				F60BBF871647C4900085B8FF /* CoreGraphics.framework in Frameworks */,
@@ -108,7 +124,8 @@
 				F60BBF971647C4900085B8FF /* SystemConfiguration.framework in Frameworks */,
 				F60BBF991647C4900085B8FF /* MobileCoreServices.framework in Frameworks */,
 				F60BBF9B1647C4900085B8FF /* CoreMedia.framework in Frameworks */,
-				F60BBFA61647C4910085B8FF /* Cordova.framework in Frameworks */,
+				411FA62616550CB100411ABE /* Cordova.framework in Frameworks */,
+				411FA63416551D7100411ABE /* libJavaScriptCore.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -143,6 +160,15 @@
 		F60BBF811647C4900085B8FF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				41ADA0321656499F004F93A6 /* iAd.framework */,
+				41ADA0301656492C004F93A6 /* GameKit.framework */,
+				41ADA02E165648FE004F93A6 /* CoreText.framework */,
+				411FA63116551D3B00411ABE /* libicucore.dylib */,
+				411FA62F16551D3200411ABE /* libstdc++.dylib */,
+				411FA63316551D7100411ABE /* libJavaScriptCore.a */,
+				411FA62B16551D1D00411ABE /* OpenAL.framework */,
+				411FA62C16551D1D00411ABE /* OpenGLES.framework */,
+				411FA62516550CB100411ABE /* Cordova.framework */,
 				F60BBF821647C4900085B8FF /* Foundation.framework */,
 				F60BBF841647C4900085B8FF /* UIKit.framework */,
 				F60BBF861647C4900085B8FF /* CoreGraphics.framework */,
@@ -163,7 +189,6 @@
 		F60BBF9C1647C4900085B8FF /* exampleWizViewManager */ = {
 			isa = PBXGroup;
 			children = (
-				F60BBFA51647C4910085B8FF /* Cordova.framework */,
 				F60BBFA71647C4910085B8FF /* Resources */,
 				F60BBFC81647C4910085B8FF /* Classes */,
 				F60BBFD11647C4910085B8FF /* Plugins */,
@@ -266,23 +291,9 @@
 		F60BBFD11647C4910085B8FF /* Plugins */ = {
 			isa = PBXGroup;
 			children = (
-				F60BBFE51647C7F40085B8FF /* WizViewManagerPlugin */,
 				F60BBFD21647C4910085B8FF /* README */,
 			);
 			name = Plugins;
-			sourceTree = "<group>";
-		};
-		F60BBFE51647C7F40085B8FF /* WizViewManagerPlugin */ = {
-			isa = PBXGroup;
-			children = (
-				F60BBFEC1647C88D0085B8FF /* WizDebugLog.h */,
-				F60BBFE61647C7F40085B8FF /* WizViewManagerPlugin.h */,
-				F60BBFE71647C7F40085B8FF /* WizViewManagerPlugin.m */,
-				F60BBFE81647C7F40085B8FF /* WizWebView.h */,
-				F60BBFE91647C7F40085B8FF /* WizWebView.m */,
-			);
-			name = WizViewManagerPlugin;
-			path = ../../../ios/project/Plugins/WizViewManagerPlugin;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -292,13 +303,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F60BBFD61647C4910085B8FF /* Build configuration list for PBXNativeTarget "exampleWizViewManager" */;
 			buildPhases = (
-				F60BBFDD1647C6E00085B8FF /* ShellScript */,
 				F60BBF771647C4900085B8FF /* Sources */,
 				F60BBF781647C4900085B8FF /* Frameworks */,
 				F60BBF791647C4900085B8FF /* Resources */,
 				F60BBF7A1647C4900085B8FF /* Sources */,
 				F60BBF7B1647C4900085B8FF /* Frameworks */,
-				F60BBF7C1647C4900085B8FF /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -363,35 +372,6 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
-/* Begin PBXShellScriptBuildPhase section */
-		F60BBF7C1647C4900085B8FF /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/bash;
-			shellScript = "";
-		};
-		F60BBFDD1647C6E00085B8FF /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "mkdir -p $PROJECT_DIR/../www/phonegap\ncp -r $PROJECT_DIR/../../www/phonegap $PROJECT_DIR/../www";
-		};
-/* End PBXShellScriptBuildPhase section */
-
 /* Begin PBXSourcesBuildPhase section */
 		F60BBF771647C4900085B8FF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -400,8 +380,6 @@
 				F60BBFA31647C4910085B8FF /* main.m in Sources */,
 				F60BBFCB1647C4910085B8FF /* AppDelegate.m in Sources */,
 				F60BBFCE1647C4910085B8FF /* MainViewController.m in Sources */,
-				F60BBFEA1647C7F40085B8FF /* WizViewManagerPlugin.m in Sources */,
-				F60BBFEB1647C7F40085B8FF /* WizWebView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -470,22 +448,25 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"DEBUG=1",
 					"$(inherited)",
+					NS_BLOCK_ASSERTIONS,
 				);
 				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
 				ONLY_ACTIVE_ARCH = YES;
+				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
@@ -502,14 +483,16 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_C_LANGUAGE_STANDARD = c99;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 3.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 4.3;
+				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -520,7 +503,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = /Users/Shared/Cordova/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/exampleWizViewManager/Framework\"";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "exampleWizViewManager/exampleWizViewManager-Prefix.pch";
@@ -528,7 +511,14 @@
 					"DEBUG=1,",
 					"CORDOVA_FRAMEWORK=1",
 				);
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/exampleWizViewManager/Plugins/WizViewManagerPlugin\"";
 				INFOPLIST_FILE = "exampleWizViewManager/exampleWizViewManager-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/exampleWizViewManager/Framework\"",
+					"\"$(SRCROOT)/exampleWizViewManager/Plugins/WizViewManagerPlugin\"",
+				);
 				OTHER_LDFLAGS = (
 					"-weak_framework",
 					UIKit,
@@ -550,14 +540,21 @@
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = /Users/Shared/Cordova/Frameworks;
+				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/exampleWizViewManager/Framework\"";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "exampleWizViewManager/exampleWizViewManager-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"NDEBUG=1,",
 					"CORDOVA_FRAMEWORK=1",
 				);
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/exampleWizViewManager/Plugins/WizViewManagerPlugin\"";
 				INFOPLIST_FILE = "exampleWizViewManager/exampleWizViewManager-Info.plist";
+				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"\"$(SRCROOT)/exampleWizViewManager/Framework\"",
+					"\"$(SRCROOT)/exampleWizViewManager/Plugins/WizViewManagerPlugin\"",
+				);
 				OTHER_LDFLAGS = (
 					"-weak_framework",
 					UIKit,

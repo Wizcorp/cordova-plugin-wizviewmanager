@@ -23,5 +23,4 @@
 
 -(UIWebView *)createNewInstanceViewFromManager:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src;
 
-
 @end
