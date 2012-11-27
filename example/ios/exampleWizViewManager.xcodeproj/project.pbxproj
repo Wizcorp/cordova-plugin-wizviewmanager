@@ -7,15 +7,46 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		411FA62616550CB100411ABE /* Cordova.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62516550CB100411ABE /* Cordova.framework */; };
 		411FA62D16551D1D00411ABE /* OpenAL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62B16551D1D00411ABE /* OpenAL.framework */; };
 		411FA62E16551D1D00411ABE /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62C16551D1D00411ABE /* OpenGLES.framework */; };
 		411FA63016551D3200411ABE /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62F16551D3200411ABE /* libstdc++.dylib */; };
 		411FA63216551D3B00411ABE /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA63116551D3B00411ABE /* libicucore.dylib */; };
-		411FA63416551D7100411ABE /* libJavaScriptCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA63316551D7100411ABE /* libJavaScriptCore.a */; };
 		41ADA02F165648FF004F93A6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADA02E165648FE004F93A6 /* CoreText.framework */; };
 		41ADA0311656492D004F93A6 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADA0301656492C004F93A6 /* GameKit.framework */; };
 		41ADA0331656499F004F93A6 /* iAd.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADA0321656499F004F93A6 /* iAd.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		41D70C8816647D1C008CAE2E /* EJAudioSourceAVAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C3816647D1C008CAE2E /* EJAudioSourceAVAudio.m */; };
+		41D70C8916647D1C008CAE2E /* EJAudioSourceOpenAL.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C3A16647D1C008CAE2E /* EJAudioSourceOpenAL.m */; };
+		41D70C8A16647D1C008CAE2E /* EJBindingAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C3C16647D1C008CAE2E /* EJBindingAudio.m */; };
+		41D70C8B16647D1C008CAE2E /* EJOpenALBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C3E16647D1C008CAE2E /* EJOpenALBuffer.m */; };
+		41D70C8C16647D1C008CAE2E /* EJOpenALManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C4016647D1C008CAE2E /* EJOpenALManager.m */; };
+		41D70C8D16647D1C008CAE2E /* EJBindingBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C4216647D1C008CAE2E /* EJBindingBase.m */; };
+		41D70C8E16647D1C008CAE2E /* EJBindingEjectaCore.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C4416647D1C008CAE2E /* EJBindingEjectaCore.m */; };
+		41D70C8F16647D1C008CAE2E /* EJBindingEventedBase.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C4616647D1C008CAE2E /* EJBindingEventedBase.m */; };
+		41D70C9016647D1C008CAE2E /* EAGLView.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C4916647D1C008CAE2E /* EAGLView.m */; };
+		41D70C9116647D1C008CAE2E /* EJBindingCanvas.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C4B16647D1C008CAE2E /* EJBindingCanvas.m */; };
+		41D70C9216647D1C008CAE2E /* EJBindingImage.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C4D16647D1C008CAE2E /* EJBindingImage.m */; };
+		41D70C9316647D1C008CAE2E /* EJBindingImageData.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C4F16647D1C008CAE2E /* EJBindingImageData.m */; };
+		41D70C9416647D1C008CAE2E /* EJCanvasContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5116647D1C008CAE2E /* EJCanvasContext.m */; };
+		41D70C9516647D1C008CAE2E /* EJCanvasContextScreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5316647D1C008CAE2E /* EJCanvasContextScreen.m */; };
+		41D70C9616647D1C008CAE2E /* EJCanvasContextTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5516647D1C008CAE2E /* EJCanvasContextTexture.m */; };
+		41D70C9716647D1C008CAE2E /* EJFont.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5916647D1C008CAE2E /* EJFont.m */; };
+		41D70C9816647D1C008CAE2E /* EJImageData.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5B16647D1C008CAE2E /* EJImageData.m */; };
+		41D70C9916647D1C008CAE2E /* EJPath.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5D16647D1C008CAE2E /* EJPath.mm */; };
+		41D70C9A16647D1C008CAE2E /* EJTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5F16647D1C008CAE2E /* EJTexture.m */; };
+		41D70C9B16647D1C008CAE2E /* EJConvert.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C6116647D1C008CAE2E /* EJConvert.m */; };
+		41D70C9C16647D1C008CAE2E /* EJTimer.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C6316647D1C008CAE2E /* EJTimer.m */; };
+		41D70C9D16647D1C008CAE2E /* EJBindingAccelerometer.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C6616647D1C008CAE2E /* EJBindingAccelerometer.m */; };
+		41D70C9E16647D1C008CAE2E /* EJBindingAdBanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C6816647D1C008CAE2E /* EJBindingAdBanner.m */; };
+		41D70C9F16647D1C008CAE2E /* EJBindingGameCenter.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C6A16647D1C008CAE2E /* EJBindingGameCenter.m */; };
+		41D70CA016647D1C008CAE2E /* EJBindingHttpRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C6C16647D1C008CAE2E /* EJBindingHttpRequest.m */; };
+		41D70CA116647D1C008CAE2E /* EJBindingLocalStorage.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C6E16647D1C008CAE2E /* EJBindingLocalStorage.m */; };
+		41D70CA216647D1C008CAE2E /* EJBindingTouchInput.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C7016647D1C008CAE2E /* EJBindingTouchInput.m */; };
+		41D70CA316647D1C008CAE2E /* EJBindingWizViewManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C7216647D1C008CAE2E /* EJBindingWizViewManager.m */; };
+		41D70CA416647D1C008CAE2E /* libJavaScriptCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 41D70C7C16647D1C008CAE2E /* libJavaScriptCore.a */; };
+		41D70CA516647D1C008CAE2E /* lodepng.c in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C7F16647D1C008CAE2E /* lodepng.c */; };
+		41D70CA616647D1C008CAE2E /* WizCanvasView.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C8216647D1C008CAE2E /* WizCanvasView.m */; };
+		41D70CA716647D1C008CAE2E /* WizViewManagerPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C8516647D1C008CAE2E /* WizViewManagerPlugin.m */; };
+		41D70CA816647D1C008CAE2E /* WizWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C8716647D1C008CAE2E /* WizWebView.m */; };
 		F60BBF831647C4900085B8FF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F60BBF821647C4900085B8FF /* Foundation.framework */; };
 		F60BBF851647C4900085B8FF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F60BBF841647C4900085B8FF /* UIKit.framework */; };
 		F60BBF871647C4900085B8FF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F60BBF861647C4900085B8FF /* CoreGraphics.framework */; };
@@ -50,15 +81,91 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		411FA62516550CB100411ABE /* Cordova.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cordova.framework; path = exampleWizViewManager/Framework/Cordova.framework; sourceTree = "<group>"; };
 		411FA62B16551D1D00411ABE /* OpenAL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenAL.framework; path = System/Library/Frameworks/OpenAL.framework; sourceTree = SDKROOT; };
 		411FA62C16551D1D00411ABE /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
 		411FA62F16551D3200411ABE /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/libstdc++.dylib"; sourceTree = SDKROOT; };
 		411FA63116551D3B00411ABE /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
-		411FA63316551D7100411ABE /* libJavaScriptCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libJavaScriptCore.a; path = exampleWizViewManager/Framework/libJavaScriptCore.a; sourceTree = "<group>"; };
 		41ADA02E165648FE004F93A6 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		41ADA0301656492C004F93A6 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 		41ADA0321656499F004F93A6 /* iAd.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = iAd.framework; path = System/Library/Frameworks/iAd.framework; sourceTree = SDKROOT; };
+		41D70C3616647D1C008CAE2E /* EJAudioSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJAudioSource.h; sourceTree = "<group>"; };
+		41D70C3716647D1C008CAE2E /* EJAudioSourceAVAudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJAudioSourceAVAudio.h; sourceTree = "<group>"; };
+		41D70C3816647D1C008CAE2E /* EJAudioSourceAVAudio.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJAudioSourceAVAudio.m; sourceTree = "<group>"; };
+		41D70C3916647D1C008CAE2E /* EJAudioSourceOpenAL.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJAudioSourceOpenAL.h; sourceTree = "<group>"; };
+		41D70C3A16647D1C008CAE2E /* EJAudioSourceOpenAL.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJAudioSourceOpenAL.m; sourceTree = "<group>"; };
+		41D70C3B16647D1C008CAE2E /* EJBindingAudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingAudio.h; sourceTree = "<group>"; };
+		41D70C3C16647D1C008CAE2E /* EJBindingAudio.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingAudio.m; sourceTree = "<group>"; };
+		41D70C3D16647D1C008CAE2E /* EJOpenALBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJOpenALBuffer.h; sourceTree = "<group>"; };
+		41D70C3E16647D1C008CAE2E /* EJOpenALBuffer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJOpenALBuffer.m; sourceTree = "<group>"; };
+		41D70C3F16647D1C008CAE2E /* EJOpenALManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJOpenALManager.h; sourceTree = "<group>"; };
+		41D70C4016647D1C008CAE2E /* EJOpenALManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJOpenALManager.m; sourceTree = "<group>"; };
+		41D70C4116647D1C008CAE2E /* EJBindingBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingBase.h; sourceTree = "<group>"; };
+		41D70C4216647D1C008CAE2E /* EJBindingBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingBase.m; sourceTree = "<group>"; };
+		41D70C4316647D1C008CAE2E /* EJBindingEjectaCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingEjectaCore.h; sourceTree = "<group>"; };
+		41D70C4416647D1C008CAE2E /* EJBindingEjectaCore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingEjectaCore.m; sourceTree = "<group>"; };
+		41D70C4516647D1C008CAE2E /* EJBindingEventedBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingEventedBase.h; sourceTree = "<group>"; };
+		41D70C4616647D1C008CAE2E /* EJBindingEventedBase.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingEventedBase.m; sourceTree = "<group>"; };
+		41D70C4816647D1C008CAE2E /* EAGLView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EAGLView.h; sourceTree = "<group>"; };
+		41D70C4916647D1C008CAE2E /* EAGLView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EAGLView.m; sourceTree = "<group>"; };
+		41D70C4A16647D1C008CAE2E /* EJBindingCanvas.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingCanvas.h; sourceTree = "<group>"; };
+		41D70C4B16647D1C008CAE2E /* EJBindingCanvas.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingCanvas.m; sourceTree = "<group>"; };
+		41D70C4C16647D1C008CAE2E /* EJBindingImage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingImage.h; sourceTree = "<group>"; };
+		41D70C4D16647D1C008CAE2E /* EJBindingImage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingImage.m; sourceTree = "<group>"; };
+		41D70C4E16647D1C008CAE2E /* EJBindingImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingImageData.h; sourceTree = "<group>"; };
+		41D70C4F16647D1C008CAE2E /* EJBindingImageData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingImageData.m; sourceTree = "<group>"; };
+		41D70C5016647D1C008CAE2E /* EJCanvasContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJCanvasContext.h; sourceTree = "<group>"; };
+		41D70C5116647D1C008CAE2E /* EJCanvasContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJCanvasContext.m; sourceTree = "<group>"; };
+		41D70C5216647D1C008CAE2E /* EJCanvasContextScreen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJCanvasContextScreen.h; sourceTree = "<group>"; };
+		41D70C5316647D1C008CAE2E /* EJCanvasContextScreen.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJCanvasContextScreen.m; sourceTree = "<group>"; };
+		41D70C5416647D1C008CAE2E /* EJCanvasContextTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJCanvasContextTexture.h; sourceTree = "<group>"; };
+		41D70C5516647D1C008CAE2E /* EJCanvasContextTexture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJCanvasContextTexture.m; sourceTree = "<group>"; };
+		41D70C5616647D1C008CAE2E /* EJCanvasTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJCanvasTypes.h; sourceTree = "<group>"; };
+		41D70C5716647D1C008CAE2E /* EJDrawable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJDrawable.h; sourceTree = "<group>"; };
+		41D70C5816647D1C008CAE2E /* EJFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJFont.h; sourceTree = "<group>"; };
+		41D70C5916647D1C008CAE2E /* EJFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJFont.m; sourceTree = "<group>"; };
+		41D70C5A16647D1C008CAE2E /* EJImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJImageData.h; sourceTree = "<group>"; };
+		41D70C5B16647D1C008CAE2E /* EJImageData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJImageData.m; sourceTree = "<group>"; };
+		41D70C5C16647D1C008CAE2E /* EJPath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJPath.h; sourceTree = "<group>"; };
+		41D70C5D16647D1C008CAE2E /* EJPath.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EJPath.mm; sourceTree = "<group>"; };
+		41D70C5E16647D1C008CAE2E /* EJTexture.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJTexture.h; sourceTree = "<group>"; };
+		41D70C5F16647D1C008CAE2E /* EJTexture.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJTexture.m; sourceTree = "<group>"; };
+		41D70C6016647D1C008CAE2E /* EJConvert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJConvert.h; sourceTree = "<group>"; };
+		41D70C6116647D1C008CAE2E /* EJConvert.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJConvert.m; sourceTree = "<group>"; };
+		41D70C6216647D1C008CAE2E /* EJTimer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJTimer.h; sourceTree = "<group>"; };
+		41D70C6316647D1C008CAE2E /* EJTimer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJTimer.m; sourceTree = "<group>"; };
+		41D70C6516647D1C008CAE2E /* EJBindingAccelerometer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingAccelerometer.h; sourceTree = "<group>"; };
+		41D70C6616647D1C008CAE2E /* EJBindingAccelerometer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingAccelerometer.m; sourceTree = "<group>"; };
+		41D70C6716647D1C008CAE2E /* EJBindingAdBanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingAdBanner.h; sourceTree = "<group>"; };
+		41D70C6816647D1C008CAE2E /* EJBindingAdBanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingAdBanner.m; sourceTree = "<group>"; };
+		41D70C6916647D1C008CAE2E /* EJBindingGameCenter.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingGameCenter.h; sourceTree = "<group>"; };
+		41D70C6A16647D1C008CAE2E /* EJBindingGameCenter.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingGameCenter.m; sourceTree = "<group>"; };
+		41D70C6B16647D1C008CAE2E /* EJBindingHttpRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingHttpRequest.h; sourceTree = "<group>"; };
+		41D70C6C16647D1C008CAE2E /* EJBindingHttpRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingHttpRequest.m; sourceTree = "<group>"; };
+		41D70C6D16647D1C008CAE2E /* EJBindingLocalStorage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingLocalStorage.h; sourceTree = "<group>"; };
+		41D70C6E16647D1C008CAE2E /* EJBindingLocalStorage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingLocalStorage.m; sourceTree = "<group>"; };
+		41D70C6F16647D1C008CAE2E /* EJBindingTouchInput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingTouchInput.h; sourceTree = "<group>"; };
+		41D70C7016647D1C008CAE2E /* EJBindingTouchInput.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingTouchInput.m; sourceTree = "<group>"; };
+		41D70C7116647D1C008CAE2E /* EJBindingWizViewManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJBindingWizViewManager.h; sourceTree = "<group>"; };
+		41D70C7216647D1C008CAE2E /* EJBindingWizViewManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJBindingWizViewManager.m; sourceTree = "<group>"; };
+		41D70C7416647D1C008CAE2E /* JavaScript.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JavaScript.h; sourceTree = "<group>"; };
+		41D70C7516647D1C008CAE2E /* JavaScriptCore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JavaScriptCore.h; sourceTree = "<group>"; };
+		41D70C7616647D1C008CAE2E /* JSBase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSBase.h; sourceTree = "<group>"; };
+		41D70C7716647D1C008CAE2E /* JSContextRef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSContextRef.h; sourceTree = "<group>"; };
+		41D70C7816647D1C008CAE2E /* JSObjectRef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSObjectRef.h; sourceTree = "<group>"; };
+		41D70C7916647D1C008CAE2E /* JSStringRef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSStringRef.h; sourceTree = "<group>"; };
+		41D70C7A16647D1C008CAE2E /* JSStringRefCF.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSStringRefCF.h; sourceTree = "<group>"; };
+		41D70C7B16647D1C008CAE2E /* JSValueRef.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = JSValueRef.h; sourceTree = "<group>"; };
+		41D70C7C16647D1C008CAE2E /* libJavaScriptCore.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libJavaScriptCore.a; sourceTree = "<group>"; };
+		41D70C7D16647D1C008CAE2E /* WebKitAvailability.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebKitAvailability.h; sourceTree = "<group>"; };
+		41D70C7F16647D1C008CAE2E /* lodepng.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = lodepng.c; sourceTree = "<group>"; };
+		41D70C8016647D1C008CAE2E /* lodepng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lodepng.h; sourceTree = "<group>"; };
+		41D70C8116647D1C008CAE2E /* WizCanvasView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizCanvasView.h; sourceTree = "<group>"; };
+		41D70C8216647D1C008CAE2E /* WizCanvasView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WizCanvasView.m; sourceTree = "<group>"; };
+		41D70C8316647D1C008CAE2E /* WizDebugLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizDebugLog.h; sourceTree = "<group>"; };
+		41D70C8416647D1C008CAE2E /* WizViewManagerPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizViewManagerPlugin.h; sourceTree = "<group>"; };
+		41D70C8516647D1C008CAE2E /* WizViewManagerPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WizViewManagerPlugin.m; sourceTree = "<group>"; };
+		41D70C8616647D1C008CAE2E /* WizWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizWebView.h; sourceTree = "<group>"; };
+		41D70C8716647D1C008CAE2E /* WizWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WizWebView.m; sourceTree = "<group>"; };
 		F60BBF7E1647C4900085B8FF /* exampleWizViewManager.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = exampleWizViewManager.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F60BBF821647C4900085B8FF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		F60BBF841647C4900085B8FF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
@@ -124,8 +231,7 @@
 				F60BBF971647C4900085B8FF /* SystemConfiguration.framework in Frameworks */,
 				F60BBF991647C4900085B8FF /* MobileCoreServices.framework in Frameworks */,
 				F60BBF9B1647C4900085B8FF /* CoreMedia.framework in Frameworks */,
-				411FA62616550CB100411ABE /* Cordova.framework in Frameworks */,
-				411FA63416551D7100411ABE /* libJavaScriptCore.a in Frameworks */,
+				41D70CA416647D1C008CAE2E /* libJavaScriptCore.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,6 +245,140 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		41D70C3316647D1C008CAE2E /* WizViewManagerPlugin */ = {
+			isa = PBXGroup;
+			children = (
+				41D70C3416647D1C008CAE2E /* Ejecta */,
+				41D70C7316647D1C008CAE2E /* JavaScriptCore */,
+				41D70C7E16647D1C008CAE2E /* lodepng */,
+				41D70C8116647D1C008CAE2E /* WizCanvasView.h */,
+				41D70C8216647D1C008CAE2E /* WizCanvasView.m */,
+				41D70C8316647D1C008CAE2E /* WizDebugLog.h */,
+				41D70C8416647D1C008CAE2E /* WizViewManagerPlugin.h */,
+				41D70C8516647D1C008CAE2E /* WizViewManagerPlugin.m */,
+				41D70C8616647D1C008CAE2E /* WizWebView.h */,
+				41D70C8716647D1C008CAE2E /* WizWebView.m */,
+			);
+			name = WizViewManagerPlugin;
+			path = ../../../ios/project/Plugins/WizViewManagerPlugin;
+			sourceTree = "<group>";
+		};
+		41D70C3416647D1C008CAE2E /* Ejecta */ = {
+			isa = PBXGroup;
+			children = (
+				41D70C3516647D1C008CAE2E /* EJAudio */,
+				41D70C4116647D1C008CAE2E /* EJBindingBase.h */,
+				41D70C4216647D1C008CAE2E /* EJBindingBase.m */,
+				41D70C4316647D1C008CAE2E /* EJBindingEjectaCore.h */,
+				41D70C4416647D1C008CAE2E /* EJBindingEjectaCore.m */,
+				41D70C4516647D1C008CAE2E /* EJBindingEventedBase.h */,
+				41D70C4616647D1C008CAE2E /* EJBindingEventedBase.m */,
+				41D70C4716647D1C008CAE2E /* EJCanvas */,
+				41D70C6016647D1C008CAE2E /* EJConvert.h */,
+				41D70C6116647D1C008CAE2E /* EJConvert.m */,
+				41D70C6216647D1C008CAE2E /* EJTimer.h */,
+				41D70C6316647D1C008CAE2E /* EJTimer.m */,
+				41D70C6416647D1C008CAE2E /* EJUtils */,
+			);
+			path = Ejecta;
+			sourceTree = "<group>";
+		};
+		41D70C3516647D1C008CAE2E /* EJAudio */ = {
+			isa = PBXGroup;
+			children = (
+				41D70C3616647D1C008CAE2E /* EJAudioSource.h */,
+				41D70C3716647D1C008CAE2E /* EJAudioSourceAVAudio.h */,
+				41D70C3816647D1C008CAE2E /* EJAudioSourceAVAudio.m */,
+				41D70C3916647D1C008CAE2E /* EJAudioSourceOpenAL.h */,
+				41D70C3A16647D1C008CAE2E /* EJAudioSourceOpenAL.m */,
+				41D70C3B16647D1C008CAE2E /* EJBindingAudio.h */,
+				41D70C3C16647D1C008CAE2E /* EJBindingAudio.m */,
+				41D70C3D16647D1C008CAE2E /* EJOpenALBuffer.h */,
+				41D70C3E16647D1C008CAE2E /* EJOpenALBuffer.m */,
+				41D70C3F16647D1C008CAE2E /* EJOpenALManager.h */,
+				41D70C4016647D1C008CAE2E /* EJOpenALManager.m */,
+			);
+			path = EJAudio;
+			sourceTree = "<group>";
+		};
+		41D70C4716647D1C008CAE2E /* EJCanvas */ = {
+			isa = PBXGroup;
+			children = (
+				41D70C4816647D1C008CAE2E /* EAGLView.h */,
+				41D70C4916647D1C008CAE2E /* EAGLView.m */,
+				41D70C4A16647D1C008CAE2E /* EJBindingCanvas.h */,
+				41D70C4B16647D1C008CAE2E /* EJBindingCanvas.m */,
+				41D70C4C16647D1C008CAE2E /* EJBindingImage.h */,
+				41D70C4D16647D1C008CAE2E /* EJBindingImage.m */,
+				41D70C4E16647D1C008CAE2E /* EJBindingImageData.h */,
+				41D70C4F16647D1C008CAE2E /* EJBindingImageData.m */,
+				41D70C5016647D1C008CAE2E /* EJCanvasContext.h */,
+				41D70C5116647D1C008CAE2E /* EJCanvasContext.m */,
+				41D70C5216647D1C008CAE2E /* EJCanvasContextScreen.h */,
+				41D70C5316647D1C008CAE2E /* EJCanvasContextScreen.m */,
+				41D70C5416647D1C008CAE2E /* EJCanvasContextTexture.h */,
+				41D70C5516647D1C008CAE2E /* EJCanvasContextTexture.m */,
+				41D70C5616647D1C008CAE2E /* EJCanvasTypes.h */,
+				41D70C5716647D1C008CAE2E /* EJDrawable.h */,
+				41D70C5816647D1C008CAE2E /* EJFont.h */,
+				41D70C5916647D1C008CAE2E /* EJFont.m */,
+				41D70C5A16647D1C008CAE2E /* EJImageData.h */,
+				41D70C5B16647D1C008CAE2E /* EJImageData.m */,
+				41D70C5C16647D1C008CAE2E /* EJPath.h */,
+				41D70C5D16647D1C008CAE2E /* EJPath.mm */,
+				41D70C5E16647D1C008CAE2E /* EJTexture.h */,
+				41D70C5F16647D1C008CAE2E /* EJTexture.m */,
+			);
+			path = EJCanvas;
+			sourceTree = "<group>";
+		};
+		41D70C6416647D1C008CAE2E /* EJUtils */ = {
+			isa = PBXGroup;
+			children = (
+				41D70C6516647D1C008CAE2E /* EJBindingAccelerometer.h */,
+				41D70C6616647D1C008CAE2E /* EJBindingAccelerometer.m */,
+				41D70C6716647D1C008CAE2E /* EJBindingAdBanner.h */,
+				41D70C6816647D1C008CAE2E /* EJBindingAdBanner.m */,
+				41D70C6916647D1C008CAE2E /* EJBindingGameCenter.h */,
+				41D70C6A16647D1C008CAE2E /* EJBindingGameCenter.m */,
+				41D70C6B16647D1C008CAE2E /* EJBindingHttpRequest.h */,
+				41D70C6C16647D1C008CAE2E /* EJBindingHttpRequest.m */,
+				41D70C6D16647D1C008CAE2E /* EJBindingLocalStorage.h */,
+				41D70C6E16647D1C008CAE2E /* EJBindingLocalStorage.m */,
+				41D70C6F16647D1C008CAE2E /* EJBindingTouchInput.h */,
+				41D70C7016647D1C008CAE2E /* EJBindingTouchInput.m */,
+				41D70C7116647D1C008CAE2E /* EJBindingWizViewManager.h */,
+				41D70C7216647D1C008CAE2E /* EJBindingWizViewManager.m */,
+			);
+			path = EJUtils;
+			sourceTree = "<group>";
+		};
+		41D70C7316647D1C008CAE2E /* JavaScriptCore */ = {
+			isa = PBXGroup;
+			children = (
+				41D70C7416647D1C008CAE2E /* JavaScript.h */,
+				41D70C7516647D1C008CAE2E /* JavaScriptCore.h */,
+				41D70C7616647D1C008CAE2E /* JSBase.h */,
+				41D70C7716647D1C008CAE2E /* JSContextRef.h */,
+				41D70C7816647D1C008CAE2E /* JSObjectRef.h */,
+				41D70C7916647D1C008CAE2E /* JSStringRef.h */,
+				41D70C7A16647D1C008CAE2E /* JSStringRefCF.h */,
+				41D70C7B16647D1C008CAE2E /* JSValueRef.h */,
+				41D70C7C16647D1C008CAE2E /* libJavaScriptCore.a */,
+				41D70C7D16647D1C008CAE2E /* WebKitAvailability.h */,
+			);
+			path = JavaScriptCore;
+			sourceTree = "<group>";
+		};
+		41D70C7E16647D1C008CAE2E /* lodepng */ = {
+			isa = PBXGroup;
+			children = (
+				41D70C7F16647D1C008CAE2E /* lodepng.c */,
+				41D70C8016647D1C008CAE2E /* lodepng.h */,
+			);
+			path = lodepng;
+			sourceTree = "<group>";
+		};
 		F60BBF701647C4900085B8FF = {
 			isa = PBXGroup;
 			children = (
@@ -165,10 +405,8 @@
 				41ADA02E165648FE004F93A6 /* CoreText.framework */,
 				411FA63116551D3B00411ABE /* libicucore.dylib */,
 				411FA62F16551D3200411ABE /* libstdc++.dylib */,
-				411FA63316551D7100411ABE /* libJavaScriptCore.a */,
 				411FA62B16551D1D00411ABE /* OpenAL.framework */,
 				411FA62C16551D1D00411ABE /* OpenGLES.framework */,
-				411FA62516550CB100411ABE /* Cordova.framework */,
 				F60BBF821647C4900085B8FF /* Foundation.framework */,
 				F60BBF841647C4900085B8FF /* UIKit.framework */,
 				F60BBF861647C4900085B8FF /* CoreGraphics.framework */,
@@ -291,6 +529,7 @@
 		F60BBFD11647C4910085B8FF /* Plugins */ = {
 			isa = PBXGroup;
 			children = (
+				41D70C3316647D1C008CAE2E /* WizViewManagerPlugin */,
 				F60BBFD21647C4910085B8FF /* README */,
 			);
 			name = Plugins;
@@ -303,6 +542,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F60BBFD61647C4910085B8FF /* Build configuration list for PBXNativeTarget "exampleWizViewManager" */;
 			buildPhases = (
+				41D70CB4166480F5008CAE2E /* ShellScript */,
 				F60BBF771647C4900085B8FF /* Sources */,
 				F60BBF781647C4900085B8FF /* Frameworks */,
 				F60BBF791647C4900085B8FF /* Resources */,
@@ -372,6 +612,22 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		41D70CB4166480F5008CAE2E /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "mkdir -p ../www/phonegap\ncp -r ../../www/phonegap ../www";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		F60BBF771647C4900085B8FF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -380,6 +636,38 @@
 				F60BBFA31647C4910085B8FF /* main.m in Sources */,
 				F60BBFCB1647C4910085B8FF /* AppDelegate.m in Sources */,
 				F60BBFCE1647C4910085B8FF /* MainViewController.m in Sources */,
+				41D70C8816647D1C008CAE2E /* EJAudioSourceAVAudio.m in Sources */,
+				41D70C8916647D1C008CAE2E /* EJAudioSourceOpenAL.m in Sources */,
+				41D70C8A16647D1C008CAE2E /* EJBindingAudio.m in Sources */,
+				41D70C8B16647D1C008CAE2E /* EJOpenALBuffer.m in Sources */,
+				41D70C8C16647D1C008CAE2E /* EJOpenALManager.m in Sources */,
+				41D70C8D16647D1C008CAE2E /* EJBindingBase.m in Sources */,
+				41D70C8E16647D1C008CAE2E /* EJBindingEjectaCore.m in Sources */,
+				41D70C8F16647D1C008CAE2E /* EJBindingEventedBase.m in Sources */,
+				41D70C9016647D1C008CAE2E /* EAGLView.m in Sources */,
+				41D70C9116647D1C008CAE2E /* EJBindingCanvas.m in Sources */,
+				41D70C9216647D1C008CAE2E /* EJBindingImage.m in Sources */,
+				41D70C9316647D1C008CAE2E /* EJBindingImageData.m in Sources */,
+				41D70C9416647D1C008CAE2E /* EJCanvasContext.m in Sources */,
+				41D70C9516647D1C008CAE2E /* EJCanvasContextScreen.m in Sources */,
+				41D70C9616647D1C008CAE2E /* EJCanvasContextTexture.m in Sources */,
+				41D70C9716647D1C008CAE2E /* EJFont.m in Sources */,
+				41D70C9816647D1C008CAE2E /* EJImageData.m in Sources */,
+				41D70C9916647D1C008CAE2E /* EJPath.mm in Sources */,
+				41D70C9A16647D1C008CAE2E /* EJTexture.m in Sources */,
+				41D70C9B16647D1C008CAE2E /* EJConvert.m in Sources */,
+				41D70C9C16647D1C008CAE2E /* EJTimer.m in Sources */,
+				41D70C9D16647D1C008CAE2E /* EJBindingAccelerometer.m in Sources */,
+				41D70C9E16647D1C008CAE2E /* EJBindingAdBanner.m in Sources */,
+				41D70C9F16647D1C008CAE2E /* EJBindingGameCenter.m in Sources */,
+				41D70CA016647D1C008CAE2E /* EJBindingHttpRequest.m in Sources */,
+				41D70CA116647D1C008CAE2E /* EJBindingLocalStorage.m in Sources */,
+				41D70CA216647D1C008CAE2E /* EJBindingTouchInput.m in Sources */,
+				41D70CA316647D1C008CAE2E /* EJBindingWizViewManager.m in Sources */,
+				41D70CA516647D1C008CAE2E /* lodepng.c in Sources */,
+				41D70CA616647D1C008CAE2E /* WizCanvasView.m in Sources */,
+				41D70CA716647D1C008CAE2E /* WizViewManagerPlugin.m in Sources */,
+				41D70CA816647D1C008CAE2E /* WizWebView.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -503,7 +791,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/exampleWizViewManager/Framework\"";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "exampleWizViewManager/exampleWizViewManager-Prefix.pch";
@@ -511,13 +799,12 @@
 					"DEBUG=1,",
 					"CORDOVA_FRAMEWORK=1",
 				);
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/exampleWizViewManager/Plugins/WizViewManagerPlugin\"";
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../ios/project/Plugins/WizViewManagerPlugin\"";
 				INFOPLIST_FILE = "exampleWizViewManager/exampleWizViewManager-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/exampleWizViewManager/Framework\"",
-					"\"$(SRCROOT)/exampleWizViewManager/Plugins/WizViewManagerPlugin\"",
+					"\"$(SRCROOT)/../../ios/project/Plugins/WizViewManagerPlugin/JavaScriptCore\"",
 				);
 				OTHER_LDFLAGS = (
 					"-weak_framework",
@@ -540,20 +827,19 @@
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = "\"$(SRCROOT)/exampleWizViewManager/Framework\"";
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "exampleWizViewManager/exampleWizViewManager-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"NDEBUG=1,",
 					"CORDOVA_FRAMEWORK=1",
 				);
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/exampleWizViewManager/Plugins/WizViewManagerPlugin\"";
+				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../../ios/project/Plugins/WizViewManagerPlugin\"";
 				INFOPLIST_FILE = "exampleWizViewManager/exampleWizViewManager-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/exampleWizViewManager/Framework\"",
-					"\"$(SRCROOT)/exampleWizViewManager/Plugins/WizViewManagerPlugin\"",
+					"\"$(SRCROOT)/../../ios/project/Plugins/WizViewManagerPlugin/JavaScriptCore\"",
 				);
 				OTHER_LDFLAGS = (
 					"-weak_framework",
