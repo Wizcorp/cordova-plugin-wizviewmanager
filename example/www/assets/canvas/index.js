@@ -621,7 +621,7 @@ if (!JSON) {
 console.log("my name: " + window.name);
 console.log("MessageEvent: " + window.document.MessageEvent);
 console.log("Event: " + window.document.Event);
-                                                   
+console.log("Views: " + window.wizViewManager.views);
 
 
 // TEST

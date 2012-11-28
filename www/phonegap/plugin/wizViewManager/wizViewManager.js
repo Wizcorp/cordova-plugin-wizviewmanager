@@ -159,10 +159,11 @@
 		for (var i = 0; i < list.length; i++) {
 			var name = list[i];
 	
-			if (name !== this.name && !this.views[name]) {
-				this.views[name] = new WizViewManagerView(name);
+			if (!this.views[name]) {
+				this.views[name] = new View(name);
 			}
 		}
+		
 	};
 
 

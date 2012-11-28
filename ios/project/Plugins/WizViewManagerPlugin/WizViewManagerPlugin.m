@@ -51,6 +51,8 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     self.showViewCallbackId = nil;
     self.hideViewCallbackId = nil;
     
+    [self updateViewList];
+    
     return self;
 }
 
@@ -69,6 +71,36 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
 	return wizViewManagerInstance;
 }
 
+- (void)updateViewList {
+    
+    // Turn view dictionary into an array of view names
+    NSArray *viewNames = [[NSArray alloc] initWithArray:[wizViewList allKeys]];
+    NSString *viewNamesString = [NSString stringWithFormat:@"'%@'", [viewNames componentsJoinedByString:@"','"]];
+    // Inject Javascript to all views
+    for (NSString *key in wizViewList) {
+        // Found view send message
+        
+        NSString *viewType = [self checkView:[wizViewList objectForKey:key]];
+
+        if ([viewType isEqualToString:@"webview"]) {
+            
+            // updated wizViewMdanager.views in type webview
+            UIWebView *targetWebView = [wizViewList objectForKey:key];
+            [targetWebView stringByEvaluatingJavaScriptFromString:
+                                       [NSString stringWithFormat:@"window.wizViewManager.updateViewList([%@]);", viewNamesString]];
+            
+        } else if ([viewType isEqualToString:@"canvas"]) {
+            
+            // updated wizViewManager.views in type canvas
+            WizCanvasView *targetCanvasView = [wizViewList objectForKey:key];
+            [targetCanvasView evaluateScript:
+                  [NSString stringWithFormat:@"window.wizViewManager.updateViewList([%@]);", viewNamesString]];
+            
+        }        
+    }
+    [viewNames release];
+    
+}
 
 - (void)createWebView:(NSString*)viewName withOptions:(NSDictionary*)options {
     // Create a new wizWebView with options (if specified)
@@ -137,6 +169,8 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         [self.webView.superview addSubview:newWizView];
     }
     
+    [self updateViewList];
+    
 }
 
 
@@ -192,7 +226,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     // add view to parent webview
     [self.webView.superview addSubview:canvasView];
 
-    
+    [self updateViewList];
     
 }
 
@@ -489,8 +523,8 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     CDVPluginResult *pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
     
-    WizCanvasView* targetCanvasView = [wizViewList objectForKey:viewName];
-    
+    WizCanvasView *targetCanvasView = [wizViewList objectForKey:viewName];
+    NSLog(@"START showCanvasView with view :  %@", targetCanvasView.window);
     if (targetCanvasView.window.isHidden || [isAnimating objectForKey:viewName]) {
         
         if ([isAnimating objectForKey:viewName]) {
@@ -821,24 +855,46 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     
     // search for view
     if ([wizViewList objectForKey:viewName]) {
-        UIWebView *targetWebView = [wizViewList objectForKey:viewName];
+        
+        NSString *viewType = [self checkView:[wizViewList objectForKey:viewName]];
+        
+       
+        if ([viewType isEqualToString:@"webview"]) {
+            
+            UIWebView *targetWebView = [wizViewList objectForKey:viewName];
+            
+            // remove the view!
+            [targetWebView removeFromSuperview];
+            [targetWebView release];
+            targetWebView.delegate = nil;
+            targetWebView = nil;
+            
+        } else if ([viewType isEqualToString:@"canvas"]) {
+            
+            // Message canvas view
+            WizCanvasView *targetCanvasView = [wizViewList objectForKey:viewName];
+            
+            // remove the view!
+            [targetCanvasView removeFromSuperview];
+            [targetCanvasView release];
+//             targetCanvasView.window.delegate = nil;
+            targetCanvasView = nil;
+            
+        }              
+        
         
         // remove the view from wizViewList
         [wizViewList removeObjectForKey:viewName];
         
-        // remove the view!
-        [targetWebView removeFromSuperview];
-        [targetWebView release];
-        targetWebView.delegate = nil;
-        targetWebView = nil;
-        
-        
+        [self updateViewList];
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
         
         
         NSLog(@"[WizViewManager] ******* removeView views left : %@ ", wizViewList);
+        
+        
     } else {
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
@@ -1212,6 +1268,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
 
 - (void) hideWithNoAnimation:(UIView *)view {
     view.alpha = 0.0;
+    [view setHidden:TRUE];
     // move view out of display
     [view setFrame:CGRectMake(
                               view.frame.origin.x + viewPadder,
