@@ -15,8 +15,6 @@
 #import "CDVCordovaView.h"
 #endif
 
-// #import "EJApp.h"
-
 
 #import <QuartzCore/QuartzCore.h>
 #import "JavaScriptCore/JavaScriptCore.h"
@@ -29,8 +27,8 @@
 #define WIZVIEWMANAGER_BOOT_JS @"phonegap/plugin/wizViewManager/wizViewCanvasManager.js"
 #define EJECTA_MAIN_JS @"index.js"
 
-@protocol TouchDelegate
-- (void)triggerEvent:(NSString *)name withTouches:(NSSet *)touches;
+@protocol EJTouchDelegate
+- (void)triggerEvent:(NSString *)name withChangedTouches:(NSSet *)changed allTouches:(NSSet *)all;
 @end
 
 @class EJTimerCollection;
@@ -44,7 +42,7 @@
 	UIView * window;
 	NSMutableDictionary * jsClasses;
 	UIImageView * loadingScreen;
-	NSObject<TouchDelegate> * touchDelegate;
+	NSObject<EJTouchDelegate> * touchDelegate;
 	
 	EJTimerCollection * timers;
 	NSTimeInterval currentTime;
@@ -83,7 +81,7 @@
 @property (nonatomic, readonly) BOOL landscapeMode;
 @property (nonatomic, readonly) JSGlobalContextRef jsGlobalContext;
 @property (nonatomic, readonly) UIView * window;
-@property (nonatomic, retain) NSObject<TouchDelegate> * touchDelegate;
+@property (nonatomic, retain) NSObject<EJTouchDelegate> * touchDelegate;
 
 @property (nonatomic, readonly) NSOperationQueue * opQueue;
 @property (nonatomic, assign) EJCanvasContext * currentRenderingContext;

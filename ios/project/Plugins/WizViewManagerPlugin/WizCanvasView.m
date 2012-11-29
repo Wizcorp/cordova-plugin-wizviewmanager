@@ -86,14 +86,7 @@ static WizCanvasView * ejectaInstance = NULL;
 		ejectaInstance = self;
 		window = windowp;
         self.view = window;
-        
-        UITapGestureRecognizer *touchRecognizer =
-        [[UITapGestureRecognizer alloc] initWithTarget: self
-                                                action: @selector(handleTouch:)];
-        touchRecognizer.numberOfTapsRequired = 1;
-        touchRecognizer.numberOfTouchesRequired = 1;
-        
-        [self.window addGestureRecognizer:touchRecognizer];
+
         // [self.window makeKeyAndVisible];
         [UIApplication sharedApplication].idleTimerDisabled = YES;
 		
@@ -329,43 +322,23 @@ static WizCanvasView * ejectaInstance = NULL;
 // ---------------------------------------------------------------------------------
 // Touch handlers
 
-// HACK to get out of viewController
-- (void)handleTouch:(UISwipeGestureRecognizer *)recognizer
-{
-    if (recognizer.state == UIGestureRecognizerStateBegan)
-    {
-        //touchesBegan
-        [self touchesBegan:Nil withEvent:NULL];
-    } else if (recognizer.state == UIGestureRecognizerStateEnded)
-    {
-        //touchesEnded
-        [self touchesEnded:Nil withEvent:NULL];
-    } else if (recognizer.state == UIGestureRecognizerStateCancelled)
-    {
-        //touchesCancelled
-        [self touchesCancelled:Nil withEvent:NULL];
-    } else if (recognizer.state == UIGestureRecognizerStateChanged)
-    {
-        //touchesMoved
-        // [self touchesCancelled:Nil withEvent:NULL];
-    }
-}
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    NSLog(@"wizCanvas view TouchesBegan! ");
-	[touchDelegate triggerEvent:@"touchstart" withTouches:touches];
+    
+    [touchDelegate triggerEvent:@"touchstart" withChangedTouches:touches allTouches:[event allTouches]];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-	[touchDelegate triggerEvent:@"touchend" withTouches:touches];
+    
+    [touchDelegate triggerEvent:@"touchend" withChangedTouches:touches allTouches:[event allTouches]];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-	[touchDelegate triggerEvent:@"touchend" withTouches:touches];
+    [touchDelegate triggerEvent:@"touchend" withChangedTouches:touches allTouches:[event allTouches]];
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-	[touchDelegate triggerEvent:@"touchmove" withTouches:touches];
+    [touchDelegate triggerEvent:@"touchmove" withChangedTouches:touches allTouches:[event allTouches]];
 }
 
 
