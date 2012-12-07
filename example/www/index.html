@@ -76,9 +76,7 @@
             alert("Could not find wizViewMessenger");
         }
         
-        
-        createCanvasView();
-	}
+    }
         
         // TODO: Change this path to match the location where the www/newview.html file lives.
         // On the simulator this is a location on your machine.
@@ -134,6 +132,17 @@
         function hideCanvasView() {
             var params = {};
             wizViewManager.hide("newCanvas", params, null, null);
+        }
+        
+        function loadIntoCanvasView() {
+            wizViewManager.load("newCanvas",
+                                "assets/canvas/exampleScript.js",
+                                function() {
+                                    console.log("Load into canvas success");
+                                },
+                                function(e) {
+                                    console.log("Load into canvas fail. " + e);
+                                });
         }
         
         function createView() {
@@ -238,6 +247,7 @@
             <input type="button" value="Create Canvas" onclick="createCanvasView()" />
             <input type="button" value="Message Canvas" onclick="messageCanvasView()" />
             <input type="button" value="New Layout Canvas" onclick="layoutCanvasView()" />
+            <input type="button" value="Load into Canvas" onclick="loadIntoCanvasView()" />
             <input type="button" value="Hide Canvas" onclick="hideCanvasView()" />
             <hr />
             <input type="button" id="create_button" value="Create View" onclick="createView()" />

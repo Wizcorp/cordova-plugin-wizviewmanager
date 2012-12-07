@@ -701,20 +701,36 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     NSString *callbackId    = [arguments objectAtIndex:0];
     NSString *viewName    = [arguments objectAtIndex:1];
     
-    [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
     
-    // NSLog(@"[WizViewManager] ******* Load into view : %@ - viewlist -> %@ options %@", viewName, wizViewList, options);
+    NSLog(@"[WizViewManager] ******* Load into view : %@ - viewlist -> %@ options %@", viewName, wizViewList, options);
     
     
-    if (options)
-	{
+    if (options) {
         
         // search for view
         if ([wizViewList objectForKey:viewName]) {
-            UIWebView *targetWebView = [wizViewList objectForKey:viewName];
+            
+            NSString *viewType = [self checkView:[wizViewList objectForKey:viewName]];
             
             NSString *src               = [options objectForKey:@"src"];
-            if (src) {
+            
+            if ([src length] > 0) {
+                NSLog(@"[WizViewManager] ******* loading source to view : %@ ", viewName);
+            } else {
+                NSLog(@"Load Error: no source");
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Load Error: no sourc"];
+                [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+                return;
+            }
+            
+            
+            if ([viewType isEqualToString:@"webview"]) {
+                
+                // webview requires we keep the callback to be accessed by the webview itself
+                // to return later once finished parsing script
+                [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
+                
+                UIWebView *targetWebView = [wizViewList objectForKey:viewName];
                 
                 if ([self validateUrl:src]) {
                     // load new source
@@ -744,6 +760,25 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
                     
                     [newHTMLString release];
                     [newURL release];
+                }
+                
+            } else if ([viewType isEqualToString:@"canvas"]) {
+                                
+                WizCanvasView *targetCanvasView = [wizViewList objectForKey:viewName];
+
+                if ([self validateUrl:src]) {
+                    // source is url
+                    NSLog(@"Load Error: source not compatible with type canvas view");
+                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:
+                                               CDVCommandStatus_ERROR messageAsString:@"Load Error: source not compatible with type canvas view"];
+                    [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+                    
+                } else {
+
+                    [targetCanvasView loadScriptAtPath:src];
+                    
+                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+                    [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
                 }
                 
             }
