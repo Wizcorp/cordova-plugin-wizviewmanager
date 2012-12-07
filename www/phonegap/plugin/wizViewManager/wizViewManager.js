@@ -109,9 +109,18 @@
 	};
 
 
+	WizViewManager.prototype.throwError = function (cb, error) {
+		if (cb) {
+			cb(error);
+		} else {
+			throw error;
+		}
+	};
+
+
 	WizViewManager.prototype.create = function (name, options, success, failure) {
 		if (!View.create) {
-			throw new Error('The create API is not implemented, while trying to create: ' + name);
+			return this.throwError(failure, new Error('The create API is not implemented, while trying to create: ' + name));
 		}
 
 		var views = this.views;
@@ -130,19 +139,35 @@
 
 
 	WizViewManager.prototype.show = function (name, animOptions, success, failure) {
+		if (!this.views[name]) {
+			return this.throwError(failure, new Error('Show Error with view name: ' + name + '. View does not exist'));
+		}
+	
 		this.views[name].show(animOptions, success, failure);
 	};
 
 
 	WizViewManager.prototype.hide = function (name, animOptions, success, failure) {
+		if (!this.views[name]) {
+			return this.throwError(failure, new Error('Hide Error with view name: ' + name + '. View does not exist'));
+		}
+	
 		this.views[name].hide(animOptions, success, failure);
 	};
  
  	WizViewManager.prototype.setLayout = function (name, animOptions, success, failure) {
+		if (!this.views[name]) {
+			return this.throwError(failure, new Error('Set Layout Error with view name: ' + name + '. View does not exist'));
+		}
+	
 		this.views[name].setLayout(animOptions, success, failure);
  	};
 
   	WizViewManager.prototype.load = function (name, source, success, failure) {
+		if (!this.views[name]) {
+			return this.throwError(failure, new Error('Load Error with view name: ' + name + '. View does not exist'));
+		}
+	
 		this.views[name].load(source, success, failure);
   	};
 
