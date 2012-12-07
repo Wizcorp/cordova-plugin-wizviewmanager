@@ -11,7 +11,6 @@
 		411FA62E16551D1D00411ABE /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62C16551D1D00411ABE /* OpenGLES.framework */; };
 		411FA63016551D3200411ABE /* libstdc++.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA62F16551D3200411ABE /* libstdc++.dylib */; };
 		411FA63216551D3B00411ABE /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 411FA63116551D3B00411ABE /* libicucore.dylib */; };
-		415C670616717F08009421FE /* Cordova.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 415C670516717F08009421FE /* Cordova.framework */; };
 		41ADA02F165648FF004F93A6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADA02E165648FE004F93A6 /* CoreText.framework */; };
 		41ADA0311656492D004F93A6 /* GameKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADA0301656492C004F93A6 /* GameKit.framework */; };
 		41ADA0331656499F004F93A6 /* iAd.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 41ADA0321656499F004F93A6 /* iAd.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -86,7 +85,6 @@
 		411FA62C16551D1D00411ABE /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
 		411FA62F16551D3200411ABE /* libstdc++.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "libstdc++.dylib"; path = "usr/lib/libstdc++.dylib"; sourceTree = SDKROOT; };
 		411FA63116551D3B00411ABE /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
-		415C670516717F08009421FE /* Cordova.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cordova.framework; path = "../../../../CordovaLib1.9 orig/build/Release-iphonesimulator/Cordova.framework"; sourceTree = "<group>"; };
 		41ADA02E165648FE004F93A6 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
 		41ADA0301656492C004F93A6 /* GameKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GameKit.framework; path = System/Library/Frameworks/GameKit.framework; sourceTree = SDKROOT; };
 		41ADA0321656499F004F93A6 /* iAd.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = iAd.framework; path = System/Library/Frameworks/iAd.framework; sourceTree = SDKROOT; };
@@ -234,7 +232,6 @@
 				F60BBF991647C4900085B8FF /* MobileCoreServices.framework in Frameworks */,
 				F60BBF9B1647C4900085B8FF /* CoreMedia.framework in Frameworks */,
 				41D70CA416647D1C008CAE2E /* libJavaScriptCore.a in Frameworks */,
-				415C670616717F08009421FE /* Cordova.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -403,7 +400,6 @@
 		F60BBF811647C4900085B8FF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				415C670516717F08009421FE /* Cordova.framework */,
 				41ADA0321656499F004F93A6 /* iAd.framework */,
 				41ADA0301656492C004F93A6 /* GameKit.framework */,
 				41ADA02E165648FE004F93A6 /* CoreText.framework */,
@@ -795,10 +791,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				COPY_PHASE_STRIP = NO;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../CordovaLib1.9 orig/build/Release-iphonesimulator\"",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "exampleWizViewManager/exampleWizViewManager-Prefix.pch";
@@ -834,10 +827,7 @@
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../../../../CordovaLib1.9 orig/build/Release-iphonesimulator\"",
-				);
+				FRAMEWORK_SEARCH_PATHS = "$(inherited)";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "exampleWizViewManager/exampleWizViewManager-Prefix.pch";
 				GCC_PREPROCESSOR_DEFINITIONS = (
