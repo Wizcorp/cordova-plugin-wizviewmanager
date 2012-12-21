@@ -896,6 +896,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
        
         if ([viewType isEqualToString:@"webview"]) {
             
+            // Get the view from the view list
             UIWebView *targetWebView = [wizViewList objectForKey:viewName];
             
             // remove the view!
@@ -906,11 +907,11 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
             
         } else if ([viewType isEqualToString:@"canvas"]) {
             
-            // Message canvas view
+            // Get the view from the view list
             WizCanvasView *targetCanvasView = [wizViewList objectForKey:viewName];
             
             // remove the view!
-            [targetCanvasView removeFromSuperview];
+            [targetCanvasView.window removeFromSuperview];
             [targetCanvasView release];
 //             targetCanvasView.window.delegate = nil;
             targetCanvasView = nil;
