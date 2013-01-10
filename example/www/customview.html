@@ -18,15 +18,17 @@
                     var action = 'hide';
                     var params = { 'view' : 'anotherView' };
                     
-                    wizViewMessenger.message( targetView, action );
+                    wizViewMessenger.postMessage(action, targetView);
                 }
                 
                 function onBodyLoad() {
                     
                 }
                 
-                function wizMessageReceiver(data) {
-                    var colorString = JSON.parse(data);
+                window.addEventListener('message', wizMessageReceiver, false);
+                
+                function wizMessageReceiver(e) {
+                    var colorString = JSON.parse(e.data);
                     document.body.style.background = colorString['color'];
                 }
 

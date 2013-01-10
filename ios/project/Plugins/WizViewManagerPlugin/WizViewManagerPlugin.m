@@ -1759,6 +1759,56 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         
         return NO;
         
+ 	} else if ([(NSString*)[prefixer objectAtIndex:0] caseInsensitiveCompare:@"wizPostMessage"] == 0) {
+        
+        NSArray *requestComponents = [requestString componentsSeparatedByString:@"://"];
+        NSString *postMessage = [[NSString alloc] initWithString:(NSString*)[requestComponents objectAtIndex:1]];
+        
+        NSArray *messageComponents = [postMessage componentsSeparatedByString:@"?"];
+        
+        NSString *originView = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:0]];
+        NSString *targetView = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:1]];
+        NSString *data = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:2]];
+        
+        NSLog(@"[WizWebView] ******* targetView is:  %@", targetView );
+               
+        // NSLog(@"[AppDelegate wizMessageView()] ******* postData is:  %@", postData );
+        
+        NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
+        
+        if ([viewList objectForKey:targetView]) {
+            // check view type
+            NSString* viewType = [self checkView:[viewList objectForKey:targetView]];
+            NSString *postDataEscaped = [data stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
+            
+            if ([viewType isEqualToString:@"canvas"]) {
+                // using canvas view
+                WizCanvasView *targetCanvasView = [viewList objectForKey:targetView];
+                [targetCanvasView evaluateScript:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
+                
+            } else if ([viewType isEqualToString:@"webview"]) {
+                // treat as webview
+                UIWebView* targetWebView = [viewList objectForKey:targetView];
+                NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@') );", originView, targetView, postDataEscaped];
+                [targetWebView stringByEvaluatingJavaScriptFromString:js];
+            } else {
+                NSLog(@"[WizWebView] ******* targetView is unknown type! :  %@", targetView );
+            }
+            
+            
+            // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);
+        }
+        
+        [postMessage release];
+        postMessage = nil;
+        [originView release];
+        [targetView release];
+        [data release];
+        [viewList release];
+        
+        
+        return NO;
+        
  	} else {
         // let Cordova handle everything else
         return superValue;

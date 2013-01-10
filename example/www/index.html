@@ -81,7 +81,7 @@
         // TODO: Change this path to match the location where the www/newview.html file lives.
         // On the simulator this is a location on your machine.
         // On the device, this is a location in your app bundle.
-        var customViewInstallPath = "/Users/cwynn/Library/Application Support/iPhone Simulator/6.0/Applications/1A45E0BF-86F6-47B6-8FAB-6B0A26560AFB/exampleWizViewManager.app/www/customview.html";
+        var customViewInstallPath = "/Users/Ally/Library/Application Support/iPhone Simulator/6.0/Applications/EB544FA8-1278-4941-B708-05D53F4E7DEC/exampleWizViewManager.app/www/customview.html";
     
         function onCreateSuccess( data ) {
             document.getElementById("create_button").disabled = true;
@@ -118,12 +118,7 @@
             wizViewManager.show("newCanvas", {}, console.log("Show canvas success"), onFail);
         }
         
-        
-        function messageCanvasView() {
-            var params = { color: "blue :)" };
-            wizViewMessenger.message("newCanvas", JSON.stringify(params));
-        }
-        
+               
         function layoutCanvasView() {
             var params = { height: 200, width: 320, y: 50 };
             wizViewManager.setLayout("newCanvas", params, null, null);
@@ -211,32 +206,48 @@
             wizViewManager.setLayout("newView", layout, null, onFail);
         }
         
-        function sendMessage( sel )
-        {
+        function sendMessage( sel ) {
             var color = sel.options[sel.selectedIndex].value;
             var targetView = "newView";
             var params = { color: color };
             
-            wizViewMessenger.message(targetView, JSON.stringify(params));
+            wizViewMessenger.postMessage(JSON.stringify(params), targetView);
+        }
+        
+        function messageCanvasView() {
+            var params = { color: "blue :)" };
+            
+            wizViewMessenger.message("newCanvas", JSON.stringify(params));
+        }
+        
+        window.addEventListener('message', wizMessageReceiver, false);
+        
+         
+        function wizMessageReceiver(e) {
+            alert("Recieved message from " + e.origin);
+            var parsedData = JSON.parse(e.data);
+            if (parsedData.message) {
+                alert(parsedData.message);
+            }
+        }
+        
+        window.addEventListener('message', handleMessageFromNewView, false);
+        
+        function handleMessageFromNewView(e) {
+            if (e.origin == 'newView' && e.data == 'hide') {
+                hideView();
+            }
         }
         
         var onSuccess = function (data) {
             alert("success " + data);
-            
         }
         
         var onFail = function (e) {
             alert("error = "+e);
         }
         
-        function wizMessageReceiver(data) {
-            alert("Recieved message on mainView");
-            var parsedData = JSON.parse(data);
-            if (parsedData.message) {
-                alert(parsedData.message);
-            }
-            hideView();
-        }
+        
         
     	</script>
     </head>
