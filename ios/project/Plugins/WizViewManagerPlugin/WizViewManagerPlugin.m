@@ -41,6 +41,12 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     // this holds all our views, first we add MainView to our view list by default
     wizViewList = [[NSMutableDictionary alloc ] initWithObjectsAndKeys: theWebView, @"mainView", nil];
     
+    // Tell our mainView it IS mainView
+    // (We dont need to do this earlier,only for the name mainView
+    // to window.name when we are using wizViewManager)
+    NSString *js = [NSString stringWithFormat:@"window.name = '%@'", @"mainView"];
+    [theWebView stringByEvaluatingJavaScriptFromString:js];   
+    
     // this holds callbacks for each view
     viewLoadedCallbackId = [[NSMutableDictionary alloc ] init];
     
@@ -796,6 +802,8 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
         
     }
+    
+    // For Webviews; all view list arrays are updated once the source has been loaded.
 }
 
 - (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options {

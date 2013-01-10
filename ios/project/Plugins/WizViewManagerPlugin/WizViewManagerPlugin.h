@@ -52,6 +52,7 @@
 - (void)showCanvasView:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)hideWebView:(NSArray*)arguments withDict:(NSDictionary*)options;
 - (void)hideCanvasView:(NSArray*)arguments withDict:(NSDictionary*)options;
+- (void)updateViewList;
 
 /**
  

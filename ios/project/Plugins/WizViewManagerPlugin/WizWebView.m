@@ -124,17 +124,23 @@ static BOOL isActive = FALSE;
     
     [callbackDict release];
     
-    /*
-    // to send data straght to mainView onLoaded
-     
-     
-    NSMutableDictionary * viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
-    UIWebView* targetWebView = [viewList objectForKey:@"mainView"]; 
-    NSLog(@"[WizWebView] ******* targetWebView... %@", targetWebView);
-    [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver('%@');", myName]];
-     
-    */
-   
+    // Update view list array for each view
+    WizViewManagerPlugin *_WizViewManagerPlugin = [WizViewManagerPlugin instance];
+    [_WizViewManagerPlugin updateViewList];
+    
+    
+    // Feed in the view name to the view's window.name property
+    NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
+    for (NSString *key in viewList) {
+        if ([[viewList objectForKey:key] isMemberOfClass:[CDVCordovaView class]]) {
+            UIWebView *targetWebView = [viewList objectForKey:key];
+            if ([targetWebView isEqual:theWebView]) {
+                NSString *js = [NSString stringWithFormat:@"window.name = '%@'", key];
+                [theWebView stringByEvaluatingJavaScriptFromString:js];
+            }
+        }
+    }
+       
 }
 
 
