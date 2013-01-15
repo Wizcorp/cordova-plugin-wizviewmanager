@@ -2,18 +2,18 @@
 
 phonegap-plugin-wizViewManager<br />
 version : 1.9 (Canvas beta)<br />
-last update : 26/11/2012<br />
+readme last update : 10/01/2013<br />
 
 
 # CHANGELOG: 
 <br />
-- New canvas view!
+- new canvas view
+- Implemented postMessage API
 
 
 # KNOWN ISSUES:
 <br />
 - For canvas; show() and hide() do not support animations.
-- Probably super buggy!
 
 
 # DESCRIPTION :
@@ -202,24 +202,23 @@ animation : {
 }; 
 </code></pre>
 
-Message a view<br />
-To send a messsage to a view, add this to the html you wish to send from use...
+Messaging views<br />
+To send a messsage to a view based on W3C post message API...
 <pre><code>
-wizViewMessenger.message(targetView, message);
-	* targetView is the string name of the target view.
+wizViewMessenger.postMessage(String message, String targetView);
 	* message is the message string
-    * To send a JSON object as the message, stringify it before sending using:  message = JSON.stringify(myObject)
+	( To send JSON, stringify first using JSON.stringify(myObject) )
+	* targetView is the string name of the target view.
+	* to reach Cordova window, targetView = "mainView"
 </code></pre>
 
-add a receiver to your html that gets the message...
+add an event listener in the html that wishes to receive the message...
 <pre><code>
-function wizMessageReceiver(message) 
-{
-    // your data comes in here
-    console.log('i got :' + message);
-                        
+window.addEventListener( 'message', wizMessageReceiver );
+
+// example receiver
+function wizMessage Receiver (event) {
+    // event data object comes in here    
 }
-	* message is the message string
-    * To receive a JSON object as the message, parse the object after receiving using:  myObject = JSON.parse(message)
 </code></pre>
 
