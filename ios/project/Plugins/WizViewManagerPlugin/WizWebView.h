@@ -7,13 +7,8 @@
  */ 
 
 #import <Foundation/Foundation.h>
-#ifdef CORDOVA_FRAMEWORK
 #import <Cordova/CDVPlugin.h>
 #import <Cordova/CDVCordovaView.h>
-#else
-#import "CDVPlugin.h"
-#import "CDVCordovaView.h"
-#endif
 
 @interface WizWebView : NSObject <UIWebViewDelegate> {
 

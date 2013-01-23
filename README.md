@@ -1,12 +1,13 @@
 # PLUGIN: 
 
 phonegap-plugin-wizViewManager<br />
-version : 1.9 (Canvas beta)<br />
-readme last update : 10/01/2013<br />
+version : 2.3 (Canvas beta)<br />
+readme last update : 23/01/2013<br />
 
 
 # CHANGELOG: 
 <br />
+- Updated for Cordova 2.3
 - new canvas view
 - Implemented postMessage API
 
