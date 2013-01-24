@@ -7,11 +7,7 @@
  */ 
 
 #import <Foundation/Foundation.h>
-#ifdef CORDOVA_FRAMEWORK
 #import <Cordova/CDVPlugin.h>
-#else
-#import "CDVPlugin.h"
-#endif
 
 @interface WizViewManagerPlugin : CDVPlugin <UIWebViewDelegate> {
     
@@ -33,13 +29,13 @@
  PHONEGAP HOOKS
  
  **/
-- (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)hideView:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)showView:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)removeView:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options;
+- (void)createView:(CDVInvokedUrlCommand*)command;
+- (void)hideView:(CDVInvokedUrlCommand*)command;
+- (void)showView:(CDVInvokedUrlCommand*)command;
+- (void)updateView:(CDVInvokedUrlCommand*)command;
+- (void)load:(CDVInvokedUrlCommand*)command;;
+- (void)removeView:(CDVInvokedUrlCommand*)command;
+- (void)setLayout:(CDVInvokedUrlCommand*)command;
 
 
 /**
@@ -48,10 +44,10 @@
  
  **/
 - (void)sendMessage:(NSString*)viewName withMessage:(NSString*)message;
-- (void)showWebView:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)showCanvasView:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)hideWebView:(NSArray*)arguments withDict:(NSDictionary*)options;
-- (void)hideCanvasView:(NSArray*)arguments withDict:(NSDictionary*)options;
+- (void)showWebView:(CDVInvokedUrlCommand*)command;
+- (void)showCanvasView:(CDVInvokedUrlCommand*)command;
+- (void)hideWebView:(CDVInvokedUrlCommand*)command;
+- (void)hideCanvasView:(CDVInvokedUrlCommand*)command;
 - (void)updateViewList;
 
 /**

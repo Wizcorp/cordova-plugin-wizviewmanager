@@ -237,11 +237,11 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
 }
 
 
-- (void)createView:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)createView:(CDVInvokedUrlCommand*)command {
     
     // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName      = [arguments objectAtIndex:1];    
+    NSString *viewName      = [command.arguments objectAtIndex:0];
+    NSDictionary *options   = [command.arguments objectAtIndex:1];
     
     NSLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@", viewName, options);
 
@@ -252,7 +252,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         
         // For a webview we should push the callbackId to stack to use later after source
         // is loaded.
-        [viewLoadedCallbackId setObject:callbackId forKey:@"updateCallback"];
+        [viewLoadedCallbackId setObject:command.callbackId forKey:@"updateCallback"];
         [self createWebView:viewName withOptions:options];
         
     } else if ([type isEqualToString:@"canvas"]) {
@@ -260,7 +260,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         // For the canvasView creation is so fast we dont need to stack callbackId.
         [self createCanvasView:viewName withOptions:options];
         CDVPluginResult* pluginResultSuccess = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self writeJavascript: [pluginResultSuccess toSuccessCallbackString:callbackId]];
+        [self writeJavascript: [pluginResultSuccess toSuccessCallbackString:command.callbackId]];
     } else {
         
         // Unspecified type do warn
@@ -268,18 +268,17 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         
         // Return to JS with error
         CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-        [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId]];
     
     }
 
     NSLog(@"[WizViewManagerPlugin] ******* current views... %@", wizViewList);
 }
 
-- (void)hideView:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)hideView:(CDVInvokedUrlCommand*)command {
     
     // Asign params
-    NSString *callbackId = [arguments objectAtIndex:0];
-    NSString *viewName = [arguments objectAtIndex:1];
+    NSString *viewName = [command.arguments objectAtIndex:0];
     NSString *viewType = [self checkView:[wizViewList objectForKey:viewName]];
     
     if ([wizViewList objectForKey:viewName]) {
@@ -287,12 +286,12 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         if ([viewType isEqualToString:@"webview"]) {
             
             // Hide the web view
-            [self hideWebView:arguments withDict:options];
+            [self hideWebView:command];
             
         } else if ([viewType isEqualToString:@"canvas"]) {
             
             // Hide the canvas view
-            [self hideCanvasView:arguments withDict:options];
+            [self hideCanvasView:command];
             
         } else {
             
@@ -301,25 +300,24 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
             
             // Return to JS with error
             CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-            [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
+            [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId]];
             
         }
     } else {
         
         // View not found
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
         return;
         
     }
 }
 
-- (void)hideCanvasView:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)hideCanvasView:(CDVInvokedUrlCommand*)command {
     // Hide a canvas view type
     // Assign arguments
-    NSString *callbackId = [arguments objectAtIndex:0];
-    NSLog(@"START hideCanvasView with callback :  %@", callbackId);
-    NSString *viewName = [arguments objectAtIndex:1];
+    NSLog(@"START hideCanvasView with callback :  %@", command.callbackId);
+    NSString *viewName = [command.arguments objectAtIndex:0];
     
     CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     CDVPluginResult *pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
@@ -340,26 +338,26 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         [self hideWithNoAnimation:targetCanvasView.window];
         // no animate so remove from animate store
         // [isAnimating removeObjectForKey:viewName];
-        [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+        [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
         // self.showViewCallbackId = nil;
         
     } else {
         
         // target already hidden
         NSLog(@"[WizViewManager] ******* target already hidden! ");
-        [self writeJavascript: [pluginResultERROR toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResultERROR toErrorCallbackString:command.callbackId]];
         // self.showViewCallbackId = nil;
         
     }
 }
 
-- (void)hideWebView:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)hideWebView:(CDVInvokedUrlCommand*)command {
         
     // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSLog(@"START hideView with callback :  %@", callbackId);
-    NSString* viewName = [arguments objectAtIndex:1];
-    
+    NSLog(@"START hideView with callback :  %@", command.callbackId);
+    NSString* viewName = [command.arguments objectAtIndex:0];
+    NSDictionary* options = [command.arguments objectAtIndex:1];
+
     CDVPluginResult* pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     
     if ([wizViewList objectForKey:viewName]) {
@@ -395,9 +393,9 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
             // about to animate (even if we are not) so add to animate store
             // [isAnimating setObject:targetWebView forKey:viewName];
             
-            self.hideViewCallbackId = callbackId;
+            self.hideViewCallbackId = command.callbackId;
 
-            if (options) 
+            if (options)
             {
                 NSDictionary* animationDict = [options objectForKey:@"animation"];
                 
@@ -464,7 +462,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         } else {
             // target already hidden do nothing
             NSLog(@"[WizViewManager] ******* target already hidden! ");
-            [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+            [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
         }
 
         // Other callbacks come from after view is added to animation object
@@ -474,17 +472,16 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     } else {
         
         CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-        [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId]];
         
     }
 }
 
 
-- (void)showView:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)showView:(CDVInvokedUrlCommand*)command {
     
     // Asign params
-    NSString *callbackId = [arguments objectAtIndex:0];
-    NSString *viewName = [arguments objectAtIndex:1];
+    NSString *viewName = [command.arguments objectAtIndex:0];
     NSString *viewType = [self checkView:[wizViewList objectForKey:viewName]];
     
     if ([wizViewList objectForKey:viewName]) {
@@ -492,12 +489,12 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         if ([viewType isEqualToString:@"webview"]) {
             
             // Show the web view
-            [self showWebView:arguments withDict:options];
+            [self showWebView:command];
             
         } else if ([viewType isEqualToString:@"canvas"]) {
             
             // Show the canvas view
-            [self showCanvasView:arguments withDict:options];
+            [self showCanvasView:command];
         
         } else {
             
@@ -506,25 +503,24 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
             
             // Return to JS with error
             CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
-            [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
+            [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId]];
             
         }
     } else {
         
         // View not found
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
         return;
         
     }
 }
 
-- (void)showCanvasView:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)showCanvasView:(CDVInvokedUrlCommand*)command {
     // Show a web view type
     // Assign arguments
-    NSString* callbackId = [arguments objectAtIndex:0];
-    NSLog(@"START showCanvasView with callback :  %@", callbackId);
-    NSString* viewName = [arguments objectAtIndex:1];
+    NSLog(@"START showCanvasView with callback :  %@", command.callbackId);
+    NSString* viewName = [command.arguments objectAtIndex:0];
     
     CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     CDVPluginResult *pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
@@ -545,26 +541,26 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         [self showWithNoAnimation:targetCanvasView.window];
         // no animate so remove from animate store
         // [isAnimating removeObjectForKey:viewName];
-        [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+        [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
         // self.showViewCallbackId = nil;
         
     } else {
         
         // target already showing
         NSLog(@"[WizViewManager] ******* target already shown! ");
-        [self writeJavascript: [pluginResultERROR toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResultERROR toErrorCallbackString:command.callbackId]];
         // self.showViewCallbackId = nil;
         
     }
 }
 
 
-- (void)showWebView:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)showWebView:(CDVInvokedUrlCommand*)command {
     // Show a web view type
     // Assign arguments
-    NSString* callbackId = [arguments objectAtIndex:0];
-    NSLog(@"START showWebView with callback :  %@", callbackId);
-    NSString* viewName = [arguments objectAtIndex:1];
+    NSLog(@"START showWebView with callback :  %@", command.callbackId);
+    NSString* viewName = [command.arguments objectAtIndex:0];
+    NSDictionary* options = [command.arguments objectAtIndex:1];
     
     CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     CDVPluginResult *pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
@@ -606,7 +602,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
             }
                 
             
-            self.showViewCallbackId = callbackId;
+            self.showViewCallbackId = command.callbackId;
             
 
             
@@ -631,38 +627,38 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
                     if (!type) {
                         
                         // default
-                        [self showWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:command.callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"zoomIn"]) {
                         
-                        [self showWithZoomInAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithZoomInAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:command.callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"fadeIn"]) {
                         
-                        [self showWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithFadeAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:command.callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideInFromLeft"]) {
                         
-                        [self showWithSlideInFromLeftAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithSlideInFromLeftAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:command.callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideInFromRight"]) {
                         
-                        [self showWithSlideInFromRightAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithSlideInFromRightAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:command.callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideInFromTop"]) {
                         
-                        [self showWithSlideInFromTopAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithSlideInFromTopAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:command.callbackId viewName:viewName];
                         
                     } else if ([type isEqualToString:@"slideInFromBottom"]) {
                         
-                        [self showWithSlideInFromBottomAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:callbackId viewName:viewName];
+                        [self showWithSlideInFromBottomAnimation:targetWebView duration:animateTime option:UIViewAnimationOptionCurveEaseIn|UIViewAnimationOptionBeginFromCurrentState showViewCallbackId:command.callbackId viewName:viewName];
                         
                     } else {
                         // not found do "none"
                         [self showWithNoAnimation:targetWebView];
                         // no animate so remove from animate store
                         [isAnimating removeObjectForKey:viewName];
-                        [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+                        [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
                         self.showViewCallbackId = nil;
                     }
                     
@@ -671,7 +667,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
                     [self showWithNoAnimation:targetWebView];
                     // no animate so remove from animate store
                     [isAnimating removeObjectForKey:viewName];
-                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
                     self.showViewCallbackId = nil;
                 }
 
@@ -681,14 +677,14 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
                 [self showWithNoAnimation:targetWebView];
                 // no animate so remove from animate store
                 [isAnimating removeObjectForKey:viewName];
-                [self writeJavascript: [pluginResultOK toSuccessCallbackString:callbackId]];
+                [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
                 self.showViewCallbackId = nil;
             }
                 
         } else {
             // target already showing
             NSLog(@"[WizViewManager] ******* target already shown! "); 
-            [self writeJavascript: [pluginResultERROR toErrorCallbackString:callbackId]];
+            [self writeJavascript: [pluginResultERROR toErrorCallbackString:command.callbackId]];
             self.showViewCallbackId = nil;
             
         }
@@ -697,16 +693,15 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     } else {
                 
         CDVPluginResult* pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-        [self writeJavascript: [pluginResultErr toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId]];
     }
 }
 
 
-- (void)load:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)load:(CDVInvokedUrlCommand*)command {
     // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName    = [arguments objectAtIndex:1];
-    
+    NSString *viewName    = [command.arguments objectAtIndex:0];
+    NSDictionary* options = [command.arguments objectAtIndex:1];
     
     NSLog(@"[WizViewManager] ******* Load into view : %@ - viewlist -> %@ options %@", viewName, wizViewList, options);
     
@@ -725,7 +720,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
             } else {
                 NSLog(@"Load Error: no source");
                 CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"Load Error: no sourc"];
-                [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+                [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
                 return;
             }
             
@@ -734,7 +729,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
                 
                 // webview requires we keep the callback to be accessed by the webview itself
                 // to return later once finished parsing script
-                [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
+                [viewLoadedCallbackId setObject:command.callbackId forKey:@"viewLoadedCallback"];
                 
                 UIWebView *targetWebView = [wizViewList objectForKey:viewName];
                 
@@ -777,14 +772,14 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
                     NSLog(@"Load Error: source not compatible with type canvas view");
                     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:
                                                CDVCommandStatus_ERROR messageAsString:@"Load Error: source not compatible with type canvas view"];
-                    [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+                    [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
                     
                 } else {
 
                     [targetCanvasView loadScriptAtPath:src];
                     
                     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-                    [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
+                    [self writeJavascript: [pluginResult toSuccessCallbackString:command.callbackId]];
                 }
                 
             }
@@ -792,21 +787,21 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         } else {
             
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
             
         }
         
     } else {
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
         
     }
     
     // For Webviews; all view list arrays are updated once the source has been loaded.
 }
 
-- (void)updateView:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)updateView:(CDVInvokedUrlCommand*)command {
     /*
      *
      *
@@ -819,10 +814,10 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
      */
     
     // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName    = [arguments objectAtIndex:1];
+    NSString *viewName    = [command.arguments objectAtIndex:0];
+    NSDictionary *options = [command.arguments objectAtIndex:1];
     
-    [viewLoadedCallbackId setObject:callbackId forKey:@"viewLoadedCallback"];
+    [viewLoadedCallbackId setObject:command.callbackId forKey:@"viewLoadedCallback"];
     
     // NSLog(@"[WizViewManager] ******* updateView name : %@ ", viewName);
     
@@ -875,24 +870,23 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         } else {
             
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
             
         }
         
     } else {
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - no options passed"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
         
     }
     
 }
 
 
-- (void)removeView:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)removeView:(CDVInvokedUrlCommand*)command {
     // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName    = [arguments objectAtIndex:1];
+    NSString *viewName    = [command.arguments objectAtIndex:0];
     
     NSLog(@"[WizViewManager] ******* removeView name : %@ ", viewName);
     
@@ -933,7 +927,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         [self updateViewList];
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];
+        [self writeJavascript: [pluginResult toSuccessCallbackString:command.callbackId]];
         
         
         NSLog(@"[WizViewManager] ******* removeView views left : %@ ", wizViewList);
@@ -942,7 +936,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     } else {
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - view not found"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
     }
     
 }
@@ -1020,10 +1014,10 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     return CGRectMake(left, top, width, height);
 }
 
-- (void)setLayout:(NSArray*)arguments withDict:(NSDictionary*)options {
+- (void)setLayout:(CDVInvokedUrlCommand*)command {
     // assign arguments
-    NSString *callbackId    = [arguments objectAtIndex:0];
-    NSString *viewName    = [arguments objectAtIndex:1];
+    NSString *viewName    = [command.arguments objectAtIndex:0];
+    NSDictionary *options = [command.arguments objectAtIndex:1];
     
     // NSLog(@"[WizViewManagerPlugin] ******* resizeView name:  %@ withOptions: %@", viewName, options);
     
@@ -1060,7 +1054,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
             
             // View not found
             CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
-            [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
             return;
         }
         
@@ -1068,13 +1062,13 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         // NSLog(@"view resized! %@", targetWebView);
         
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self writeJavascript: [pluginResult toSuccessCallbackString:callbackId]];       
+        [self writeJavascript: [pluginResult toSuccessCallbackString:command.callbackId]];
         
     } else {
         // NSLog(@"view not found!");
         
         CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"view not found!"];
-        [self writeJavascript: [pluginResult toErrorCallbackString:callbackId]];
+        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
     }
 }
 
@@ -1827,13 +1821,17 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     for (int i = 0; i<[allKeys count]; i++) {
         
         if (![[allKeys objectAtIndex:i] isEqualToString:@"mainView"]) {
-            [self removeView:[NSArray arrayWithObjects:@"", [allKeys objectAtIndex:i], nil] withDict:NULL];
+            CDVInvokedUrlCommand *cmd = [[CDVInvokedUrlCommand alloc] initWithArguments:[NSArray arrayWithObjects:[allKeys objectAtIndex:i], nil] callbackId:@"" className:@"WizViewManagerPlugin" methodName:@"removeView"];
+            [self removeView:cmd];
+            [cmd release];
         }
         
     }
     
     // resize mainView to normal
-    [self setLayout:[NSArray arrayWithObjects:@"", @"mainView", nil] withDict:NULL];
+    CDVInvokedUrlCommand *cmd = [[CDVInvokedUrlCommand alloc] initWithArguments:[NSArray arrayWithObjects:@"mainView", nil] callbackId:@"" className:@"WizViewManagerPlugin" methodName:@"setLayout"];
+    [self setLayout:cmd];
+    [cmd release];
     
     [theWebView reload];
 }
