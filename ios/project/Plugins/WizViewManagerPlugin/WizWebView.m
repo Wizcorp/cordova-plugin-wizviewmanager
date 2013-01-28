@@ -98,6 +98,28 @@ static BOOL isActive = FALSE;
     return [lowerCased hasPrefix:@"http://"] || [lowerCased hasPrefix:@"https://"];
 }
 
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
+    
+    NSMutableDictionary * callbackDict = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViewLoadedCallbackId]];
+    
+    NSLog(@"[WizViewManager] ******* viewLoadedCallbackId : %@ ", callbackDict);
+
+    NSString *messageString = [error localizedFailureReason] ?
+                                [NSString stringWithFormat:@"error - %@ : %@", [error localizedDescription], [error localizedFailureReason]] :
+                                [NSString stringWithFormat:@"error - %@", [error localizedDescription]];
+    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:messageString];
+    
+    if ([callbackDict objectForKey:@"viewLoadedCallback"]) {
+        NSString* callbackId = [callbackDict objectForKey:@"viewLoadedCallback"];
+        [viewManager writeJavascript:[pluginResult toErrorCallbackString:callbackId]];
+    }
+    
+    if ([callbackDict objectForKey:@"updateCallback"]) {
+        NSString* callbackId = [callbackDict objectForKey:@"updateCallback"];
+        [viewManager writeJavascript:[pluginResult toErrorCallbackString:callbackId]];
+    }
+}
+
 - (void)webViewDidFinishLoad:(UIWebView *)theWebView {
 	// view is loaded
     NSLog(@"[WizWebView] ******* view is LOADED! " );
