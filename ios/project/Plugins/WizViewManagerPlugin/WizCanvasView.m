@@ -61,6 +61,7 @@ JSObjectRef ej_callAsConstructor(JSContextRef ctx, JSObjectRef constructor, size
 
 @synthesize landscapeMode;
 @synthesize jsGlobalContext;
+@synthesize glContext;
 @synthesize window;
 @synthesize touchDelegate;
 
@@ -137,7 +138,11 @@ static WizCanvasView * ejectaInstance = NULL;
                             kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly, NULL
                             );
         
-		// Load the initial JavaScript source files
+		// Create the OpenGL ES1 Context
+		glContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
+		[EAGLContext setCurrentContext:glContext];
+
+        // Load the initial JavaScript source files
 	    [self loadScriptAtPath:EJECTA_BOOT_JS];
         
         // Load wizViewManager JS plugin
@@ -163,8 +168,10 @@ static WizCanvasView * ejectaInstance = NULL;
 	[jsClasses release];
 	[opQueue release];
 	
+	[displayLink invalidate];
 	[displayLink release];
 	[timers release];
+	[glContext release];
 	[super dealloc];
 }
 
@@ -218,7 +225,7 @@ static WizCanvasView * ejectaInstance = NULL;
 
 
 - (void)resume {
-	[screenRenderingContext resetGLContext];
+	[EAGLContext setCurrentContext:glContext];
 	[displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
 	paused = false;
 }
@@ -262,16 +269,16 @@ static WizCanvasView * ejectaInstance = NULL;
 
 - (void)loadScriptAtPath:(NSString *)path {
 	NSString * script = [NSString stringWithContentsOfFile:[self pathForResource:path] encoding:NSUTF8StringEncoding error:NULL];
-
+	
 	if( !script ) {
-		NSLog(@"[loadScriptAtPath] Error: Can't Find Script %@", path );
+		NSLog(@"Error: Can't Find Script %@", path );
 		return;
 	}
 	
 	NSLog(@"Loading Script: %@", path );
 	JSStringRef scriptJS = JSStringCreateWithCFString((CFStringRef)script);
 	JSStringRef pathJS = JSStringCreateWithCFString((CFStringRef)path);
-
+	
 	JSValueRef exception = NULL;
 	JSEvaluateScript( jsGlobalContext, scriptJS, NULL, pathJS, 0, &exception );
 	[self logException:exception ctx:jsGlobalContext];
@@ -288,6 +295,7 @@ static WizCanvasView * ejectaInstance = NULL;
 
 - (JSClassRef)getJSClassForClass:(id)classId {
 	JSClassRef jsClass = [[jsClasses objectForKey:classId] pointerValue];
+	
 	// Not already loaded? Ask the objc class for the JSClassRef!
 	if( !jsClass ) {
 		jsClass = [classId getJSClass];
@@ -322,23 +330,20 @@ static WizCanvasView * ejectaInstance = NULL;
 // ---------------------------------------------------------------------------------
 // Touch handlers
 
-
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    
-    [touchDelegate triggerEvent:@"touchstart" withChangedTouches:touches allTouches:[event allTouches]];
+	[touchDelegate triggerEvent:@"touchstart" withChangedTouches:touches allTouches:[event allTouches]];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    
-    [touchDelegate triggerEvent:@"touchend" withChangedTouches:touches allTouches:[event allTouches]];
+	[touchDelegate triggerEvent:@"touchend" withChangedTouches:touches allTouches:[event allTouches]];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    [touchDelegate triggerEvent:@"touchend" withChangedTouches:touches allTouches:[event allTouches]];
+	[touchDelegate triggerEvent:@"touchend" withChangedTouches:touches allTouches:[event allTouches]];
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    [touchDelegate triggerEvent:@"touchmove" withChangedTouches:touches allTouches:[event allTouches]];
+	[touchDelegate triggerEvent:@"touchmove" withChangedTouches:touches allTouches:[event allTouches]];
 }
 
 
@@ -377,6 +382,5 @@ static WizCanvasView * ejectaInstance = NULL;
 		currentRenderingContext = [renderingContext retain];
 	}
 }
-
 
 @end

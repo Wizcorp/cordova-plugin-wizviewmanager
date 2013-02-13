@@ -25,11 +25,11 @@
 }
 
 - (void)leaderboardViewControllerDidFinish:(GKLeaderboardViewController *)viewController {
-	[[WizCanvasView instance] dismissModalViewControllerAnimated:YES];
+	[[EJApp instance] dismissModalViewControllerAnimated:YES];
 }
 
 - (void)achievementViewControllerDidFinish:(GKAchievementViewController *)viewController {
-	[[WizCanvasView instance] dismissModalViewControllerAnimated:YES];
+	[[EJApp instance] dismissModalViewControllerAnimated:YES];
 }
 
 
@@ -55,9 +55,9 @@ EJ_BIND_FUNCTION( authenticate, ctx, argc, argv ) {
 		[[NSUserDefaults standardUserDefaults] synchronize];
 		
 		if( callback ) {
-			JSContextRef gctx = [WizCanvasView instance].jsGlobalContext;
+			JSContextRef gctx = [EJApp instance].jsGlobalContext;
 			JSValueRef params[] = { JSValueMakeBoolean(gctx, error) };
-			[[WizCanvasView instance] invokeCallback:callback thisObject:NULL argc:1 argv:params];
+			[[EJApp instance] invokeCallback:callback thisObject:NULL argc:1 argv:params];
 			JSValueUnprotect(gctx, callback);
 		}
 	}];
@@ -95,9 +95,9 @@ EJ_BIND_FUNCTION( reportScore, ctx, argc, argv ) {
 
 		[scoreReporter reportScoreWithCompletionHandler:^(NSError *error) {
 			if( callback ) {
-				JSContextRef gctx = [WizCanvasView instance].jsGlobalContext;
+				JSContextRef gctx = [EJApp instance].jsGlobalContext;
 				JSValueRef params[] = { JSValueMakeBoolean(gctx, error) };
-				[[WizCanvasView instance] invokeCallback:callback thisObject:NULL argc:1 argv:params];
+				[[EJApp instance] invokeCallback:callback thisObject:NULL argc:1 argv:params];
 				JSValueUnprotect(gctx, callback);
 			}
 		}];
@@ -114,7 +114,7 @@ EJ_BIND_FUNCTION( showLeaderboard, ctx, argc, argv ) {
     if( leaderboard ) {
         leaderboard.leaderboardDelegate = self;
 		leaderboard.category = JSValueToNSString(ctx, argv[0]);
-		[[WizCanvasView instance] presentModalViewController:leaderboard animated:YES];
+		[[EJApp instance] presentModalViewController:leaderboard animated:YES];
     }
 	
 	return NULL;
@@ -155,9 +155,9 @@ EJ_BIND_FUNCTION( showLeaderboard, ctx, argc, argv ) {
 		[achievements setObject:achievement forKey:identifier];
 		
 		if( callback ) {
-			JSContextRef gctx = [WizCanvasView instance].jsGlobalContext;
+			JSContextRef gctx = [EJApp instance].jsGlobalContext;
 			JSValueRef params[] = { JSValueMakeBoolean(gctx, error) };
-			[[WizCanvasView instance] invokeCallback:callback thisObject:NULL argc:1 argv:params];
+			[[EJApp instance] invokeCallback:callback thisObject:NULL argc:1 argv:params];
 			JSValueUnprotect(gctx, callback);
 		}
 	}];
@@ -199,7 +199,7 @@ EJ_BIND_FUNCTION( showAchievements, ctx, argc, argv ) {
 	GKAchievementViewController *achievementView = [[[GKAchievementViewController alloc] init] autorelease];
     if( achievementView ) {
 		achievementView.achievementDelegate = self;
-		[[WizCanvasView instance] presentModalViewController:achievementView animated:YES];
+		[[EJApp instance] presentModalViewController:achievementView animated:YES];
     }
 	return NULL;
 }

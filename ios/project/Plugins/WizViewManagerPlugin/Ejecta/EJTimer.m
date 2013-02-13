@@ -6,7 +6,6 @@
 - (id)init {
 	if( self = [super init] ) {
 		timers = [[NSMutableDictionary alloc] init];
-        lastId = 0;
 	}
 	return self;
 }
@@ -44,10 +43,6 @@
 
 
 
-@interface EJTimer()
-@property (nonatomic, retain) NSDate *target;
-@end
-
 @implementation EJTimer
 @synthesize active;
 
@@ -56,26 +51,27 @@
 		active = true;
 		interval = intervalp;
 		repeat = repeatp;
-		self.target = [NSDate dateWithTimeIntervalSinceNow:interval];
+		target = [NSDate timeIntervalSinceReferenceDate] + interval;
 		
 		callback = callbackp;
-		JSValueProtect([WizCanvasView instance].jsGlobalContext, callback);
+		JSValueProtect([EJApp instance].jsGlobalContext, callback);
 	}
 	return self;
 }
 
 - (void)dealloc {
-	JSValueUnprotect([WizCanvasView instance].jsGlobalContext, callback);
-    self.target = nil;
+	JSValueUnprotect([EJApp instance].jsGlobalContext, callback);
 	[super dealloc];
 }
 
 - (void)check {
-	if( active && [self.target timeIntervalSinceNow] <= 0 ) {
-		[[WizCanvasView instance] invokeCallback:callback thisObject:NULL argc:0 argv:NULL];
+	NSTimeInterval currentTime = [NSDate timeIntervalSinceReferenceDate];
+	
+	if( active && target <= currentTime ) {
+		[[EJApp instance] invokeCallback:callback thisObject:NULL argc:0 argv:NULL];
 		
 		if( repeat ) {
-            self.target = [NSDate dateWithTimeIntervalSinceNow:interval];
+			target = currentTime + interval;
 		}
 		else {
 			active = false;
