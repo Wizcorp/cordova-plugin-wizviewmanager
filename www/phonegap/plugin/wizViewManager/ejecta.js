@@ -24,11 +24,14 @@ window.screen = {
 
 window.navigator = {
 	userAgent: ej.userAgent,
-	appVersion: ej.appVersion
+	appVersion: ej.appVersion,
+	get onLine() { return ej.onLine; } // re-evaluate on each get
 };
 
 // Create the default screen canvas
 window.canvas = new Ejecta.Canvas();
+window.canvas.type = 'canvas';
+window.canvas.style = {};
 
 // The console object
 window.console = {
@@ -51,7 +54,6 @@ window.console.debug =
 	window.console.error =
 	window.console.log;
 
-console.log("Width " + window.screen.availWidth + " height " + window.screen.availHeight);
 
 // Timers
 window.setTimeout = function(cb, t){ return ej.setTimeout(cb, t); };
@@ -100,7 +102,10 @@ window.document = {
 	
 	createElement: function( name ) {
 		if( name === 'canvas' ) {
-			return new Ejecta.Canvas();
+			var canvas = new Ejecta.Canvas();
+			canvas.type = 'canvas';
+			canvas.style = {};
+			return canvas;
 		}
 		else if( name == 'audio' ) {
 			return new Ejecta.Audio();
@@ -217,7 +222,7 @@ window.document._eventInitializers.touchstart =
 var accelerometer = null;
 var deviceMotionEvent = {
 	type: 'devicemotion', 
-	target: {type:'canvas'},
+	target: canvas,
 	acceleration: {x: 0, y: 0, z: 0},
 	accelerationIncludingGravity: {x: 0, y: 0, z: 0},
 	preventDefault: function(){},

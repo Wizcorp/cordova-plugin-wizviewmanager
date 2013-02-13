@@ -26,7 +26,7 @@ static int firstCanvasInstance = YES;
 			height = JSValueToNumberFast(ctx, argv[1]);
 		}
 		else {
-			CGSize screen = [WizCanvasView instance].window.bounds.size;
+			CGSize screen = [EJApp instance].view.bounds.size;
 			width = screen.width;
 			height = screen.height;
 		}
@@ -104,7 +104,7 @@ EJ_BIND_GET(font, ctx) {
 EJ_BIND_SET(font, ctx, value) {
 	char string[64]; // Long font names are long
 	JSStringRef jsString = JSValueToStringCopy( ctx, value, NULL );
-	JSStringGetUTF8CString(jsString, string, 32);
+	JSStringGetUTF8CString(jsString, string, 64);
 	
 	// Yeah, oldschool!
 	float size = 0;
@@ -122,11 +122,12 @@ EJ_BIND_GET(width, ctx) {
 }
 
 EJ_BIND_SET(width, ctx, value) {
-	if( renderingContext ) {
+	short newWidth = JSValueToNumberFast(ctx, value);
+	if( renderingContext && newWidth != width ) {
 		NSLog(@"Warning: rendering context already created; can't change width");
 		return;
 	}
-	width = JSValueToNumberFast(ctx, value);
+	width = newWidth;
 }
 
 EJ_BIND_GET(height, ctx) {
@@ -134,11 +135,12 @@ EJ_BIND_GET(height, ctx) {
 }
 
 EJ_BIND_SET(height, ctx, value) {
-	if( renderingContext ) {
+	short newHeight = JSValueToNumberFast(ctx, value);
+	if( renderingContext && newHeight != height ) {
 		NSLog(@"Warning: rendering context already created; can't change height");
 		return;
 	}
-	height = JSValueToNumberFast(ctx, value);
+	height = newHeight;
 }
 
 EJ_BIND_GET(offsetLeft, ctx) {
@@ -158,11 +160,12 @@ EJ_BIND_GET(retinaResolutionEnabled, ctx) {
 }
 
 EJ_BIND_SET(imageSmoothingEnabled, ctx, value) {
-	[EJTexture setSmoothScaling:JSValueToBoolean(ctx, value)];
+	ejectaInstance.currentRenderingContext = renderingContext;
+	renderingContext.imageSmoothingEnabled = JSValueToBoolean(ctx, value);
 }
 
 EJ_BIND_GET(imageSmoothingEnabled, ctx) {
-	return JSValueMakeBoolean(ctx, [EJTexture smoothScaling]);
+	return JSValueMakeBoolean(ctx, renderingContext.imageSmoothingEnabled);
 }
 
 EJ_BIND_GET(backingStorePixelRatio, ctx) {
@@ -282,6 +285,7 @@ EJ_BIND_FUNCTION(drawImage, ctx, argc, argv) {
 	
 	NSObject<EJDrawable> * drawable = (NSObject<EJDrawable> *)JSObjectGetPrivate((JSObjectRef)argv[0]);
 	EJTexture * image = drawable.texture;
+	float scale = image.contentScale;
 	
 	short sx = 0, sy = 0, sw = 0, sh = 0;
 	float dx = 0, dy = 0, dw = sw, dh = sh;	
@@ -290,8 +294,10 @@ EJ_BIND_FUNCTION(drawImage, ctx, argc, argv) {
 		// drawImage(image, dx, dy)
 		dx = JSValueToNumberFast(ctx, argv[1]);
 		dy = JSValueToNumberFast(ctx, argv[2]);
-		dw = sw = image.width;
-		dh = sh = image.height;
+		sw = image.width;
+		sh = image.height;
+		dw = sw / scale;
+		dh = sh / scale;
 	}
 	else if( argc == 5 ) {
 		// drawImage(image, dx, dy, dw, dh)
@@ -304,10 +310,10 @@ EJ_BIND_FUNCTION(drawImage, ctx, argc, argv) {
 	}
 	else if( argc >= 9 ) {
 		// drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
-		sx = JSValueToNumberFast(ctx, argv[1]);
-		sy = JSValueToNumberFast(ctx, argv[2]);
-		sw = JSValueToNumberFast(ctx, argv[3]);
-		sh = JSValueToNumberFast(ctx, argv[4]);
+		sx = JSValueToNumberFast(ctx, argv[1]) * scale;
+		sy = JSValueToNumberFast(ctx, argv[2]) * scale;
+		sw = JSValueToNumberFast(ctx, argv[3]) * scale;
+		sh = JSValueToNumberFast(ctx, argv[4]) * scale;
 		
 		dx = JSValueToNumberFast(ctx, argv[5]);
 		dy = JSValueToNumberFast(ctx, argv[6]);
@@ -380,7 +386,7 @@ EJ_BIND_FUNCTION(getImageData, ctx, argc, argv) {
 	EJImageData * imageData = [renderingContext getImageDataSx:sx sy:sy sw:sw sh:sh];
 	
 	// Create the JS object
-	JSClassRef imageDataClass = [[WizCanvasView instance] getJSClassForClass:[EJBindingImageData class]];
+	JSClassRef imageDataClass = [[EJApp instance] getJSClassForClass:[EJBindingImageData class]];
 	JSObjectRef obj = JSObjectMake( ctx, imageDataClass, NULL );
 	JSValueProtect(ctx, obj);
 	
@@ -404,7 +410,7 @@ EJ_BIND_FUNCTION(createImageData, ctx, argc, argv) {
 	EJImageData * imageData = [[[EJImageData alloc] initWithWidth:sw height:sh pixels:pixels] autorelease];
 	
 	// Create the JS object
-	JSClassRef imageDataClass = [[WizCanvasView instance] getJSClassForClass:[EJBindingImageData class]];
+	JSClassRef imageDataClass = [[EJApp instance] getJSClassForClass:[EJBindingImageData class]];
 	JSObjectRef obj = JSObjectMake( ctx, imageDataClass, NULL );
 	JSValueProtect(ctx, obj);
 	
@@ -578,10 +584,21 @@ EJ_BIND_FUNCTION( strokeText, ctx, argc, argv ) {
 	return NULL;
 }
 
+EJ_BIND_FUNCTION( clip, ctx, argc, argv ) {
+	ejectaInstance.currentRenderingContext = renderingContext;
+	[renderingContext clip];
+	return NULL;
+}
+
+EJ_BIND_FUNCTION( resetClip, ctx, argc, argv ) {
+	ejectaInstance.currentRenderingContext = renderingContext;
+	[renderingContext resetClip];
+	return NULL;
+}
+
 EJ_BIND_FUNCTION_NOT_IMPLEMENTED( createRadialGradient );
 EJ_BIND_FUNCTION_NOT_IMPLEMENTED( createLinearGradient );
 EJ_BIND_FUNCTION_NOT_IMPLEMENTED( createPattern );
-EJ_BIND_FUNCTION_NOT_IMPLEMENTED( clip );
 EJ_BIND_FUNCTION_NOT_IMPLEMENTED( isPointInPath );
 
 @end
