@@ -12,7 +12,7 @@
 }
 
 - (void)dealloc {
-	JSContextRef ctx = [WizCanvasView instance].jsGlobalContext;
+	JSContextRef ctx = [EJApp instance].jsGlobalContext;
 	if( dataArray ) {
 		JSValueUnprotect(ctx, dataArray);
 	}
@@ -24,7 +24,7 @@
 - (EJImageData *)imageData {
 	if( dataArray ) {
 		// Copy values from the JSArray back into the imageData
-		JSContextRef ctx = [WizCanvasView instance].jsGlobalContext;
+		JSContextRef ctx = [EJApp instance].jsGlobalContext;
 		int count = imageData.width * imageData.height * 4;
 		
 		JSObjectToByteArray(ctx, dataArray, imageData.pixels, count );

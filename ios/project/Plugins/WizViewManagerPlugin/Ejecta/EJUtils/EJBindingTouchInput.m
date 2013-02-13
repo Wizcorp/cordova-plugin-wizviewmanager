@@ -5,7 +5,7 @@
 
 - (id)initWithContext:(JSContextRef)ctx object:(JSObjectRef)obj argc:(size_t)argc argv:(const JSValueRef [])argv {
 	if( self = [super initWithContext:ctx object:obj argc:argc argv:argv] ) {
-        
+	
 		// Create the JavaScript arrays that will be passed to the callback
 		jsAllTouches = JSObjectMakeArray(ctx, 0, NULL, NULL);
 		JSValueProtect(ctx, jsAllTouches);
@@ -28,13 +28,13 @@
 			JSValueProtect( ctx, jsTouchesPool[i] );
 		}
 		
-		[WizCanvasView instance].touchDelegate = self;
+		[EJApp instance].touchDelegate = self;
 	}
 	return self;
 }
 
 - (void)dealloc {
-	JSContextRef ctx = [WizCanvasView instance].jsGlobalContext;
+	JSContextRef ctx = [EJApp instance].jsGlobalContext;
 	
 	JSValueUnprotect( ctx, jsAllTouches );
 	JSValueUnprotect( ctx, jsChangedTouches );
@@ -62,8 +62,8 @@
 	JSObjectSetProperty(ctx, jsChangedTouches, jsLengthName, JSValueMakeNumber(ctx, changed.count), kJSPropertyAttributeNone, NULL);
 	
 	int allTouchesIndex = 0,
-    changedTouchesIndex = 0;
-    
+		changedTouchesIndex = 0;
+		
 	for( UITouch * touch in all ) {
 		CGPoint pos = [touch locationInView:touch.view];
 		

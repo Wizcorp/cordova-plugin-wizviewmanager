@@ -11,7 +11,7 @@
 }
 
 - (void)dealloc {
-	JSContextRef ctx = [WizCanvasView instance].jsGlobalContext;
+	JSContextRef ctx = [EJApp instance].jsGlobalContext;
 	
 	// Unprotect all event callbacks
 	for( NSString * name in eventListeners ) {
