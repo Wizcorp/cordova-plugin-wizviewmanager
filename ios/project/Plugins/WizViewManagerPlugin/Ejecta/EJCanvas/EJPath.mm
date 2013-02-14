@@ -5,7 +5,11 @@
 
 // We're using the C++ std::vector here to store our points. Boxing and unboxing
 // so many EJVectors to NSValue types seemed wasteful.
-typedef std::vector<EJVector2> subpath_t;
+typedef std::vector<EJVector2> points_t;
+typedef struct {
+	points_t points;
+	bool isClosed;
+} subpath_t;
 typedef std::vector<subpath_t> path_t;
 
 @interface EJPath() {
@@ -24,53 +28,78 @@ typedef std::vector<subpath_t> path_t;
 	if(self) {
 		transform	= CGAffineTransformIdentity;
 		stencilMask = 0x1;
+		[self reset];
 	}
 	return self;
 }
 
-- (void)dealloc {
-	if( vertexBuffer ) {
-		free(vertexBuffer);
+- (id)copyWithZone:(NSZone *)zone {
+	EJPath * copy = [[EJPath allocWithZone:zone] init];
+	copy->currentPos = currentPos;
+	copy->startPos = startPos;
+	copy->minPos = minPos;
+	copy->maxPos = maxPos;
+	copy->longestSubpath = longestSubpath;
+	copy->transform = transform;
+	
+	copy->currentPath = currentPath;
+	copy->paths = paths;
+	return copy;
+}
+
+- (void)push:(EJVector2)v {
+	// Ignore this point if it's identical to the last
+	if( v.x == lastPushed.x && v.y == lastPushed.y && currentPath.points.size() > 0 ) {
+		return;
 	}
-	[super dealloc];
+	lastPushed = v;
+	
+	minPos.x = MIN( minPos.x, v.x );
+	minPos.y = MIN( minPos.y, v.y );
+	maxPos.x = MAX( maxPos.x, v.x );
+	maxPos.y = MAX( maxPos.y, v.y );
+	currentPath.points.push_back(v);
 }
 
 - (void)reset {
 	longestSubpath = 0;
 	paths.clear();
-	currentPath.clear();
+	currentPath.isClosed = false;
+	currentPath.points.clear();
 	
 	currentPos = EJVector2Make( 0, 0 );
 	startPos = EJVector2Make( 0, 0 );
+	
+	minPos = EJVector2Make(INFINITY, INFINITY);
+	maxPos = EJVector2Make(-INFINITY, -INFINITY);
 }
 
 - (void)close {
-	if( currentPos.x != startPos.x || currentPos.y != startPos.y ) {
-		currentPath.push_back(startPos);
-		currentPos = startPos;
-	}
+	currentPath.isClosed = true;
+	[self push:startPos];
+	currentPos = startPos;
 	[self endSubPath];
 }
 
 - (void)endSubPath {
-	if( currentPath.size() > 1 ) {
+	if( currentPath.points.size() > 1 ) {
 		paths.push_back(currentPath);
-		longestSubpath = MAX( longestSubpath, currentPath.size() );
-		
-		currentPath.clear();
-		startPos = currentPos;
+		longestSubpath = MAX( longestSubpath, currentPath.points.size() );
 	}
+	currentPath.points.clear();
+	currentPath.isClosed = false;
+	startPos = currentPos;
 }
 
 - (void)moveToX:(float)x y:(float)y {
 	[self endSubPath];
 	currentPos = startPos = EJVector2ApplyTransform( EJVector2Make( x, y ), transform);
-	currentPath.push_back(currentPos);
+	[self push:currentPos];
 }
 
 - (void)lineToX:(float)x y:(float)y {
 	currentPos = EJVector2ApplyTransform( EJVector2Make(x, y), transform);
-	currentPath.push_back(currentPos);
+	[self push:currentPos];
 }
 
 - (void)bezierCurveToCpx1:(float)cpx1 cpy1:(float)cpy1 cpx2:(float)cpx2 cpy2:(float)cpy2 x:(float)x y:(float)y scale:(float)scale {
@@ -83,7 +112,7 @@ typedef std::vector<subpath_t> path_t;
 	
 	[self recursiveBezierX1:currentPos.x y1:currentPos.y x2:cp1.x y2:cp1.y x3:cp2.x y3:cp2.y x4:p.x y4:p.y level:0];
 	currentPos = p;
-	currentPath.push_back(currentPos);
+	[self push:currentPos];
 }
 
 - (void)recursiveBezierX1:(float)x1 y1:(float)y1
@@ -122,7 +151,7 @@ typedef std::vector<subpath_t> path_t;
 			if((d2 + d3)*(d2 + d3) <= distanceTolerance * (dx*dx + dy*dy)) {
 				// If the curvature doesn't exceed the distance_tolerance value
 				// we tend to finish subdivisions.
-				currentPath.push_back(EJVector2Make(x1234, y1234));
+				[self push:EJVector2Make(x1234, y1234)];
 				return;
 			}
 		}
@@ -130,14 +159,14 @@ typedef std::vector<subpath_t> path_t;
 			if( d2 > EJ_PATH_COLLINEARITY_EPSILON ) {
 				// p1,p3,p4 are collinear, p2 is considerable
 				if( d2 * d2 <= distanceTolerance * (dx*dx + dy*dy) ) {
-					currentPath.push_back(EJVector2Make(x1234, y1234));
+					[self push:EJVector2Make(x1234, y1234)];
 					return;
 				}
 			}
 			else if( d3 > EJ_PATH_COLLINEARITY_EPSILON ) {
 				// p1,p2,p4 are collinear, p3 is considerable
 				if( d3 * d3 <= distanceTolerance * (dx*dx + dy*dy) ) {
-					currentPath.push_back(EJVector2Make(x1234, y1234));
+					[self push:EJVector2Make(x1234, y1234)];
 					return;
 				}
 			}
@@ -146,7 +175,7 @@ typedef std::vector<subpath_t> path_t;
 				dx = x1234 - (x1 + x4) / 2;
 				dy = y1234 - (y1 + y4) / 2;
 				if( dx*dx + dy*dy <= distanceTolerance ) {
-					currentPath.push_back(EJVector2Make(x1234, y1234));
+					[self push:EJVector2Make(x1234, y1234)];
 					return;
 				}
 			}
@@ -169,7 +198,7 @@ typedef std::vector<subpath_t> path_t;
 	
 	[self recursiveQuadraticX1:currentPos.x y1:currentPos.y x2:cp.x y2:cp.y x3:p.x y3:p.y level:0];
 	currentPos = p;
-	currentPath.push_back(currentPos);
+	[self push:currentPos];
 }
 
 - (void)recursiveQuadraticX1:(float)x1 y1:(float)y1
@@ -194,7 +223,7 @@ typedef std::vector<subpath_t> path_t;
 	if( d > EJ_PATH_COLLINEARITY_EPSILON ) {
 		// Regular care
 		if( d * d <= distanceTolerance * (dx*dx + dy*dy) ) {
-			currentPath.push_back(EJVector2Make(x123, y123));
+			[self push:EJVector2Make(x123, y123)];
 			return;
 		}
 	}
@@ -203,7 +232,7 @@ typedef std::vector<subpath_t> path_t;
 		dx = x123 - (x1 + x3) / 2;
 		dy = y123 - (y1 + y3) / 2;
 		if( dx*dx + dy*dy <= distanceTolerance ) {
-			currentPath.push_back(EJVector2Make(x123, y123));
+			[self push:EJVector2Make(x123, y123)];
 			return;
 		}
 	}
@@ -221,7 +250,7 @@ typedef std::vector<subpath_t> path_t;
 	// I have no idea what this code is doing, but it seems to work.
 	
 	// get untransformed currentPos
-	EJVector2 cp = EJVector2ApplyTransform(EJVector2Make(x1, y1), CGAffineTransformInvert(transform));
+	EJVector2 cp = EJVector2ApplyTransform(currentPos, CGAffineTransformInvert(transform));
 	
 	float a1 = cp.y - y1;
 	float b1 = cp.x - x1;
@@ -278,11 +307,11 @@ typedef std::vector<subpath_t> path_t;
 	float angle = startAngle;
 	for( int i = 0; i <= steps; i++, angle += stepSize ) {
 		currentPos = EJVector2ApplyTransform( EJVector2Make( x + cosf(angle) * radius, y + sinf(angle) * radius ), transform);
-		currentPath.push_back( currentPos );
+		[self push:currentPos];
 	}
 }
 
-- (void)drawPolygonsToContext:(EJCanvasContext *)context {
+- (void)drawPolygonsToContext:(EJCanvasContext *)context target:(EJPathPolygonTarget)target {
 	[self endSubPath];
 	if( longestSubpath < 3 ) { return; }
 	
@@ -298,56 +327,82 @@ typedef std::vector<subpath_t> path_t;
 	// to fill the created mask with the polygons color.
 	// TODO: add a fast path for polygons that only have 3 vertices
 	
-	// Make sure the vertex buffer holds enough space for the longest subpath
-	if( vertexBufferLength < longestSubpath ) {
-		vertexBuffer = (EJVector2 *)realloc( vertexBuffer, sizeof(EJVector2) * longestSubpath );
-		vertexBufferLength = longestSubpath;
-	}
-	
 	[context flushBuffers];
 	[context createStencilBufferOnce];
 	
 	
-	// Enable drawing to the stencil buffer, disable drawing to the color buffer and
-	// draw the polygons to the stencil buffer as a triangle fan.
-	
+	// Disable drawing to the color buffer, enable the stencil buffer
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_COLOR_ARRAY);
 	
 	glDisable(GL_BLEND);
 	glEnable(GL_STENCIL_TEST);
-	glStencilMask(0x01);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_INVERT);
-	glStencilFunc(GL_ALWAYS, 0, ~0);
+	glStencilMask(0xff);
+	
+	glStencilFunc(GL_ALWAYS, 0, 0xff);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 	
-	float minX = INFINITY, minY = INFINITY, maxX = -INFINITY, maxY = -INFINITY;
+	
+	// Clear the needed area in the stencil buffer
+	
+	glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
+	[context
+		pushRectX:minPos.x y:minPos.y w:maxPos.x-minPos.x h:maxPos.y-minPos.y
+		tx:0 ty:0 tw:0 th:0
+		color:color	withTransform:CGAffineTransformIdentity];
+	[context flushBuffers];
+	
+	
+	// For each subpath, draw to the stencil buffer twice:
+	// 1) for all back-facing polygons, increase the stencil value
+	// 2) for all front-facing polygons, decrease the stencil value
+	
+	glEnable(GL_CULL_FACE);
 	for( path_t::iterator sp = paths.begin(); sp != paths.end(); ++sp ) {
-		int vertexIndex = 0;
-		for( subpath_t::iterator vertex = sp->begin(); vertex != sp->end(); ++vertex, ++vertexIndex ) {
-			minX = MIN( minX, vertex->x );
-			minY = MIN( minY, vertex->y );
-			maxX = MAX( maxX, vertex->x );
-			maxY = MAX( maxY, vertex->y );
-			
-			vertexBuffer[vertexIndex] = *vertex;
-		}
-		glVertexPointer(2, GL_FLOAT, sizeof(EJVector2), vertexBuffer);
-		glDrawArrays(GL_TRIANGLE_FAN, 0, vertexIndex);
+		glVertexPointer(2, GL_FLOAT, sizeof(EJVector2), &(sp->points).front());
+		
+		glCullFace(GL_BACK);
+		glStencilOp(GL_INCR_WRAP, GL_KEEP, GL_INCR_WRAP);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, sp->points.size());
+		
+		glCullFace(GL_FRONT);
+		glStencilOp(GL_DECR_WRAP, GL_KEEP, GL_DECR_WRAP);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, sp->points.size());
 	}
+	glDisable(GL_CULL_FACE);
 	[context bindVertexBuffer];
 	
 	
-	// Disable drawing to the stencil buffer, enable drawing to the color buffer and push a rect
-	// with the correct size and color to the context.
+	// Enable drawing to the color or depth buffer and push a rect with the correct
+	// size and color to the context. This rect will also clear the stencil buffer
+	// again.
 	
-	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glEnable(GL_BLEND);
-	glStencilFunc(GL_EQUAL, 0x01, 0x01);
+	if( target == kEJPathPolygonTargetDepth ) {
+		glDepthFunc(GL_ALWAYS);
+		glDepthMask(GL_TRUE);
+		glClear(GL_DEPTH_BUFFER_BIT);
+	}
+	else if( target == kEJPathPolygonTargetColor ) {
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glEnable(GL_BLEND);
+	}
+	
+	glStencilFunc(GL_NOTEQUAL, 0x00, 0xff);
     glStencilOp(GL_ZERO, GL_ZERO, GL_ZERO);
-	[context pushRectX:minX y:minY w:maxX-minX h:maxY-minY tx:0 ty:0 tw:0 th:0 color:color withTransform:CGAffineTransformIdentity];
+	[context
+		pushRectX:minPos.x y:minPos.y w:maxPos.x-minPos.x h:maxPos.y-minPos.y
+		tx:0 ty:0 tw:0 th:0
+		color:color	withTransform:CGAffineTransformIdentity];
 	[context flushBuffers];
 	glDisable(GL_STENCIL_TEST);
+	
+	if( target == kEJPathPolygonTargetDepth ) {
+		glDepthMask(GL_FALSE);
+		glDepthFunc(GL_EQUAL);
+		
+		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+		glEnable(GL_BLEND);
+	}
 }
 
 - (void)drawArcToContext:(EJCanvasContext *)context atPoint:(EJVector2)point v1:(EJVector2)p1 v2:(EJVector2)p2 color:(EJColorRGBA)color {
@@ -423,19 +478,15 @@ typedef std::vector<subpath_t> path_t;
 	BOOL addCaps = (projectedLineWidth > 2 && (state->lineCap == kEJLineCapRound || state->lineCap == kEJLineCapSquare));
 	
 	// The miter limit is the maximum allowed ratio of the miter length to half the line width.
-	// For thin lines we skip computing the miter completely.
-	BOOL addMiter = (projectedLineWidth >= 1 && state->lineJoin == kEJLineJoinMiter);
+	BOOL addMiter = (state->lineJoin == kEJLineJoinMiter);
 	float miterLimit = (state->miterLimit * width2);
 	
 	EJColorRGBA color = state->strokeColor;
 	color.rgba.a = (float)color.rgba.a * state->globalAlpha;
 	
-	// enable stencil test when drawing transparent lines
-	// cycle through the highest 7 bits, so that the stencil buffer only has to be cleared after seven stroke operations
-	// the lowest bit is reserved for drawPolygonsToContext
-	if(color.rgba.a < 0xff) {
-		stencilMask <<= 1;
-		
+	// Enable stencil test when drawing transparent lines.
+	// Cycle through all bits, so that the stencil buffer only has to be cleared after eight stroke operations
+	if( color.rgba.a < 0xff ) {
 		[context flushBuffers];
 		[context createStencilBufferOnce];
 		
@@ -470,12 +521,7 @@ typedef std::vector<subpath_t> path_t;
 		nextEdge, nextExt;			// Next edge and its normal * width/2
 	
 	for( path_t::iterator sp = paths.begin(); sp != paths.end(); ++sp ) {
-		EJVector2
-			front = sp->front(),
-			back = sp->back();
-		
-		// If back and front are equal, this subpath is closed.
-		BOOL subPathIsClosed = (sp->size() > 2 && front.x == back.x && front.y == back.y);
+		BOOL subPathIsClosed = sp->isClosed;
 		BOOL ignoreFirstSegment = addMiter && subPathIsClosed;
 		BOOL firstInSubPath = true;
 		BOOL miterLimitExceeded = NO, firstMiterLimitExceeded = NO;
@@ -487,18 +533,18 @@ typedef std::vector<subpath_t> path_t;
 		// the first segment will be computed and used to draw the first segment's first
 		// miter, as well as the last segment's last miter outside the loop.
 		if( addMiter && subPathIsClosed ) {
-			transNext = &sp->at(sp->size()-2);
+			transNext = &sp->points.at(sp->points.size()-2);
 			next = EJVector2ApplyTransform( *transNext, inverseTransform );
 		}
 
-		for( subpath_t::iterator vertex = sp->begin(); vertex != sp->end(); ++vertex) {
+		for( points_t::iterator vertex = sp->points.begin(); vertex != sp->points.end(); ++vertex) {
 			transCurrent = transNext;
 			transNext = &(*vertex);
 			
 			current = next;
 			next = EJVector2ApplyTransform( *transNext, inverseTransform );
 			
-			if( !transCurrent ) { continue; }
+			if( !transCurrent ) { continue;	}
 			
 			currentEdge	= nextEdge;
 			currentExt = nextExt;
@@ -564,6 +610,11 @@ typedef std::vector<subpath_t> path_t;
 				// to calculate the first miter.
 				firstMiter1 = miter21;
 				firstMiter2 = miter22;
+				if( !miterAdded ) {
+					// Flip miter21 <> miter22 if it's the butt for the first segment
+					miter21 = firstMiter2;
+					miter22 = firstMiter1;
+				}
 				firstMiterLimitExceeded = miterLimitExceeded;
 				ignoreFirstSegment = false;
 				continue;
@@ -618,7 +669,7 @@ typedef std::vector<subpath_t> path_t;
 			miter12 = firstMiter2;
 		}
 		else {
-			EJVector2 untransformedBack = EJVector2ApplyTransform(back, inverseTransform);
+			EJVector2 untransformedBack = EJVector2ApplyTransform(sp->points.back(), inverseTransform);
 			miter11 = EJVector2Add(untransformedBack, nextExt);
 			miter12 = EJVector2Sub(untransformedBack, nextExt);
 		}
@@ -635,7 +686,7 @@ typedef std::vector<subpath_t> path_t;
 			// calculate point for current edge
 			d1 = EJDistanceToLineSegmentSquared(miter12, next, second);
 			d2 = EJDistanceToLineSegmentSquared(miter11, next, second);
-			p2 = (d1>d2)?miter12:miter11;
+			p2 = ( d1 > d2 )?miter12:miter11;
 			
 			// calculate point for next edge
 			d1 = EJDistanceToLineSegmentSquared(firstMiter1, current, next);
@@ -676,16 +727,19 @@ typedef std::vector<subpath_t> path_t;
 	} // for each path
 	
 	// disable stencil test when drawing transparent lines
-	if(color.rgba.a<0xff) {
+	if( color.rgba.a < 0xff ) {
 		[context flushBuffers];
 		glDisable(GL_STENCIL_TEST);
 		
-		if(stencilMask == (1<<7)) {
+		if( stencilMask == (1<<7) ) {
 			stencilMask = (1<<0);
 			
 			glStencilMask(0xff);
 			glClearStencil(0x0);
 			glClear(GL_STENCIL_BUFFER_BIT);
+		}
+		else {
+			stencilMask <<= 1;
 		}
 	}
 }

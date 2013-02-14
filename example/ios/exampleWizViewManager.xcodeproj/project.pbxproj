@@ -29,7 +29,6 @@
 		41D70C9416647D1C008CAE2E /* EJCanvasContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5116647D1C008CAE2E /* EJCanvasContext.m */; };
 		41D70C9516647D1C008CAE2E /* EJCanvasContextScreen.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5316647D1C008CAE2E /* EJCanvasContextScreen.m */; };
 		41D70C9616647D1C008CAE2E /* EJCanvasContextTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5516647D1C008CAE2E /* EJCanvasContextTexture.m */; };
-		41D70C9716647D1C008CAE2E /* EJFont.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5916647D1C008CAE2E /* EJFont.m */; };
 		41D70C9816647D1C008CAE2E /* EJImageData.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5B16647D1C008CAE2E /* EJImageData.m */; };
 		41D70C9916647D1C008CAE2E /* EJPath.mm in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5D16647D1C008CAE2E /* EJPath.mm */; };
 		41D70C9A16647D1C008CAE2E /* EJTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = 41D70C5F16647D1C008CAE2E /* EJTexture.m */; };
@@ -78,6 +77,8 @@
 		F60BBFD01647C4910085B8FF /* MainViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = F60BBFCF1647C4910085B8FF /* MainViewController.xib */; };
 		F60BBFE31647C7970085B8FF /* www in Resources */ = {isa = PBXBuildFile; fileRef = F60BBFE21647C7970085B8FF /* www */; };
 		F60BBFF81647C9D00085B8FF /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = F60BBFF71647C9D00085B8FF /* Default-568h@2x.png */; };
+		F655E42916CB9F9F00003002 /* EJFont.mm in Sources */ = {isa = PBXBuildFile; fileRef = F655E42816CB9F9F00003002 /* EJFont.mm */; };
+		F655E42C16CB9FD500003002 /* EJApp.m in Sources */ = {isa = PBXBuildFile; fileRef = F655E42B16CB9FD500003002 /* EJApp.m */; };
 		F67420C71671BC860000AC68 /* Cordova.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F67420C61671BC860000AC68 /* Cordova.framework */; };
 /* End PBXBuildFile section */
 
@@ -123,7 +124,6 @@
 		41D70C5616647D1C008CAE2E /* EJCanvasTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJCanvasTypes.h; sourceTree = "<group>"; };
 		41D70C5716647D1C008CAE2E /* EJDrawable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJDrawable.h; sourceTree = "<group>"; };
 		41D70C5816647D1C008CAE2E /* EJFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJFont.h; sourceTree = "<group>"; };
-		41D70C5916647D1C008CAE2E /* EJFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJFont.m; sourceTree = "<group>"; };
 		41D70C5A16647D1C008CAE2E /* EJImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJImageData.h; sourceTree = "<group>"; };
 		41D70C5B16647D1C008CAE2E /* EJImageData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJImageData.m; sourceTree = "<group>"; };
 		41D70C5C16647D1C008CAE2E /* EJPath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJPath.h; sourceTree = "<group>"; };
@@ -205,6 +205,9 @@
 		F60BBFD31647C4910085B8FF /* verify.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = verify.sh; sourceTree = "<group>"; };
 		F60BBFE21647C7970085B8FF /* www */ = {isa = PBXFileReference; lastKnownFileType = folder; name = www; path = ../www; sourceTree = "<group>"; };
 		F60BBFF71647C9D00085B8FF /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = "Default-568h@2x.png"; path = "Resources/splash/Default-568h@2x.png"; sourceTree = "<group>"; };
+		F655E42816CB9F9F00003002 /* EJFont.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EJFont.mm; sourceTree = "<group>"; };
+		F655E42A16CB9FD500003002 /* EJApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJApp.h; sourceTree = "<group>"; };
+		F655E42B16CB9FD500003002 /* EJApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJApp.m; sourceTree = "<group>"; };
 		F67420C61671BC860000AC68 /* Cordova.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cordova.framework; path = Frameworks/Cordova.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -269,6 +272,8 @@
 		41D70C3416647D1C008CAE2E /* Ejecta */ = {
 			isa = PBXGroup;
 			children = (
+				F655E42A16CB9FD500003002 /* EJApp.h */,
+				F655E42B16CB9FD500003002 /* EJApp.m */,
 				41D70C3516647D1C008CAE2E /* EJAudio */,
 				41D70C4116647D1C008CAE2E /* EJBindingBase.h */,
 				41D70C4216647D1C008CAE2E /* EJBindingBase.m */,
@@ -324,7 +329,7 @@
 				41D70C5616647D1C008CAE2E /* EJCanvasTypes.h */,
 				41D70C5716647D1C008CAE2E /* EJDrawable.h */,
 				41D70C5816647D1C008CAE2E /* EJFont.h */,
-				41D70C5916647D1C008CAE2E /* EJFont.m */,
+				F655E42816CB9F9F00003002 /* EJFont.mm */,
 				41D70C5A16647D1C008CAE2E /* EJImageData.h */,
 				41D70C5B16647D1C008CAE2E /* EJImageData.m */,
 				41D70C5C16647D1C008CAE2E /* EJPath.h */,
@@ -655,7 +660,6 @@
 				41D70C9416647D1C008CAE2E /* EJCanvasContext.m in Sources */,
 				41D70C9516647D1C008CAE2E /* EJCanvasContextScreen.m in Sources */,
 				41D70C9616647D1C008CAE2E /* EJCanvasContextTexture.m in Sources */,
-				41D70C9716647D1C008CAE2E /* EJFont.m in Sources */,
 				41D70C9816647D1C008CAE2E /* EJImageData.m in Sources */,
 				41D70C9916647D1C008CAE2E /* EJPath.mm in Sources */,
 				41D70C9A16647D1C008CAE2E /* EJTexture.m in Sources */,
@@ -672,6 +676,8 @@
 				41D70CA616647D1C008CAE2E /* WizCanvasView.m in Sources */,
 				41D70CA716647D1C008CAE2E /* WizViewManagerPlugin.m in Sources */,
 				41D70CA816647D1C008CAE2E /* WizWebView.m in Sources */,
+				F655E42916CB9F9F00003002 /* EJFont.mm in Sources */,
+				F655E42C16CB9FD500003002 /* EJApp.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -794,6 +800,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_CXX_LIBRARY = "libstdc++";
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -832,6 +839,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
+				CLANG_CXX_LIBRARY = "libstdc++";
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				FRAMEWORK_SEARCH_PATHS = (

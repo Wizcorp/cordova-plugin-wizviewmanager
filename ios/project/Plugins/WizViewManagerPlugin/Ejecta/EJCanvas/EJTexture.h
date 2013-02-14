@@ -9,9 +9,11 @@
 	NSString * fullPath;
 	GLuint textureId;
 	GLenum format;
+	float contentScale;
+	GLint textureFilter;
 }
 - (id)initWithPath:(NSString *)path;
-- (id)initWithPath:(NSString *)path context:(EAGLContext*)context;
+- (id)initWithPath:(NSString *)path sharegroup:(EAGLSharegroup*)sharegroup;
 - (id)initWithWidth:(int)widthp height:(int)heightp format:(GLenum) format;
 - (id)initWithWidth:(int)widthp height:(int)heightp;
 - (id)initWithWidth:(int)widthp height:(int)heightp pixels:(GLubyte *)pixels;
@@ -29,6 +31,7 @@
 + (BOOL)smoothScaling;
 + (void)setSmoothScaling:(BOOL)smoothScaling;
 
+@property (readonly, nonatomic)	float contentScale;
 @property (readonly, nonatomic) GLuint textureId;
 @property (readonly, nonatomic) short width, height, realWidth, realHeight;
 
