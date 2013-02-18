@@ -9,6 +9,8 @@
 #import "WizWebView.h"
 #import "WizViewManagerPlugin.h"
 
+#define WVM_PLUGIN_FOLDER @"www/phonegap/plugin/wizViewManager/"
+
 @implementation WizWebView
 
 @synthesize wizView;
@@ -162,7 +164,11 @@ static BOOL isActive = FALSE;
             }
         }
     }
-       
+    
+    // Load in wizViewMessenger for the view after page has finished loading
+    NSString *script = [NSString stringWithContentsOfFile:[self pathForResource:@"wizViewMessenger.js"] encoding:NSUTF8StringEncoding error:NULL];
+    [theWebView stringByEvaluatingJavaScriptFromString:script];
+    
 }
 
 
@@ -257,6 +263,13 @@ static BOOL isActive = FALSE;
     
     // Accept any other URLs
 	return YES;
+}
+
+
+
+
+- (NSString *)pathForResource:(NSString *)path {
+	return [NSString stringWithFormat:@"%@/" WVM_PLUGIN_FOLDER "%@", [[NSBundle mainBundle] resourcePath], path];
 }
 
 @end
