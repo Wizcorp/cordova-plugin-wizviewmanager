@@ -232,6 +232,7 @@ static BOOL isActive = FALSE;
         NSString *originView = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:0]];
         NSString *targetView = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:1]];
         NSString *data = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:2]];
+        NSString *type = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:3]];
         
         NSLog(@"[WizWebView] ******* targetView is:  %@", targetView );
         
@@ -243,7 +244,7 @@ static BOOL isActive = FALSE;
             NSString *postDataEscaped = [data stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
             
             UIWebView* targetWebView = [viewList objectForKey:targetView];
-            NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@') );", originView, targetView, postDataEscaped];
+            NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), '%@' );", originView, targetView, postDataEscaped, type];
             [targetWebView stringByEvaluatingJavaScriptFromString:js];
 
             // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);

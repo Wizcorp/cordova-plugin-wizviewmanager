@@ -1680,7 +1680,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     return [self.webviewDelegate webViewDidStartLoad:theWebView];
 }
 
-- (void) webViewDidFinishLoad:(UIWebView*)theWebView {
+- (void) webViewDidFinishLoad:(UIWebView*)theWebView {    
     return [self.webviewDelegate webViewDidFinishLoad:theWebView];
 }
 
@@ -1763,6 +1763,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         NSString *originView = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:0]];
         NSString *targetView = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:1]];
         NSString *data = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:2]];
+        NSString *type = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:3]];
         
         NSLog(@"[WizWebView] ******* targetView is:  %@", targetView );
                
@@ -1783,7 +1784,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
             } else if ([viewType isEqualToString:@"webview"]) {
                 // treat as webview
                 UIWebView* targetWebView = [viewList objectForKey:targetView];
-                NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@') );", originView, targetView, postDataEscaped];
+                NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), '%@' );", originView, targetView, postDataEscaped, type];
                 [targetWebView stringByEvaluatingJavaScriptFromString:js];
             } else {
                 NSLog(@"[WizWebView] ******* targetView is unknown type! :  %@", targetView );
