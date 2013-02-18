@@ -28,8 +28,8 @@
                 window.addEventListener('message', wizMessageReceiver, false);
                 
                 function wizMessageReceiver(e) {
-                    var colorString = JSON.parse(e.data);
-                    document.body.style.background = colorString['color'];
+                	console.log("newView received message type: " + Object.prototype.toString.call(e.data) + " data: ", e.data);
+                    document.body.style.background = e.data.color;
                 }
 
                 
