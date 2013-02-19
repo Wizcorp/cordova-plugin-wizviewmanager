@@ -23,6 +23,9 @@ var wizViewMessenger = {
     },
     
     postMessage: function(message, targetView) { 
+    	// for more information on the MessageEvent API, see:
+		// http://www.w3.org/TR/2008/WD-html5-20080610/comms.HTMLElement
+		
     	// wizPostMessage://origin?target?data
     	
     	// Check message type
@@ -68,7 +71,7 @@ var wizViewMessenger = {
         } else if (type === "Boolean") {
 	        data = Boolean(data);
         } else if (type === "Function") {
-	        // w3c says nothing about functions!
+	        // w3c says nothing about functions, will be returned as string.
         } else if (type === "Object") {
 	        data = JSON.parse(data);
         } else {

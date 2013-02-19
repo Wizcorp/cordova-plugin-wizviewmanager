@@ -52,11 +52,6 @@
 	}
 
 
-	View.prototype.postMessage = function (message) {
-        cordova.exec(null, null, "WizViewManagerPlugin", "postMessage", [message, this.name]);
-	};
-
-
 	View.create = function (name, options, success, failure) {
 		propsToString(options);
         cordova.exec(success, failure, "WizViewManagerPlugin", "createView", [name, options]);
@@ -96,17 +91,6 @@
 		this.views = {};
 	}
 
-
-	WizViewManager.prototype.receivedMessage = function (message, senderName) {
-		// for more information on the MessageEvent API, see:
-		// http://www.w3.org/TR/2008/WD-html5-20080610/comms.html
-
-		var sender = this.views[senderName];
-
-		var event = document.createEvent('MessageEvent');
-		event.initMessageEvent('typeArg???', true, true, message, senderName, '', sender);
-		window.dispatchEvent(event);
-	};
 
 
 	WizViewManager.prototype.throwError = function (cb, error) {
@@ -192,7 +176,7 @@
 	};
 
 
-	// instantiate the wizViewManager (always named "mainView" in Cordova)
+	// instantiate the wizViewManager (always named "mainView" in Cordova's window)
 	window.wizViewManager = new WizViewManager('mainView');
 
 }(window));
