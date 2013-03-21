@@ -142,6 +142,44 @@ static WizCanvasView * ejectaInstance = NULL;
 		glContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES1];
 		[EAGLContext setCurrentContext:glContext];
 
+        // Register for application lifecycle notifications
+        
+        // Register the instance to observe willResignActive notifications
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(pauseNotification:)
+                                                     name:UIApplicationWillResignActiveNotification
+                                                   object:nil];
+
+        // Register the instance to observe didEnterBackground notifications
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(pauseNotification:)
+                                                     name:UIApplicationDidEnterBackgroundNotification
+                                                   object:nil];
+        
+        // Register the instance to observe didEnterForeground notifications
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(resumeNotification:)
+                                                     name:UIApplicationWillEnterForegroundNotification
+                                                   object:nil];
+
+        // Register the instance to observe didBecomeActive notifications
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(resumeNotification:)
+                                                     name:UIApplicationDidBecomeActiveNotification
+                                                   object:nil];
+
+        // Register the instance to observe willTerminate notifications
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(pauseNotification:)
+                                                     name:UIApplicationWillTerminateNotification
+                                                   object:nil];
+        
+        // Register the instance to observe didReceiveMemoryWarning notifications
+        [[NSNotificationCenter defaultCenter] addObserver:self
+                                                 selector:@selector(clearCachesNotification:)
+                                                     name:UIApplicationDidReceiveMemoryWarningNotification
+                                                   object:nil];
+        
         // Load the initial JavaScript source files
 	    [self loadScriptAtPath:EJECTA_BOOT_JS];
         
@@ -162,7 +200,10 @@ static WizCanvasView * ejectaInstance = NULL;
 }
 
 - (void)dealloc {
-	JSGlobalContextRelease(jsGlobalContext);
+    // Stop the instance from observing all notification center notifications.
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+	
+    JSGlobalContextRelease(jsGlobalContext);
 	[currentRenderingContext release];
 	[touchDelegate release];
 	[jsClasses release];
@@ -235,6 +276,21 @@ static WizCanvasView * ejectaInstance = NULL;
 	JSGarbageCollect(jsGlobalContext);
 }
 
+
+- (void)pauseNotification:(NSNotification *)notification
+{
+    [self pause];
+}
+
+- (void)resumeNotification:(NSNotification *)notification
+{
+    [self resume];
+}
+
+- (void)clearCachesNotification:(NSNotification *)notification
+{
+    [self clearCaches];
+}
 
 - (void)hideLoadingScreen {
 	//[loadingScreen removeFromSuperview];
