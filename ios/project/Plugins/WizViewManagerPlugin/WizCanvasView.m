@@ -304,6 +304,24 @@ static WizCanvasView * ejectaInstance = NULL;
 
 // ---------------------------------------------------------------------------------
 // Script loading and execution
+- (BOOL)loadCommonScript:(NSString *)script withPath:(NSString *)path {
+	if( !script ) {
+		NSLog(@"Error: Can't Find Script %@", path );
+		return NO;
+	}
+
+    JSStringRef scriptJS = JSStringCreateWithCFString((CFStringRef)script);
+	JSStringRef pathJS = JSStringCreateWithCFString((CFStringRef)path);
+	
+	JSValueRef exception = NULL;
+	JSEvaluateScript( jsGlobalContext, scriptJS, NULL, pathJS, 0, &exception );
+	[self logException:exception ctx:jsGlobalContext];
+    
+	JSStringRelease( scriptJS );
+    
+    return YES;
+}
+
 - (void)evaluateScript:(NSString *)script {
 
 	if( !script ) {
@@ -312,34 +330,31 @@ static WizCanvasView * ejectaInstance = NULL;
 	}
 	
 	// NSLog(@"Loading Script: %@", script );
-	
-    JSStringRef scriptJS = JSStringCreateWithCFString((CFStringRef)script);
-	JSStringRef pathJS = JSStringCreateWithCFString((CFStringRef)@"");
-	
-	JSValueRef exception = NULL;
-	JSEvaluateScript( jsGlobalContext, scriptJS, NULL, pathJS, 0, &exception );
-	[self logException:exception ctx:jsGlobalContext];
-    
-	JSStringRelease( scriptJS );
+    [self loadCommonScript:script withPath:@""];
 }
 
 - (void)loadScriptAtPath:(NSString *)path {
+	NSLog(@"Loading Script: %@", path );
+    
 	NSString * script = [NSString stringWithContentsOfFile:[self pathForResource:path] encoding:NSUTF8StringEncoding error:NULL];
 	
-	if( !script ) {
-		NSLog(@"Error: Can't Find Script %@", path );
-		return;
-	}
-	
-	NSLog(@"Loading Script: %@", path );
-	JSStringRef scriptJS = JSStringCreateWithCFString((CFStringRef)script);
-	JSStringRef pathJS = JSStringCreateWithCFString((CFStringRef)path);
-	
-	JSValueRef exception = NULL;
-	JSEvaluateScript( jsGlobalContext, scriptJS, NULL, pathJS, 0, &exception );
-	[self logException:exception ctx:jsGlobalContext];
+    [self loadCommonScript:script withPath:path];
+}
+
+- (BOOL)loadRequest:(NSString *)url {
+	NSLog(@"Loading Script: %@", url );
     
-	JSStringRelease( scriptJS );
+    NSError *error;
+    NSData *urlData = [NSData dataWithContentsOfURL:[NSURL URLWithString:url] options:0 error:&error];
+    
+	if( !urlData ) {
+		NSLog(@"Error: Can't Find Script %@", url );
+		return NO;
+	}
+    
+    NSString *script = [NSString stringWithCString:[urlData bytes] encoding:NSUTF8StringEncoding];
+    
+    return [self loadCommonScript:script withPath:url];
 }
 
 - (JSValueRef)invokeCallback:(JSObjectRef)callback thisObject:(JSObjectRef)thisObject argc:(size_t)argc argv:(const JSValueRef [])argv {
