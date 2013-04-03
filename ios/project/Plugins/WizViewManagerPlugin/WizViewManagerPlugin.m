@@ -768,10 +768,13 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
                 WizCanvasView *targetCanvasView = [wizViewList objectForKey:viewName];
 
                 if ([self validateUrl:src]) {
-                    [targetCanvasView loadRequest:src];
-                    
-                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-                    [self writeJavascript: [pluginResult toSuccessCallbackString:command.callbackId]];
+                    if ( [targetCanvasView loadRequest:src] ) {
+                        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+                        [self writeJavascript: [pluginResult toSuccessCallbackString:command.callbackId]];
+                    } else {
+                        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"error - failed to load URL from src"];
+                        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                    }
                 } else {
 
                     [targetCanvasView loadScriptAtPath:src];
