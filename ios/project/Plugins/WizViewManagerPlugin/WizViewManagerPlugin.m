@@ -768,12 +768,10 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
                 WizCanvasView *targetCanvasView = [wizViewList objectForKey:viewName];
 
                 if ([self validateUrl:src]) {
-                    // source is url
-                    NSLog(@"Load Error: source not compatible with type canvas view");
-                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:
-                                               CDVCommandStatus_ERROR messageAsString:@"Load Error: source not compatible with type canvas view"];
-                    [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                    [targetCanvasView loadRequest:src];
                     
+                    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+                    [self writeJavascript: [pluginResult toSuccessCallbackString:command.callbackId]];
                 } else {
 
                     [targetCanvasView loadScriptAtPath:src];

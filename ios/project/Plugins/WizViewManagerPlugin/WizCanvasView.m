@@ -342,6 +342,32 @@ static WizCanvasView * ejectaInstance = NULL;
 	JSStringRelease( scriptJS );
 }
 
+- (void)loadRequest:(NSString *)url {
+    NSData *urlData = [NSData dataWithContentsOfURL:[NSURL URLWithString:url]];
+    
+	if( !urlData ) {
+		NSLog(@"Error: Can't Find Script %@", url );
+		return;
+	}
+    
+    NSString *script = [NSString stringWithCString:[urlData bytes] encoding:NSUTF8StringEncoding];
+    
+	if( !script ) {
+		NSLog(@"Error: Can't Find Script %@", url );
+		return;
+	}
+	
+	NSLog(@"Loading Script: %@", url );
+	JSStringRef scriptJS = JSStringCreateWithCFString((CFStringRef)script);
+	JSStringRef pathJS = JSStringCreateWithCFString((CFStringRef)url);
+	
+	JSValueRef exception = NULL;
+	JSEvaluateScript( jsGlobalContext, scriptJS, NULL, pathJS, 0, &exception );
+	[self logException:exception ctx:jsGlobalContext];
+    
+	JSStringRelease( scriptJS );
+}
+
 - (JSValueRef)invokeCallback:(JSObjectRef)callback thisObject:(JSObjectRef)thisObject argc:(size_t)argc argv:(const JSValueRef [])argv {
 	JSValueRef exception = NULL;
 	JSValueRef result = JSObjectCallAsFunction( jsGlobalContext, callback, thisObject, argc, argv, &exception );
