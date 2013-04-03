@@ -72,7 +72,7 @@
 // Added for pure script injection wizardry - ao.
 - (void)evaluateScript:(NSString *)path;
 - (void)loadScriptAtPath:(NSString *)path;
-- (void)loadRequest:(NSString *)url;
+- (BOOL)loadRequest:(NSString *)url;
 - (JSValueRef)invokeCallback:(JSObjectRef)callback thisObject:(JSObjectRef)thisObject argc:(size_t)argc argv:(const JSValueRef [])argv;
 - (void)logException:(JSValueRef)exception ctx:(JSContextRef)ctxp;
 
