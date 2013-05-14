@@ -205,10 +205,11 @@ animation : {
 
 Messaging views<br />
 To send a messsage to a view based on W3C post message API...
+for more information on the MessageEvent API, see:
+http://www.w3.org/TR/2008/WD-html5-20080610/comms.HTMLElement
 <pre><code>
-wizViewMessenger.postMessage(String message, String targetView);
-	* message is the message string
-	( To send JSON, stringify first using JSON.stringify(myObject) )
+wizViewMessenger.postMessage(Data message, String targetView);
+	* message is Data as Array, String, Number, Object
 	* targetView is the string name of the target view.
 	* to reach Cordova window, targetView = "mainView"
 </code></pre>

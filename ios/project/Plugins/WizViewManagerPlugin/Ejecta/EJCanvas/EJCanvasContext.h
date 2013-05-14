@@ -75,6 +75,8 @@ typedef struct {
 	EJTextAlign textAlign;
 	EJTextBaseline textBaseline;
 	UIFont * font;
+	
+	EJPath * clipPath;
 } EJCanvasState;
 
 
@@ -87,6 +89,7 @@ typedef struct {
 	short viewportWidth, viewportHeight;
 	short bufferWidth, bufferHeight;
 	
+	BOOL imageSmoothingEnabled;
 	BOOL msaaEnabled;
 	int msaaSamples;
 	
@@ -154,12 +157,16 @@ typedef struct {
 - (void)strokeText:(NSString *)text x:(float)x y:(float)y;
 - (float)measureText:(NSString *)text;
 
+- (void)clip;
+- (void)resetClip;
+
 @property (nonatomic) EJCanvasState * state;
 @property (nonatomic) EJCompositeOperation globalCompositeOperation;
 @property (nonatomic, retain) UIFont * font;
 @property (nonatomic, assign) float backingStoreRatio;
 @property (nonatomic) BOOL msaaEnabled;
 @property (nonatomic) int msaaSamples;
+@property (nonatomic) BOOL imageSmoothingEnabled;
 
 /* TODO: not yet implemented:
 	createLinearGradient(x0, y0, x1, y1)
@@ -169,7 +176,6 @@ typedef struct {
 	shadowOffsetY
 	shadowBlur
 	shadowColor
-	clip()
 	isPointInPath(x, y)
 */
 @end
