@@ -1,6 +1,7 @@
 /* WizViewManager for cordova - Handle Views create/remove/show/hide etc.
 *
  * @author Ally Ogilvie  
+ * @author Ron Korving
  * @copyright WizCorp Inc. [ Incorporated Wizards ] 2012
  * @file - wizViewManager.js
  * @about - JavaScript cordova bridge for view management
@@ -29,7 +30,7 @@
 
 (function (window) {
 
-	// inheritor helper for each library (copy please)
+	// inheritor helper for each library
 	function inherits(ctor, superCtor) {
 		ctor.prototype = Object.create(superCtor.prototype, {
 			constructor: { value: ctor, enumerable: false, writable: true, configurable: true }
@@ -85,10 +86,11 @@
 
 
 
-	// WizViewManager parent class for each library (copy please)
+	// WizViewManager parent class for each library
 	function WizViewManager(name) {
 		this.name = name;
 		this.views = {};
+		this.updateViewList([name]);
 	}
 
 
@@ -119,6 +121,15 @@
 		}
 
 		View.create(name, options, successWrapper, failure);
+	};
+
+
+	WizViewManager.prototype.remove = function (name, success, failure) {
+		if (!this.views[name]) {
+			return this.throwError(failure, new Error('Remove Error with view name: ' + name + '. View does not exist'));
+		}
+
+		this.views[name].remove(success, failure);
 	};
 
 
