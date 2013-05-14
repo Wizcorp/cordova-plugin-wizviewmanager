@@ -19,7 +19,7 @@
 # under the License.
 #
 -->
-<cordova>
+<widget>
     <preference name="KeyboardDisplayRequiresUserAction" value="true" />
     <preference name="SuppressesIncrementalRendering" value="false" />
     <preference name="UIWebViewBounce" value="true" />
@@ -28,9 +28,10 @@
     <preference name="EnableViewportScale" value="false" />
     <preference name="AutoHideSplashScreen" value="true" />
     <preference name="ShowSplashScreenSpinner" value="true" />
+    <preference name="FadeSplashScreen" value="true" />
+    <preference name="FadeSplashScreenDuration" value="2" />
     <preference name="MediaPlaybackRequiresUserAction" value="false" />
     <preference name="AllowInlineMediaPlayback" value="false" />
-    <preference name="OpenAllWhitelistURLsInWebView" value="false" />
     <preference name="BackupWebStorage" value="cloud" />
 
     <content src="index.html" /> 
@@ -58,4 +59,4 @@
     </plugins>
 
     <access origin="*" />
-</cordova>
+</widget>
