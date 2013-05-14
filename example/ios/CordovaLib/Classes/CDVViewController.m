@@ -22,14 +22,13 @@
 #import "CDVCommandQueue.h"
 #import "CDVCommandDelegateImpl.h"
 #import "CDVConfigParser.h"
+#import "CDVUserAgentUtil.h"
 
 #define degreesToRadian(x) (M_PI * (x) / 180.0)
-#define CDV_USER_AGENT_KEY @"Cordova-User-Agent"
-#define CDV_USER_AGENT_VERSION_KEY @"Cordova-User-Agent-Version"
 
-static NSString* gOriginalUserAgent = nil;
-
-@interface CDVViewController ()
+@interface CDVViewController () {
+    NSInteger _userAgentLockToken;
+}
 
 @property (nonatomic, readwrite, strong) NSXMLParser* configParser;
 @property (nonatomic, readwrite, strong) NSDictionary* settings;
@@ -43,6 +42,8 @@ static NSString* gOriginalUserAgent = nil;
 @property (nonatomic, readwrite, strong) UIImageView* imageView;
 @property (readwrite, assign) BOOL initialized;
 
+@property (atomic, strong) NSURL* openURL;
+
 @end
 
 @implementation CDVViewController
@@ -51,7 +52,7 @@ static NSString* gOriginalUserAgent = nil;
 @synthesize pluginObjects, pluginsMap, whitelist;
 @synthesize configParser, settings, loadFromString;
 @synthesize imageView, activityView, useSplashScreen;
-@synthesize wwwFolderName, startPage, invokeString, initialized;
+@synthesize wwwFolderName, startPage, initialized, openURL;
 @synthesize commandDelegate = _commandDelegate;
 @synthesize commandQueue = _commandQueue;
 
@@ -69,22 +70,16 @@ static NSString* gOriginalUserAgent = nil;
                                                      name:UIApplicationWillResignActiveNotification object:nil];
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppDidBecomeActive:)
                                                      name:UIApplicationDidBecomeActiveNotification object:nil];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppLocaleDidChange:)
-                                                     name:NSCurrentLocaleDidChangeNotification object:nil];
 
-        if (IsAtLeastiOSVersion(@"4.0")) {
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppWillEnterForeground:)
-                                                         name:UIApplicationWillEnterForegroundNotification object:nil];
-            [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppDidEnterBackground:)
-                                                         name:UIApplicationDidEnterBackgroundNotification object:nil];
-        }
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppWillEnterForeground:)
+                                                     name:UIApplicationWillEnterForegroundNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onAppDidEnterBackground:)
+                                                     name:UIApplicationDidEnterBackgroundNotification object:nil];
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleOpenURL:) name:CDVPluginHandleOpenURLNotification object:nil];
 
         // read from UISupportedInterfaceOrientations (or UISupportedInterfaceOrientations~iPad, if its iPad) from -Info.plist
         self.supportedOrientations = [self parseInterfaceOrientations:
             [[[NSBundle mainBundle] infoDictionary] objectForKey:@"UISupportedInterfaceOrientations"]];
-
-        self.wwwFolderName = @"www";
-        self.startPage = @"index.html";
 
         [self printMultitaskingInfo];
         [self printDeprecationNotice];
@@ -170,6 +165,10 @@ static NSString* gOriginalUserAgent = nil;
     self.pluginsMap = [delegate.pluginsDict dictionaryWithLowercaseKeys];
     self.whitelist = [[CDVWhitelist alloc] initWithArray:delegate.whitelistHosts];
     self.settings = delegate.settings;
+
+    // And the start folder/page.
+    self.wwwFolderName = @"www";
+    self.startPage = [delegate getStartPage];
 
     // Initialize the plugin objects dict.
     self.pluginObjects = [[NSMutableDictionary alloc] initWithCapacity:4];
@@ -306,14 +305,17 @@ static NSString* gOriginalUserAgent = nil;
     }
 
     // /////////////////
-
-    if (!loadErr) {
-        NSURLRequest* appReq = [NSURLRequest requestWithURL:appURL cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:20.0];
-        [self.webView loadRequest:appReq];
-    } else {
-        NSString* html = [NSString stringWithFormat:@"<html><body> %@ </body></html>", loadErr];
-        [self.webView loadHTMLString:html baseURL:nil];
-    }
+    [CDVUserAgentUtil acquireLock:^(NSInteger lockToken) {
+            _userAgentLockToken = lockToken;
+            [CDVUserAgentUtil setUserAgent:self.userAgent lockToken:lockToken];
+            if (!loadErr) {
+                NSURLRequest* appReq = [NSURLRequest requestWithURL:appURL cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:20.0];
+                [self.webView loadRequest:appReq];
+            } else {
+                NSString* html = [NSString stringWithFormat:@"<html><body> %@ </body></html>", loadErr];
+                [self.webView loadHTMLString:html baseURL:nil];
+            }
+        }];
 }
 
 - (NSArray*)parseInterfaceOrientations:(NSArray*)orientations
@@ -411,55 +413,15 @@ static NSString* gOriginalUserAgent = nil;
     return [self.supportedOrientations containsObject:[NSNumber numberWithInt:orientation]];
 }
 
-/**
- Called by UIKit when the device starts to rotate to a new orientation.  This fires the \c setOrientation
- method on the Orientation object in JavaScript.  Look at the JavaScript documentation for more information.
- */
-- (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation
+- (UIWebView*)newCordovaViewWithFrame:(CGRect)bounds
 {
-    if (!IsAtLeastiOSVersion(@"5.0")) {
-        NSString* jsCallback = [NSString stringWithFormat:
-            @"window.__defineGetter__('orientation',function(){ return %d; }); \
-                                  cordova.fireWindowEvent('orientationchange');"
-            , [self mapIosOrientationToJsOrientation:fromInterfaceOrientation]];
-        [self.commandDelegate evalJs:jsCallback];
-    }
-}
-
-- (CDVCordovaView*)newCordovaViewWithFrame:(CGRect)bounds
-{
-    return [[CDVCordovaView alloc] initWithFrame:bounds];
-}
-
-+ (NSString*)originalUserAgent
-{
-    if (gOriginalUserAgent == nil) {
-        NSUserDefaults* userDefaults = [NSUserDefaults standardUserDefaults];
-        NSString* systemVersion = [[UIDevice currentDevice] systemVersion];
-        NSString* localeStr = [[NSLocale currentLocale] localeIdentifier];
-        NSString* systemAndLocale = [NSString stringWithFormat:@"%@ %@", systemVersion, localeStr];
-
-        NSString* cordovaUserAgentVersion = [userDefaults stringForKey:CDV_USER_AGENT_VERSION_KEY];
-        gOriginalUserAgent = [userDefaults stringForKey:CDV_USER_AGENT_KEY];
-        BOOL cachedValueIsOld = ![systemAndLocale isEqualToString:cordovaUserAgentVersion];
-
-        if ((gOriginalUserAgent == nil) || cachedValueIsOld) {
-            UIWebView* sampleWebView = [[UIWebView alloc] initWithFrame:CGRectZero];
-            gOriginalUserAgent = [sampleWebView stringByEvaluatingJavaScriptFromString:@"navigator.userAgent"];
-
-            [userDefaults setObject:gOriginalUserAgent forKey:CDV_USER_AGENT_KEY];
-            [userDefaults setObject:systemAndLocale forKey:CDV_USER_AGENT_VERSION_KEY];
-
-            [userDefaults synchronize];
-        }
-    }
-    return gOriginalUserAgent;
+    return [[UIWebView alloc] initWithFrame:bounds];
 }
 
 - (NSString*)userAgent
 {
     if (_userAgent == nil) {
-        NSString* originalUserAgent = [[self class] originalUserAgent];
+        NSString* originalUserAgent = [CDVUserAgentUtil originalUserAgent];
         // Use our address as a unique number to append to the User-Agent.
         _userAgent = [NSString stringWithFormat:@"%@ (%lld)", originalUserAgent, (long long)self];
     }
@@ -473,11 +435,6 @@ static NSString* gOriginalUserAgent = nil;
     webViewBounds.origin = self.view.bounds.origin;
 
     if (!self.webView) {
-        // setting the UserAgent must occur before the UIWebView is instantiated.
-        // This is read per instantiation, so it does not affect the main Cordova UIWebView
-        NSDictionary* dict = [[NSDictionary alloc] initWithObjectsAndKeys:self.userAgent, @"UserAgent", nil];
-        [[NSUserDefaults standardUserDefaults] registerDefaults:dict];
-
         self.webView = [self newCordovaViewWithFrame:webViewBounds];
         self.webView.autoresizingMask = (UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight);
 
@@ -542,6 +499,11 @@ static NSString* gOriginalUserAgent = nil;
  */
 - (void)webViewDidFinishLoad:(UIWebView*)theWebView
 {
+    if (_userAgentLockToken != 0) {
+        [CDVUserAgentUtil releaseLock:_userAgentLockToken];
+        _userAgentLockToken = 0;
+    }
+
     /*
      * Hide the Top Activity THROBBER in the Battery Bar
      */
@@ -559,11 +521,19 @@ static NSString* gOriginalUserAgent = nil;
     // The .onNativeReady().fire() will work when cordova.js is already loaded.
     // The _nativeReady = true; is used when this is run before cordova.js is loaded.
     NSString* nativeReady = @"try{cordova.require('cordova/channel').onNativeReady.fire();}catch(e){window._nativeReady = true;}";
-    [self.commandDelegate evalJs:nativeReady];
+    // Don't use [commandDelegate evalJs] here since it relies on cordova.js being loaded already.
+    [self.webView stringByEvaluatingJavaScriptFromString:nativeReady];
+
+    [self processOpenUrl];
 }
 
 - (void)webView:(UIWebView*)webView didFailLoadWithError:(NSError*)error
 {
+    if (_userAgentLockToken != 0) {
+        [CDVUserAgentUtil releaseLock:_userAgentLockToken];
+        _userAgentLockToken = 0;
+    }
+
     NSLog(@"Failed to load webpage with error: %@", [error localizedDescription]);
 
     /*
@@ -956,9 +926,21 @@ BOOL gSplashScreenShown = NO;
     [self.commandDelegate evalJs:@"cordova.fireDocumentEvent('pause', null, true);" scheduledOnRunLoop:NO];
 }
 
-- (void)onAppLocaleDidChange:(NSNotification*)notification
+// ///////////////////////
+
+- (void)handleOpenURL:(NSNotification*)notification
 {
-    gOriginalUserAgent = nil;
+    self.openURL = notification.object;
+}
+
+- (void)processOpenUrl
+{
+    if (self.openURL) {
+        // calls into javascript global function 'handleOpenURL'
+        NSString* jsString = [NSString stringWithFormat:@"handleOpenURL(\"%@\");", [self.openURL description]];
+        [self.webView stringByEvaluatingJavaScriptFromString:jsString];
+        self.openURL = nil;
+    }
 }
 
 // ///////////////////////
@@ -972,6 +954,7 @@ BOOL gSplashScreenShown = NO;
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidBecomeActiveNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
     [[NSNotificationCenter defaultCenter] removeObserver:self name:NSCurrentLocaleDidChangeNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:CDVPluginHandleOpenURLNotification object:nil];
 
     self.webView.delegate = nil;
     self.webView = nil;

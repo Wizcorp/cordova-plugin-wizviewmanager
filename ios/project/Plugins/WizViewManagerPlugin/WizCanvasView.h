@@ -8,7 +8,6 @@
 
 #import <Foundation/Foundation.h>
 #import <Cordova/CDVPlugin.h>
-#import <Cordova/CDVCordovaView.h>
 
 
 #import <QuartzCore/QuartzCore.h>

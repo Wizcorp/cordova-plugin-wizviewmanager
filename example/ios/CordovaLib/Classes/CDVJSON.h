@@ -17,7 +17,14 @@
  under the License.
  */
 
-#import <UIKit/UIKit.h>
+@interface NSArray (CDVJSONSerializing)
+- (NSString*)JSONString;
+@end
 
-@interface CDVCordovaView : UIWebView {}
+@interface NSDictionary (CDVJSONSerializing)
+- (NSString*)JSONString;
+@end
+
+@interface NSString (CDVJSONSerializing)
+- (id)JSONObject;
 @end

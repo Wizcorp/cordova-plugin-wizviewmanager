@@ -22,7 +22,7 @@ static BOOL isActive = FALSE;
     
     viewManager = myViewManager;
     
-    wizView = [[CDVCordovaView alloc] initWithFrame:webViewBounds];
+    wizView = [[UIWebView alloc] initWithFrame:webViewBounds];
     wizView.delegate = self;
     wizView.multipleTouchEnabled   = YES;
     wizView.autoresizesSubviews    = YES;
@@ -156,7 +156,7 @@ static BOOL isActive = FALSE;
     // Feed in the view name to the view's window.name property
     NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
     for (NSString *key in viewList) {
-        if ([[viewList objectForKey:key] isMemberOfClass:[CDVCordovaView class]]) {
+        if ([[viewList objectForKey:key] isMemberOfClass:[UIWebView class]]) {
             UIWebView *targetWebView = [viewList objectForKey:key];
             if ([targetWebView isEqual:theWebView]) {
                 NSString *js = [NSString stringWithFormat:@"window.name = '%@'", key];

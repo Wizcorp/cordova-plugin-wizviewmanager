@@ -20,7 +20,7 @@
 #import "CDVFile.h"
 #import "NSArray+Comparisons.h"
 #import "NSDictionary+Extensions.h"
-#import "JSONKit.h"
+#import "CDVJSON.h"
 #import "NSData+Base64.h"
 #import <MobileCoreServices/MobileCoreServices.h>
 #import "CDVAvailability.h"
@@ -31,6 +31,8 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
 #ifndef __IPHONE_5_1
     NSString* const NSURLIsExcludedFromBackupKey = @"NSURLIsExcludedFromBackupKey";
 #endif
+
+NSString* const kCDVAssetsLibraryPrefix = @"assets-library://";
 
 @implementation CDVFile
 
@@ -329,6 +331,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
     NSString* requestedPath = [command.arguments objectAtIndex:1];
     NSDictionary* options = [command.arguments objectAtIndex:2 withDefault:nil];
 
+    // return unsupported result for assets-library URLs
+    if ([fullPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"getFile not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
     CDVPluginResult* result = nil;
     BOOL bDirRequest = NO;
     BOOL create = NO;
@@ -425,6 +434,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
     // arguments are URL encoded
     NSString* fullPath = [command.arguments objectAtIndex:0];
 
+    // return unsupported result for assets-library URLs
+    if ([fullPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"remove not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
     CDVPluginResult* result = nil;
     NSString* newPath = nil;
 
@@ -461,6 +477,14 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
 {
     // arguments
     NSString* argPath = [command.arguments objectAtIndex:0];
+
+    // return unsupported result for assets-library URLs
+    if ([argPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"getMetadata not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
     NSString* testPath = argPath; // [self getFullPath: argPath];
 
     NSFileManager* fileMgr = [[NSFileManager alloc] init];
@@ -500,6 +524,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
     // arguments
     NSString* filePath = [command.arguments objectAtIndex:0];
     NSDictionary* options = [command.arguments objectAtIndex:1 withDefault:nil];
+
+    // return unsupported result for assets-library URLs
+    if ([filePath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"setMetadata not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
 
     CDVPluginResult* result = nil;
     BOOL ok = NO;
@@ -547,6 +578,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
     // arguments
     NSString* fullPath = [command.arguments objectAtIndex:0];
 
+    // return unsupported result for assets-library URLs
+    if ([fullPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"remove not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
     CDVPluginResult* result = nil;
     CDVFileError errorCode = 0;  // !! 0 not currently defined
 
@@ -586,6 +624,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
 {
     // arguments
     NSString* fullPath = [command.arguments objectAtIndex:0];
+
+    // return unsupported result for assets-library URLs
+    if ([fullPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"removeRecursively not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
 
     CDVPluginResult* result = nil;
 
@@ -692,6 +737,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
     NSString* destRootPath = [arguments objectAtIndex:1];
     // optional argument
     NSString* newName = ([arguments count] > 2) ? [arguments objectAtIndex:2] : [srcFullPath lastPathComponent];          // use last component from appPath if new name not provided
+
+    // return unsupported result for assets-library URLs
+    if ([srcFullPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"moveTo/copyTo not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
 
     CDVPluginResult* result = nil;
     CDVFileError errCode = 0;  // !! Currently 0 is not defined, use this to signal error !!
@@ -838,6 +890,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
     // arguments
     NSString* argPath = [command.arguments objectAtIndex:0];
 
+    // return unsupported result for assets-library URLs
+    if ([argPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"getFileMetadata not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
     CDVPluginResult* result = nil;
 
     NSString* fullPath = argPath; // [self getFullPath: argPath];
@@ -875,6 +934,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
     // arguments
     NSString* fullPath = [command.arguments objectAtIndex:0];
 
+    // return unsupported result for assets-library URLs
+    if ([fullPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"readEntries not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
     CDVPluginResult* result = nil;
 
     NSFileManager* fileMgr = [[NSFileManager alloc] init];
@@ -908,11 +974,30 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
  * NSArray* arguments
  *	0 - NSString* fullPath
  *	1 - NSString* encoding - NOT USED,  iOS reads and writes using UTF8!
+ *	2 - NSString* start - OPTIONAL, only provided when not == 0.
+ *	3 - NSString* end - OPTIONAL, only provided when not == length.
  */
 - (void)readAsText:(CDVInvokedUrlCommand*)command
 {
     // arguments
     NSString* argPath = [command.arguments objectAtIndex:0];
+    NSInteger start = 0;
+    NSInteger end = -1;
+
+    if ([command.arguments count] >= 3) {
+        start = [[command.arguments objectAtIndex:2] integerValue];
+    }
+    if ([command.arguments count] >= 4) {
+        end = [[command.arguments objectAtIndex:3] integerValue];
+    }
+
+    // return unsupported result for assets-library URLs
+    if ([argPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"readAsText not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
     // NSString* encoding = [command.arguments objectAtIndex:2];   // not currently used
     CDVPluginResult* result = nil;
 
@@ -922,7 +1007,16 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
         // invalid path entry
         result = [CDVPluginResult resultWithStatus:CDVCommandStatus_IO_EXCEPTION messageAsInt:NOT_FOUND_ERR];
     } else {
-        NSData* readData = [file readDataToEndOfFile];
+        if (start > 0) {
+            [file seekToFileOffset:start];
+        }
+
+        NSData* readData;
+        if (end < 0) {
+            readData = [file readDataToEndOfFile];
+        } else {
+            readData = [file readDataOfLength:(end - start)];
+        }
 
         [file closeFile];
         NSString* pNStrBuff = nil;
@@ -933,7 +1027,7 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
             pNStrBuff = @"";
         }
 
-        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:[pNStrBuff stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding]];
+        result = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:pNStrBuff];
     }
     [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
 }
@@ -950,6 +1044,22 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
 {
     // arguments
     NSString* argPath = [command.arguments objectAtIndex:0];
+    NSInteger start = 0;
+    NSInteger end = -1;
+
+    if ([command.arguments count] >= 2) {
+        start = [[command.arguments objectAtIndex:1] integerValue];
+    }
+    if ([command.arguments count] >= 3) {
+        end = [[command.arguments objectAtIndex:2] integerValue];
+    }
+
+    // return unsupported result for assets-library URLs
+    if ([argPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"readAsDataURL not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
 
     CDVFileError errCode = ABORT_ERR;
     CDVPluginResult* result = nil;
@@ -963,7 +1073,17 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
             errCode = ENCODING_ERR;
         } else {
             NSFileHandle* file = [NSFileHandle fileHandleForReadingAtPath:argPath];
-            NSData* readData = [file readDataToEndOfFile];
+            if (start > 0) {
+                [file seekToFileOffset:start];
+            }
+
+            NSData* readData;
+            if (end < 0) {
+                readData = [file readDataToEndOfFile];
+            } else {
+                readData = [file readDataOfLength:(end - start)];
+            }
+
             [file closeFile];
             if (readData) {
                 NSString* output = [NSString stringWithFormat:@"data:%@;base64,%@", mimeType, [readData base64EncodedString]];
@@ -1014,6 +1134,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
     NSString* argPath = [command.arguments objectAtIndex:0];
     unsigned long long pos = (unsigned long long)[[command.arguments objectAtIndex:1] longLongValue];
 
+    // return unsupported result for assets-library URLs
+    if ([argPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"truncate not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
+
     NSString* appFile = argPath; // [self getFullPath:argPath];
 
     unsigned long long newPos = [self truncateFile:appFile atPosition:pos];
@@ -1053,6 +1180,13 @@ extern NSString * const NSURLIsExcludedFromBackupKey __attribute__((weak_import)
     NSString* argPath = [arguments objectAtIndex:0];
     NSString* argData = [arguments objectAtIndex:1];
     unsigned long long pos = (unsigned long long)[[arguments objectAtIndex:2] longLongValue];
+
+    // return unsupported result for assets-library URLs
+    if ([argPath hasPrefix:kCDVAssetsLibraryPrefix]) {
+        CDVPluginResult* result = [CDVPluginResult resultWithStatus:CDVCommandStatus_MALFORMED_URL_EXCEPTION messageAsString:@"write not supported for assets-library URLs."];
+        [self.commandDelegate sendPluginResult:result callbackId:command.callbackId];
+        return;
+    }
 
     NSString* fullPath = argPath; // [self getFullPath:argPath];
 

@@ -1843,7 +1843,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     if ([view isMemberOfClass:[WizCanvasView class]]) {
         return @"canvas";
     }
-    if ([view isMemberOfClass:[UIWebView class]] || [view isMemberOfClass:[CDVCordovaView class]]) {
+    if ([view isMemberOfClass:[UIWebView class]] || [view isMemberOfClass:[UIWebView class]]) {
         return @"webview";
     }
 
