@@ -1,12 +1,16 @@
 # PLUGIN: 
 
 phonegap-plugin-wizViewManager<br />
-version : 2.3 (Canvas beta)<br />
-readme last update : 23/01/2013<br />
+version : 2.7 (Canvas beta)<br />
+readme last update : 14/05/2013<br />
 
 
 # CHANGELOG: 
 <br />
+- Updated for Cordova 2.7
+- Updated for Cordova 2.6
+- Updated for Cordova 2.5
+- Updated for Cordova 2.4
 - Updated for Cordova 2.3
 - new canvas view
 - Implemented postMessage API
@@ -205,10 +209,11 @@ animation : {
 
 Messaging views<br />
 To send a messsage to a view based on W3C post message API...
+for more information on the MessageEvent API, see:
+http://www.w3.org/TR/2008/WD-html5-20080610/comms.HTMLElement
 <pre><code>
-wizViewMessenger.postMessage(String message, String targetView);
-	* message is the message string
-	( To send JSON, stringify first using JSON.stringify(myObject) )
+wizViewMessenger.postMessage(Data message, String targetView);
+	* message is Data as Array, String, Number, Object
 	* targetView is the string name of the target view.
 	* to reach Cordova window, targetView = "mainView"
 </code></pre>

@@ -1,5 +1,5 @@
 #import <Foundation/Foundation.h>
-#import "WizCanvasView.h"
+#import "EJApp.h"
 
 @interface EJTimerCollection : NSObject {
 	NSMutableDictionary * timers;
@@ -14,7 +14,8 @@
 
 
 @interface EJTimer : NSObject {
-	NSTimeInterval interval;
+	NSTimeInterval target;
+	float interval;
 	JSObjectRef callback;
 	BOOL active, repeat;
 }

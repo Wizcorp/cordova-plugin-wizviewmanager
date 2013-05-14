@@ -8,7 +8,6 @@
 
 #import <Foundation/Foundation.h>
 #import <Cordova/CDVPlugin.h>
-#import <Cordova/CDVCordovaView.h>
 
 
 #import <QuartzCore/QuartzCore.h>
@@ -42,6 +41,7 @@
 	EJTimerCollection * timers;
 	NSTimeInterval currentTime;
 	
+	EAGLContext * glContext;
 	CADisplayLink * displayLink;
 	
 	NSOperationQueue * opQueue;
@@ -66,6 +66,7 @@
 // Added for pure script injection wizardry - ao.
 - (void)evaluateScript:(NSString *)path;
 - (void)loadScriptAtPath:(NSString *)path;
+- (BOOL)loadRequest:(NSString *)url;
 - (JSValueRef)invokeCallback:(JSObjectRef)callback thisObject:(JSObjectRef)thisObject argc:(size_t)argc argv:(const JSValueRef [])argv;
 - (void)logException:(JSValueRef)exception ctx:(JSContextRef)ctxp;
 
@@ -75,6 +76,7 @@
 
 @property (nonatomic, readonly) BOOL landscapeMode;
 @property (nonatomic, readonly) JSGlobalContextRef jsGlobalContext;
+@property (nonatomic, readonly) EAGLContext * glContext;
 @property (nonatomic, readonly) UIView * window;
 @property (nonatomic, retain) NSObject<EJTouchDelegate> * touchDelegate;
 

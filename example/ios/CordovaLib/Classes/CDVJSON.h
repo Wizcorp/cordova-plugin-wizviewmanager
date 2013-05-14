@@ -17,12 +17,14 @@
  under the License.
  */
 
-#import <Foundation/Foundation.h>
-#import <UIKit/UIKit.h>
-#import "CDVPlugin.h"
+@interface NSArray (CDVJSONSerializing)
+- (NSString*)JSONString;
+@end
 
-@interface CDVDebugConsole : CDVPlugin {}
+@interface NSDictionary (CDVJSONSerializing)
+- (NSString*)JSONString;
+@end
 
-- (void)log:(CDVInvokedUrlCommand*)command;
-
+@interface NSString (CDVJSONSerializing)
+- (id)JSONObject;
 @end
