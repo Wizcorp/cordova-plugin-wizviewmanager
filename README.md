@@ -1,12 +1,13 @@
 # PLUGIN: 
 
 phonegap-plugin-wizViewManager<br />
-version : 2.5 (Canvas beta)<br />
+version : 2.6 (Canvas beta)<br />
 readme last update : 14/05/2013<br />
 
 
 # CHANGELOG: 
 <br />
+- Updated for Cordova 2.6
 - Updated for Cordova 2.5
 - Updated for Cordova 2.4
 - Updated for Cordova 2.3
