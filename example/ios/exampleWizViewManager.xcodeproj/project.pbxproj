@@ -42,6 +42,8 @@
 		30A0434914DC770100060A13 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 30A0434614DC770100060A13 /* Localizable.strings */; };
 		30E5649213A7FCAF007403D8 /* CoreMedia.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 30E5649113A7FCAF007403D8 /* CoreMedia.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		D4A0D8761607E02300AEF8BB /* Default-568h@2x~iphone.png in Resources */ = {isa = PBXBuildFile; fileRef = D4A0D8751607E02300AEF8BB /* Default-568h@2x~iphone.png */; };
+		F659A7D91741D4CB00AD9A49 /* EJApp.m in Sources */ = {isa = PBXBuildFile; fileRef = F659A7D81741D4CB00AD9A49 /* EJApp.m */; };
+		F659A7DB1741D50200AD9A49 /* EJFont.mm in Sources */ = {isa = PBXBuildFile; fileRef = F659A7DA1741D50200AD9A49 /* EJFont.mm */; };
 		F6FA7CBD16AFDD3900AD8974 /* EJAudioSourceAVAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C6D16AFDD3900AD8974 /* EJAudioSourceAVAudio.m */; };
 		F6FA7CBE16AFDD3900AD8974 /* EJAudioSourceOpenAL.m in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C6F16AFDD3900AD8974 /* EJAudioSourceOpenAL.m */; };
 		F6FA7CBF16AFDD3900AD8974 /* EJBindingAudio.m in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C7116AFDD3900AD8974 /* EJBindingAudio.m */; };
@@ -57,7 +59,6 @@
 		F6FA7CC916AFDD3900AD8974 /* EJCanvasContext.m in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C8616AFDD3900AD8974 /* EJCanvasContext.m */; };
 		F6FA7CCA16AFDD3900AD8974 /* EJCanvasContextScreen.m in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C8816AFDD3900AD8974 /* EJCanvasContextScreen.m */; };
 		F6FA7CCB16AFDD3900AD8974 /* EJCanvasContextTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C8A16AFDD3900AD8974 /* EJCanvasContextTexture.m */; };
-		F6FA7CCC16AFDD3900AD8974 /* EJFont.m in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C8E16AFDD3900AD8974 /* EJFont.m */; };
 		F6FA7CCD16AFDD3900AD8974 /* EJImageData.m in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C9016AFDD3900AD8974 /* EJImageData.m */; };
 		F6FA7CCE16AFDD3900AD8974 /* EJPath.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C9216AFDD3900AD8974 /* EJPath.mm */; };
 		F6FA7CCF16AFDD3900AD8974 /* EJTexture.m in Sources */ = {isa = PBXBuildFile; fileRef = F6FA7C9416AFDD3900AD8974 /* EJTexture.m */; };
@@ -142,6 +143,9 @@
 		32CA4F630368D1EE00C91783 /* exampleWizViewManager-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "exampleWizViewManager-Prefix.pch"; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* exampleWizViewManager-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "exampleWizViewManager-Info.plist"; path = "../exampleWizViewManager-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
 		D4A0D8751607E02300AEF8BB /* Default-568h@2x~iphone.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x~iphone.png"; sourceTree = "<group>"; };
+		F659A7D71741D4CB00AD9A49 /* EJApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJApp.h; sourceTree = "<group>"; };
+		F659A7D81741D4CB00AD9A49 /* EJApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJApp.m; sourceTree = "<group>"; };
+		F659A7DA1741D50200AD9A49 /* EJFont.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = EJFont.mm; sourceTree = "<group>"; };
 		F6FA7C6B16AFDD3900AD8974 /* EJAudioSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJAudioSource.h; sourceTree = "<group>"; };
 		F6FA7C6C16AFDD3900AD8974 /* EJAudioSourceAVAudio.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJAudioSourceAVAudio.h; sourceTree = "<group>"; };
 		F6FA7C6D16AFDD3900AD8974 /* EJAudioSourceAVAudio.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJAudioSourceAVAudio.m; sourceTree = "<group>"; };
@@ -176,7 +180,6 @@
 		F6FA7C8B16AFDD3900AD8974 /* EJCanvasTypes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJCanvasTypes.h; sourceTree = "<group>"; };
 		F6FA7C8C16AFDD3900AD8974 /* EJDrawable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJDrawable.h; sourceTree = "<group>"; };
 		F6FA7C8D16AFDD3900AD8974 /* EJFont.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJFont.h; sourceTree = "<group>"; };
-		F6FA7C8E16AFDD3900AD8974 /* EJFont.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJFont.m; sourceTree = "<group>"; };
 		F6FA7C8F16AFDD3900AD8974 /* EJImageData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJImageData.h; sourceTree = "<group>"; };
 		F6FA7C9016AFDD3900AD8974 /* EJImageData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = EJImageData.m; sourceTree = "<group>"; };
 		F6FA7C9116AFDD3900AD8974 /* EJPath.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EJPath.h; sourceTree = "<group>"; };
@@ -446,6 +449,8 @@
 		F6FA7C6916AFDD3900AD8974 /* Ejecta */ = {
 			isa = PBXGroup;
 			children = (
+				F659A7D71741D4CB00AD9A49 /* EJApp.h */,
+				F659A7D81741D4CB00AD9A49 /* EJApp.m */,
 				F6FA7C6A16AFDD3900AD8974 /* EJAudio */,
 				F6FA7C7616AFDD3900AD8974 /* EJBindingBase.h */,
 				F6FA7C7716AFDD3900AD8974 /* EJBindingBase.m */,
@@ -501,7 +506,7 @@
 				F6FA7C8B16AFDD3900AD8974 /* EJCanvasTypes.h */,
 				F6FA7C8C16AFDD3900AD8974 /* EJDrawable.h */,
 				F6FA7C8D16AFDD3900AD8974 /* EJFont.h */,
-				F6FA7C8E16AFDD3900AD8974 /* EJFont.m */,
+				F659A7DA1741D50200AD9A49 /* EJFont.mm */,
 				F6FA7C8F16AFDD3900AD8974 /* EJImageData.h */,
 				F6FA7C9016AFDD3900AD8974 /* EJImageData.m */,
 				F6FA7C9116AFDD3900AD8974 /* EJPath.h */,
@@ -711,7 +716,6 @@
 				F6FA7CC916AFDD3900AD8974 /* EJCanvasContext.m in Sources */,
 				F6FA7CCA16AFDD3900AD8974 /* EJCanvasContextScreen.m in Sources */,
 				F6FA7CCB16AFDD3900AD8974 /* EJCanvasContextTexture.m in Sources */,
-				F6FA7CCC16AFDD3900AD8974 /* EJFont.m in Sources */,
 				F6FA7CCD16AFDD3900AD8974 /* EJImageData.m in Sources */,
 				F6FA7CCE16AFDD3900AD8974 /* EJPath.mm in Sources */,
 				F6FA7CCF16AFDD3900AD8974 /* EJTexture.m in Sources */,
@@ -728,6 +732,8 @@
 				F6FA7CDB16AFDD3900AD8974 /* WizCanvasView.m in Sources */,
 				F6FA7CDC16AFDD3900AD8974 /* WizViewManagerPlugin.m in Sources */,
 				F6FA7CDD16AFDD3900AD8974 /* WizWebView.m in Sources */,
+				F659A7D91741D4CB00AD9A49 /* EJApp.m in Sources */,
+				F659A7DB1741D50200AD9A49 /* EJFont.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

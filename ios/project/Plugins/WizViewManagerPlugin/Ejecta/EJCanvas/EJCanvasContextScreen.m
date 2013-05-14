@@ -1,6 +1,6 @@
 #import <QuartzCore/QuartzCore.h>
 #import "EJCanvasContextScreen.h"
-#import "WizCanvasView.h"
+#import "EJApp.h"
 
 @implementation EJCanvasContextScreen
 
@@ -13,7 +13,7 @@
 	// screen size and retina properties into account
 	
 	CGRect frame = CGRectMake(0, 0, width, height);
-	CGSize screen = [WizCanvasView instance].window.bounds.size;
+	CGSize screen = [EJApp instance].view.bounds.size;
     float contentScale = (useRetinaResolution && [UIScreen mainScreen].scale == 2) ? 2 : 1;
 	float aspect = frame.size.width / frame.size.height;
 	
@@ -21,12 +21,12 @@
 		frame.size.width = screen.width;
 		frame.size.height = screen.width / aspect;
 	}
-	if( scalingMode == kEJScalingModeFitHeight ) {
+	else if( scalingMode == kEJScalingModeFitHeight ) {
 		frame.size.width = screen.height * aspect;
 		frame.size.height = screen.height;
 	}
 	float internalScaling = frame.size.width / (float)width;
-	[WizCanvasView instance].internalScaling = internalScaling;
+	[EJApp instance].internalScaling = internalScaling;
 	
     backingStoreRatio = internalScaling * contentScale;
 	
@@ -53,15 +53,17 @@
 	[super create];
 	
 	// Set up the renderbuffer and some initial OpenGL properties
-	[glview.context renderbufferStorage:GL_RENDERBUFFER fromDrawable:(CAEAGLLayer *)glview.layer];
+	[[EJApp instance].glContext renderbufferStorage:GL_RENDERBUFFER fromDrawable:(CAEAGLLayer *)glview.layer];
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, viewRenderBuffer);
 	
+
 	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
 	glDisable(GL_DITHER);
 	
 	glEnable(GL_BLEND);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_ALWAYS);
 	
 	[self prepare];
 	
@@ -69,8 +71,8 @@
     glClear(GL_COLOR_BUFFER_BIT);
 
 	// Append the OpenGL view to Impact's main view
-	[[WizCanvasView instance] hideLoadingScreen];
-	[[WizCanvasView instance].window addSubview:glview];
+	[[EJApp instance] hideLoadingScreen];
+	[[EJApp instance].view addSubview:glview];
 }
 
 - (void)dealloc {
@@ -127,10 +129,6 @@
 	glFinish();
 }
 
-- (void)resetGLContext {
-	[glview resetContext];
-}
-
 - (void)present {
 	[self flushBuffers];
 	
@@ -141,11 +139,11 @@
 		glResolveMultisampleFramebufferAPPLE();
 		
 		glBindRenderbuffer(GL_RENDERBUFFER, viewRenderBuffer);
-		[glview.context presentRenderbuffer:GL_RENDERBUFFER];
+		[[EJApp instance].glContext presentRenderbuffer:GL_RENDERBUFFER];
 		glBindFramebuffer(GL_FRAMEBUFFER, msaaFrameBuffer);
 	}
 	else {
-		[glview.context presentRenderbuffer:GL_RENDERBUFFER];
+		[[EJApp instance].glContext presentRenderbuffer:GL_RENDERBUFFER];
 	}	
 }
 

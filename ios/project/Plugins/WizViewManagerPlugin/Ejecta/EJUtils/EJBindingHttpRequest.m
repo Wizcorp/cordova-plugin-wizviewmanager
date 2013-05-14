@@ -31,13 +31,27 @@
 	[password release]; password = NULL;
 }
 
+- (int)getStatusCode {
+	if( !response ) {
+		return 0;
+	}
+	else if( [response isKindOfClass:[NSHTTPURLResponse class]] ) {
+		return ((NSHTTPURLResponse *)response).statusCode;;
+	}
+	else {
+		return 200; // assume everything went well for non-HTTP resources
+	}
+}
+
 - (NSString *)getResponseText {
 	if( !response || !responseBody ) { return NULL; }
 	
 	NSStringEncoding encoding = NSASCIIStringEncoding;
-	CFStringEncoding cfEncoding = CFStringConvertIANACharSetNameToEncoding((CFStringRef) [response textEncodingName]);
-	if( cfEncoding != kCFStringEncodingInvalidId ) {
-		encoding = CFStringConvertEncodingToNSStringEncoding(cfEncoding);
+	if ( response.textEncodingName ) {
+		CFStringEncoding cfEncoding = CFStringConvertIANACharSetNameToEncoding((CFStringRef) [response textEncodingName]);
+		if( cfEncoding != kCFStringEncodingInvalidId ) {
+			encoding = CFStringConvertEncodingToNSStringEncoding(cfEncoding);
+		}
 	}
 
 	return [[[NSString alloc] initWithData:responseBody encoding:encoding] autorelease];
@@ -51,11 +65,14 @@
 			persistence:NSURLCredentialPersistenceNone];
 		[[challenge sender] useCredential:credentials forAuthenticationChallenge:challenge];
     }
+	else if( [challenge previousFailureCount] == 0 ) {
+		[[challenge sender] continueWithoutCredentialForAuthenticationChallenge:challenge];
+	}
 	else {
 		[[challenge sender] cancelAuthenticationChallenge:challenge];
 		state = kEJHttpRequestStateDone;
 		[self triggerEvent:@"abort" argc:0 argv:NULL];
-		NSLog(@"XHR: Aborting Request %@ - wrong or no credentials", url);
+		NSLog(@"XHR: Aborting Request %@ - wrong credentials", url);
     }
 }
 
@@ -143,11 +160,14 @@ EJ_BIND_FUNCTION(abort, ctx, argc, argv) {
 }
 
 EJ_BIND_FUNCTION(getAllResponseHeaders, ctx, argc, argv) {
-	if( !response ) { return NULL; }
+	if( !response || ![response isKindOfClass:[NSHTTPURLResponse class]] ) {
+		return NULL;
+	}
 	
+	NSHTTPURLResponse * urlResponse = (NSHTTPURLResponse *)response;
 	NSMutableString * headers = [NSMutableString string];
-	for( NSString * key in [response allHeaderFields] ) {
-		id value = [[response allHeaderFields] objectForKey:key];
+	for( NSString * key in urlResponse.allHeaderFields ) {
+		id value = [urlResponse.allHeaderFields objectForKey:key];
 		[headers appendFormat:@"%@: %@\n", key, value];
 	}
 	
@@ -155,10 +175,13 @@ EJ_BIND_FUNCTION(getAllResponseHeaders, ctx, argc, argv) {
 }
 
 EJ_BIND_FUNCTION(getResponseHeader, ctx, argc, argv) {
-	if( argc < 1 || !response ) { return NULL; }
+	if( argc < 1 || !response || ![response isKindOfClass:[NSHTTPURLResponse class]] ) {
+		return NULL;
+	}
 	
+	NSHTTPURLResponse * urlResponse = (NSHTTPURLResponse *)response;
 	NSString * header = JSValueToNSString( ctx, argv[0] );
-	NSString * value = [[response allHeaderFields] objectForKey:header];
+	NSString * value = [urlResponse.allHeaderFields objectForKey:header];
 	
 	return value ? NSStringToJSValue(ctx, value) : NULL;
 }
@@ -172,8 +195,13 @@ EJ_BIND_FUNCTION(send, ctx, argc, argv) {
 	if( !method || !url ) { return NULL; }
 	
 	[self clearConnection];
-	
-	NSMutableURLRequest * request = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
+
+	NSURL * requestUrl = [NSURL URLWithString:url];
+	if( !requestUrl.host ) {
+		// No host? Assume we have a local file
+		requestUrl = [NSURL fileURLWithPath:[[EJApp instance] pathForResource:url]];
+	}
+	NSMutableURLRequest * request = [[NSMutableURLRequest alloc] initWithURL:requestUrl];
 	[request setHTTPMethod:method];
 	
 	for( NSString * header in requestHeaders ) {
@@ -197,8 +225,6 @@ EJ_BIND_FUNCTION(send, ctx, argc, argv) {
 	if( async ) {
 		state = kEJHttpRequestStateLoading;
 		connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
-		[connection setDelegateQueue:[WizCanvasView instance].opQueue];
-		[connection start];
 	}
 	else {	
 		NSData * data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:nil];
@@ -206,7 +232,13 @@ EJ_BIND_FUNCTION(send, ctx, argc, argv) {
 		[response retain];
 		
 		state = kEJHttpRequestStateDone;
-		if( response.statusCode == 200 ) {
+		if( [response isKindOfClass:[NSHTTPURLResponse class]] ) {
+			NSHTTPURLResponse * urlResponse = (NSHTTPURLResponse *)response;
+			if( urlResponse.statusCode == 200 ) {
+				[self triggerEvent:@"load" argc:0 argv:NULL];
+			}
+		}
+		else {
 			[self triggerEvent:@"load" argc:0 argv:NULL];
 		}
 		[self triggerEvent:@"loadend" argc:0 argv:NULL];
@@ -242,14 +274,12 @@ EJ_BIND_GET(responseText, ctx) {
 }
 
 EJ_BIND_GET(status, ctx) {
-	return JSValueMakeNumber( ctx, response ? response.statusCode : 0 );
+	return JSValueMakeNumber( ctx, [self getStatusCode] );
 }
 
 EJ_BIND_GET(statusText, ctx) {
-	if( !response ) { return NULL; }
-	
 	// FIXME: should be "200 OK" instead of just "200"
-	NSString * code = [NSString stringWithFormat:@"%d", response.statusCode];
+	NSString * code = [NSString stringWithFormat:@"%d", [self getStatusCode]];	
 	return NSStringToJSValue(ctx, code);
 }
 
