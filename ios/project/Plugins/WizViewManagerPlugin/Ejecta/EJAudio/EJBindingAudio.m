@@ -44,11 +44,11 @@
 	// This will begin loading the sound in a background thread
 	loading = YES;
 	
-	NSString * fullPath = [[WizCanvasView instance] pathForResource:path];
+	NSString * fullPath = [[EJApp instance] pathForResource:path];
 	NSInvocationOperation* loadOp = [[NSInvocationOperation alloc] initWithTarget:self
 				selector:@selector(loadOperation:) object:fullPath];
 	[loadOp setThreadPriority:0.0];
-	[[WizCanvasView instance].opQueue addOperation:loadOp];
+	[[EJApp instance].opQueue addOperation:loadOp];
 	[loadOp release];
 }
 
@@ -143,7 +143,7 @@ EJ_BIND_FUNCTION(canPlayType, ctx, argc, argv) {
 
 EJ_BIND_FUNCTION(cloneNode, ctx, argc, argv) {
 	// Create new JS object
-	JSClassRef audioClass = [[WizCanvasView instance] getJSClassForClass:[EJBindingAudio class]];
+	JSClassRef audioClass = [[EJApp instance] getJSClassForClass:[EJBindingAudio class]];
 	JSObjectRef obj = JSObjectMake( ctx, audioClass, NULL );
 	
 	// Create the native instance

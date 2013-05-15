@@ -17,21 +17,11 @@
  under the License.
  */
 
-#import "CDVCordovaView.h"
+#import <Foundation/Foundation.h>
 
-@implementation CDVCordovaView
+@interface CDVTimer : NSObject
 
-- (void)loadRequest:(NSURLRequest*)request
-{
-    [super loadRequest:request];
-}
-
-/*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect {
-    // Drawing code.
-}
-*/
++ (void)start:(NSString*)name;
++ (void)stop:(NSString*)name;
 
 @end

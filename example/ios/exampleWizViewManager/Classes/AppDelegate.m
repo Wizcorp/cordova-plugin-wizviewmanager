@@ -43,6 +43,15 @@
 
     [cookieStorage setCookieAcceptPolicy:NSHTTPCookieAcceptPolicyAlways];
 
+    int cacheSizeMemory = 8 * 1024 * 1024; // 8MB
+    int cacheSizeDisk = 32 * 1024 * 1024; // 32MB
+#if __has_feature(objc_arc)
+        NSURLCache* sharedCache = [[NSURLCache alloc] initWithMemoryCapacity:cacheSizeMemory diskCapacity:cacheSizeDisk diskPath:@"nsurlcache"];
+#else
+        NSURLCache* sharedCache = [[[NSURLCache alloc] initWithMemoryCapacity:cacheSizeMemory diskCapacity:cacheSizeDisk diskPath:@"nsurlcache"] autorelease];
+#endif
+    [NSURLCache setSharedURLCache:sharedCache];
+
     self = [super init];
     return self;
 }
@@ -56,13 +65,23 @@
 {
     CGRect screenBounds = [[UIScreen mainScreen] bounds];
 
-    self.window = [[[UIWindow alloc] initWithFrame:screenBounds] autorelease];
+#if __has_feature(objc_arc)
+        self.window = [[UIWindow alloc] initWithFrame:screenBounds];
+#else
+        self.window = [[[UIWindow alloc] initWithFrame:screenBounds] autorelease];
+#endif
     self.window.autoresizesSubviews = YES;
 
-    self.viewController = [[[MainViewController alloc] init] autorelease];
+#if __has_feature(objc_arc)
+        self.viewController = [[MainViewController alloc] init];
+#else
+        self.viewController = [[[MainViewController alloc] init] autorelease];
+#endif
     self.viewController.useSplashScreen = YES;
-    self.viewController.wwwFolderName = @"www";
-    self.viewController.startPage = @"index.html";
+
+    // Set your app's start page by setting the <content src='foo.html' /> tag in config.xml.
+    // If necessary, uncomment the line below to override it.
+    // self.viewController.startPage = @"index.html";
 
     // NOTE: To customize the view's frame size (which defaults to full screen), override
     // [self.viewController viewWillAppear:] in your view controller.
@@ -92,8 +111,8 @@
 }
 
 // repost the localnotification using the default NSNotificationCenter so multiple plugins may respond
-- (void)           application:(UIApplication*)application
-   didReceiveLocalNotification:(UILocalNotification*)notification
+- (void)            application:(UIApplication*)application
+    didReceiveLocalNotification:(UILocalNotification*)notification
 {
     // re-post ( broadcast )
     [[NSNotificationCenter defaultCenter] postNotificationName:CDVLocalNotification object:notification];
@@ -105,6 +124,11 @@
     NSUInteger supportedInterfaceOrientations = (1 << UIInterfaceOrientationPortrait) | (1 << UIInterfaceOrientationLandscapeLeft) | (1 << UIInterfaceOrientationLandscapeRight) | (1 << UIInterfaceOrientationPortraitUpsideDown);
 
     return supportedInterfaceOrientations;
+}
+
+- (void)applicationDidReceiveMemoryWarning:(UIApplication*)application
+{
+    [[NSURLCache sharedURLCache] removeAllCachedResponses];
 }
 
 @end

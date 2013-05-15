@@ -32,7 +32,7 @@
 	<link rel="stylesheet" media="only screen and (max-device-width: 480px)" href="iphone.css" type="text/css" />		
 	-->
 	<!-- If your application is targeting iOS BEFORE 4.0 you MUST put json2.js from http://www.JSON.org/json2.js into your www directory and include it here -->
-	<script type="text/javascript" charset="utf-8" src="cordova-2.3.0.js"></script>
+	<script type="text/javascript" charset="utf-8" src="cordova-2.7.0.js"></script>
     <script type="text/javascript" charset="utf-8" src="phonegap/plugin/wizViewManager/wizViewManager.js"></script>
     <script type="text/javascript" charset="utf-8" src="phonegap/plugin/wizViewManager/wizViewMessenger.js"></script>
     <script type="text/javascript">
@@ -50,12 +50,13 @@
 	/* If you are supporting your own protocol, the var invokeString will contain any arguments to the app launch.
 	see http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
 	for more details -jm */
-	/*
+	
 	function handleOpenURL(url)
 	{
+        console.log("my url " + url);
 		// TODO: do something with the url passed in.
 	}
-	*/
+	
 	
 	function onBodyLoad()
 	{		
@@ -81,7 +82,7 @@
         // TODO: Change this path to match the location where the www/newview.html file lives.
         // On the simulator this is a location on your machine.
         // On the device, this is a location in your app bundle.
-        var customViewInstallPath = "/Users/Ally/Library/Application Support/iPhone Simulator/6.0/Applications/EB544FA8-1278-4941-B708-05D53F4E7DEC/exampleWizViewManager.app/www/customview.html";
+        var customViewInstallPath = "/Users/Ally/Library/Application Support/iPhone Simulator/6.0/Applications/DF9C617C-FEFA-464F-93B5-EA7902364331/exampleWizViewManager.app/www/customview.html";
     
         function onCreateSuccess( data ) {
             document.getElementById("create_button").disabled = true;
@@ -211,7 +212,7 @@
             var targetView = "newView";
             var params = { color: color };
             
-            wizViewMessenger.postMessage(JSON.stringify(params), targetView);
+            wizViewMessenger.postMessage(params, targetView);
         }
         
         function messageCanvasView() {

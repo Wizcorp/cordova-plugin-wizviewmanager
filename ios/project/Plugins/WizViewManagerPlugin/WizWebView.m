@@ -9,6 +9,8 @@
 #import "WizWebView.h"
 #import "WizViewManagerPlugin.h"
 
+#define WVM_PLUGIN_FOLDER @"www/phonegap/plugin/wizViewManager/"
+
 @implementation WizWebView
 
 @synthesize wizView;
@@ -20,7 +22,7 @@ static BOOL isActive = FALSE;
     
     viewManager = myViewManager;
     
-    wizView = [[CDVCordovaView alloc] initWithFrame:webViewBounds];
+    wizView = [[UIWebView alloc] initWithFrame:webViewBounds];
     wizView.delegate = self;
     wizView.multipleTouchEnabled   = YES;
     wizView.autoresizesSubviews    = YES;
@@ -154,7 +156,7 @@ static BOOL isActive = FALSE;
     // Feed in the view name to the view's window.name property
     NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
     for (NSString *key in viewList) {
-        if ([[viewList objectForKey:key] isMemberOfClass:[CDVCordovaView class]]) {
+        if ([[viewList objectForKey:key] isMemberOfClass:[UIWebView class]]) {
             UIWebView *targetWebView = [viewList objectForKey:key];
             if ([targetWebView isEqual:theWebView]) {
                 NSString *js = [NSString stringWithFormat:@"window.name = '%@'", key];
@@ -162,7 +164,11 @@ static BOOL isActive = FALSE;
             }
         }
     }
-       
+    
+    // Load in wizViewMessenger for the view after page has finished loading
+    NSString *script = [NSString stringWithContentsOfFile:[self pathForResource:@"wizViewMessenger.js"] encoding:NSUTF8StringEncoding error:NULL];
+    [theWebView stringByEvaluatingJavaScriptFromString:script];
+    
 }
 
 
@@ -226,6 +232,7 @@ static BOOL isActive = FALSE;
         NSString *originView = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:0]];
         NSString *targetView = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:1]];
         NSString *data = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:2]];
+        NSString *type = [[NSString alloc] initWithString:(NSString*)[messageComponents objectAtIndex:3]];
         
         NSLog(@"[WizWebView] ******* targetView is:  %@", targetView );
         
@@ -237,7 +244,7 @@ static BOOL isActive = FALSE;
             NSString *postDataEscaped = [data stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
             
             UIWebView* targetWebView = [viewList objectForKey:targetView];
-            NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@') );", originView, targetView, postDataEscaped];
+            NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), '%@' );", originView, targetView, postDataEscaped, type];
             [targetWebView stringByEvaluatingJavaScriptFromString:js];
 
             // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);
@@ -257,6 +264,13 @@ static BOOL isActive = FALSE;
     
     // Accept any other URLs
 	return YES;
+}
+
+
+
+
+- (NSString *)pathForResource:(NSString *)path {
+	return [NSString stringWithFormat:@"%@/" WVM_PLUGIN_FOLDER "%@", [[NSBundle mainBundle] resourcePath], path];
 }
 
 @end
