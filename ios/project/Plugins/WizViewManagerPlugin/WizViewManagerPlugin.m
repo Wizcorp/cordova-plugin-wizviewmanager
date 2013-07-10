@@ -96,12 +96,12 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
                                        [NSString stringWithFormat:@"window.wizViewManager.updateViewList([%@]);", viewNamesString]];
             
         } else if ([viewType isEqualToString:@"canvas"]) {
-            
+            /*
             // updated wizViewManager.views in type canvas
             WizCanvasView *targetCanvasView = [wizViewList objectForKey:key];
             [targetCanvasView evaluateScript:
                   [NSString stringWithFormat:@"window.wizViewManager.updateViewList([%@]);", viewNamesString]];
-            
+            */
         }        
     }
     [viewNames release];
@@ -526,8 +526,8 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
     CDVPluginResult *pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
     
     WizCanvasView *targetCanvasView = [wizViewList objectForKey:viewName];
-    NSLog(@"START showCanvasView with view :  %@", targetCanvasView.window);
-    if (targetCanvasView.window.isHidden || [isAnimating objectForKey:viewName]) {
+    NSLog(@"START showCanvasView with view :  %@", targetCanvasView.view);
+    if (targetCanvasView.view.isHidden || [isAnimating objectForKey:viewName]) {
         
         if ([isAnimating objectForKey:viewName]) {
             // TODO: view is animating - stop current animation can release previous callback
@@ -538,7 +538,7 @@ static WizViewManagerPlugin * wizViewManagerInstance = NULL;
         // TODO current default
         
         // not found do "none"
-        [self showWithNoAnimation:targetCanvasView.window];
+        [self showWithNoAnimation:targetCanvasView.view];
         // no animate so remove from animate store
         // [isAnimating removeObjectForKey:viewName];
         [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];

@@ -1,12 +1,14 @@
 #import "EJTimer.h"
+#import "WizCanvasView.h"
 
 
 @implementation EJTimerCollection
 
-- (id)init {
-	if( self = [super init] ) {
+
+- (id)initWithScriptView:(WizCanvasView *)scriptViewp {
+	if (self = [super init]) {
+		scriptView = scriptViewp;
 		timers = [[NSMutableDictionary alloc] init];
-        lastId = 0;
 	}
 	return self;
 }
@@ -16,27 +18,28 @@
 	[super dealloc];
 }
 
-- (int)scheduleCallback:(JSObjectRef)callback interval:(float)interval repeat:(BOOL)repeat {
+- (int)scheduleCallback:(JSObjectRef)callback interval:(NSTimeInterval)interval repeat:(BOOL)repeat {
 	lastId++;
 	
-	EJTimer * timer = [[EJTimer alloc] initWithCallback:callback interval:interval repeat:repeat];
-	[timers setObject:timer forKey:[NSNumber numberWithInt:lastId]];
+	EJTimer *timer = [[EJTimer alloc] initWithScriptView:scriptView callback:callback interval:interval repeat:repeat];
+	timers[@(lastId)] = timer;
 	[timer release];
 	return lastId;
 }
 
 - (void)cancelId:(int)timerId {
-	[timers removeObjectForKey:[NSNumber numberWithInt:timerId]];
+	[timers removeObjectForKey:@(timerId)];
 }
 
 - (void)update {	
-	for( NSNumber * timerId in [timers allKeys]) {
-		EJTimer * timer = [timers objectForKey:timerId];
+	for( NSNumber *timerId in [timers allKeys]) {
+		EJTimer *timer = [timers[timerId] retain];
 		[timer check];
 		
 		if( !timer.active ) {
 			[timers removeObjectForKey:timerId];
-		}		
+		}
+        [timer release];
 	}
 }
 
@@ -48,34 +51,40 @@
 @property (nonatomic, retain) NSDate *target;
 @end
 
+
 @implementation EJTimer
 @synthesize active;
 
-- (id)initWithCallback:(JSObjectRef)callbackp interval:(float)intervalp repeat:(BOOL)repeatp {
+- (id)initWithScriptView:(WizCanvasView *)scriptViewp
+	callback:(JSObjectRef)callbackp
+	interval:(NSTimeInterval)intervalp
+	repeat:(BOOL)repeatp
+{
 	if( self = [super init] ) {
+		scriptView = scriptViewp;
 		active = true;
 		interval = intervalp;
 		repeat = repeatp;
 		self.target = [NSDate dateWithTimeIntervalSinceNow:interval];
 		
 		callback = callbackp;
-		JSValueProtect([WizCanvasView instance].jsGlobalContext, callback);
+		JSValueProtect(scriptView.jsGlobalContext, callback);
 	}
 	return self;
 }
 
 - (void)dealloc {
-	JSValueUnprotect([WizCanvasView instance].jsGlobalContext, callback);
-    self.target = nil;
+	self.target = nil;
+	JSValueUnprotectSafe(scriptView.jsGlobalContext, callback);
 	[super dealloc];
 }
 
-- (void)check {
-	if( active && [self.target timeIntervalSinceNow] <= 0 ) {
-		[[WizCanvasView instance] invokeCallback:callback thisObject:NULL argc:0 argv:NULL];
+- (void)check {	
+	if( active && self.target.timeIntervalSinceNow <= 0 ) {
+		[scriptView invokeCallback:callback thisObject:NULL argc:0 argv:NULL];
 		
 		if( repeat ) {
-            self.target = [NSDate dateWithTimeIntervalSinceNow:interval];
+			self.target = [NSDate dateWithTimeIntervalSinceNow:interval];
 		}
 		else {
 			active = false;

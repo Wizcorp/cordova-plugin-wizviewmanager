@@ -7,67 +7,49 @@
  */ 
 
 #import "WizCanvasView.h"
-#import "WizViewManagerPlugin.h"
-
-
+#import "EJTimer.h"
+#import "EJBindingBase.h"
+#import "EJClassLoader.h"
+#import "EJBindingTouchInput.h"
 #import <objc/runtime.h>
 
-#import "Ejecta/EJBindingBase.h"
-#import "Ejecta/EJCanvas/EJCanvasContext.h"
-#import "Ejecta/EJCanvas/EJCanvasContextScreen.h"
-#import "Ejecta/EJTimer.h"
 
-
-
-
-// ---------------------------------------------------------------------------------
-// JavaScript callback functions to retrieve and create instances of a native class
-
-JSValueRef ej_global_undefined;
-JSClassRef ej_constructorClass;
-JSValueRef ej_getNativeClass(JSContextRef ctx, JSObjectRef object, JSStringRef propertyNameJS, JSValueRef* exception) {
-	CFStringRef className = JSStringCopyCFString( kCFAllocatorDefault, propertyNameJS );
-	
-	JSObjectRef obj = NULL;
-	NSString * fullClassName = [NSString stringWithFormat:@"EJBinding%@", className];
-	id class = NSClassFromString(fullClassName);
-	if( class ) {
-		obj = JSObjectMake( ctx, ej_constructorClass, (void *)class );
-	}
-	
-	CFRelease(className);
-	return obj ? obj : ej_global_undefined;
+// Block function callbacks
+JSValueRef EJBlockFunctionCallAsFunction(
+        JSContextRef ctx, JSObjectRef function, JSObjectRef thisObject, size_t argc, const JSValueRef argv[], JSValueRef* exception
+) {
+    JSValueRef (^block)(JSContextRef ctx, size_t argc, const JSValueRef argv[]) = JSObjectGetPrivate(function);
+    JSValueRef ret = block(ctx, argc, argv);
+    return ret ? ret : JSValueMakeUndefined(ctx);
 }
 
-JSObjectRef ej_callAsConstructor(JSContextRef ctx, JSObjectRef constructor, size_t argc, const JSValueRef argv[], JSValueRef* exception) {
-	id class = (id)JSObjectGetPrivate( constructor );
-	
-	JSClassRef jsClass = [[WizCanvasView instance] getJSClassForClass:class];
-	JSObjectRef obj = JSObjectMake( ctx, jsClass, NULL );
-	
-	id instance = [(EJBindingBase *)[class alloc] initWithContext:ctx object:obj argc:argc argv:argv];
-	JSObjectSetPrivate( obj, (void *)instance );
-	
-	return obj;
+void EJBlockFunctionFinalize(JSObjectRef object) {
+    JSValueRef (^block)(JSContextRef ctx, size_t argc, const JSValueRef argv[]) = JSObjectGetPrivate(object);
+    [block release];
 }
 
+#pragma mark -
+#pragma mark Ejecta view Implementation
 
-
-
-// ---------------------------------------------------------------------------------
-// Ejecta Main Class implementation - this creates the JavaScript Context and loads
-// the initial JavaScript source files
 @implementation WizCanvasView
 
-@synthesize landscapeMode;
-@synthesize jsGlobalContext;
-@synthesize window;
-@synthesize touchDelegate;
+@synthesize appFolder;
 
-@synthesize opQueue;
+@synthesize pauseOnEnterBackground;
+@synthesize isPaused;
+@synthesize hasScreenCanvas;
+@synthesize jsGlobalContext;
+
 @synthesize currentRenderingContext;
+@synthesize openGLContext;
+
+@synthesize windowEventsDelegate;
+@synthesize touchDelegate;
+@synthesize deviceMotionDelegate;
 @synthesize screenRenderingContext;
-@synthesize internalScaling;
+
+@synthesize backgroundQueue;
+@synthesize classLoader;
 
 static WizCanvasView * ejectaInstance = NULL;
 
@@ -78,11 +60,55 @@ static WizCanvasView * ejectaInstance = NULL;
 
 - (id)initWithWindow:(UIView *)windowp name:(NSString*)viewName sourceToLoad:(NSString*)src {
 	if( self = [super init] ) {
-		
-		landscapeMode = [[[[NSBundle mainBundle] infoDictionary]
-                          objectForKey:@"UIInterfaceOrientation"] hasPrefix:@"UIInterfaceOrientationLandscape"];
-		
-        
+        NSLog(@"frame of canvas window: %f", [windowp bounds].size.height);
+
+        landscapeMode = [[[NSBundle mainBundle] infoDictionary][@"UIInterfaceOrientation"]
+                hasPrefix:@"UIInterfaceOrientationLandscape"];
+
+        oldSize = [windowp bounds].size;
+        appFolder = EJECTA_APP_FOLDER;
+
+        isPaused = false;
+
+        // CADisplayLink (and NSNotificationCenter?) retains it's target, but this
+        // is causing a retain loop - we can't completely release the scriptView
+        // from the outside.
+        // So we're using a "weak proxy" that doesn't retain the scriptView; we can
+        // then just invalidate the CADisplayLink in our dealloc and be done with it.
+        proxy = [[EJNonRetainingProxy proxyWithTarget:self] retain];
+
+        self.pauseOnEnterBackground = YES;
+
+        // Limit all background operations (image & sound loading) to one thread
+        backgroundQueue = [[NSOperationQueue alloc] init];
+        backgroundQueue.maxConcurrentOperationCount = 1;
+
+        timers = [[EJTimerCollection alloc] initWithScriptView:self];
+
+        displayLink = [[CADisplayLink displayLinkWithTarget:proxy selector:@selector(run:)] retain];
+        [displayLink setFrameInterval:1];
+        [displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+
+        // Create the global JS context in its own group, so it can be released properly
+        jsGlobalContext = JSGlobalContextCreateInGroup(NULL, NULL);
+        jsUndefined = JSValueMakeUndefined(jsGlobalContext);
+        JSValueProtect(jsGlobalContext, jsUndefined);
+
+        // Attach all native class constructors to 'Ejecta'
+        classLoader = [[EJClassLoader alloc] initWithScriptView:self name:@"Ejecta"];
+
+
+        // Retain the caches here, so even if they're currently unused in JavaScript,
+        // they will persist until the last scriptView is released
+        textureCache = [[EJSharedTextureCache instance] retain];
+        openALManager = [[EJSharedOpenALManager instance] retain];
+        openGLContext = [[EJSharedOpenGLContext instance] retain];
+
+        // Create the OpenGL context for Canvas2D
+        glCurrentContext = openGLContext.glContext2D;
+        [EAGLContext setCurrentContext:glCurrentContext];
+
+
 		ejectaInstance = self;
 		window = windowp;
         self.view = window;
@@ -90,56 +116,11 @@ static WizCanvasView * ejectaInstance = NULL;
         // [self.window makeKeyAndVisible];
         [UIApplication sharedApplication].idleTimerDisabled = YES;
 		
-		
-		// Show the loading screen - commented out for now.
-		// This causes some visual quirks on different devices, as the launch screen may be a
-		// different one than we loade here - let's rather show a black screen for 200ms...
-		//NSString * loadingScreenName = [EJApp landscapeMode] ? @"Default-Landscape.png" : @"Default-Portrait.png";
-		//loadingScreen = [[UIImageView alloc] initWithImage:[UIImage imageNamed:loadingScreenName]];
-		//loadingScreen.frame = self.view.bounds;
-		//[self.view addSubview:loadingScreen];
-		
-		paused = false;
-		internalScaling = 1;
-		
-		// Limit all background operations (image & sound loading) to one thread
-		opQueue = [[NSOperationQueue alloc] init];
-		opQueue.maxConcurrentOperationCount = 1;
-		
-		timers = [[EJTimerCollection alloc] init];
-		
-		displayLink = [[CADisplayLink displayLinkWithTarget:self selector:@selector(run:)] retain];
-		[displayLink setFrameInterval:1];
-		[displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-		
-        
-		// Create the global JS context and attach the 'Ejecta' object
-		jsClasses = [[NSMutableDictionary alloc] init];
-        
-		JSClassDefinition constructorClassDef = kJSClassDefinitionEmpty;
-		constructorClassDef.callAsConstructor = ej_callAsConstructor;
-		ej_constructorClass = JSClassCreate(&constructorClassDef);
-		
-		JSClassDefinition globalClassDef = kJSClassDefinitionEmpty;
-		globalClassDef.getProperty = ej_getNativeClass;
-		JSClassRef globalClass = JSClassCreate(&globalClassDef);
-        
-        
-		jsGlobalContext = JSGlobalContextCreate(NULL);
-		ej_global_undefined = JSValueMakeUndefined(jsGlobalContext);
-		JSValueProtect(jsGlobalContext, ej_global_undefined);
-		JSObjectRef globalObject = JSContextGetGlobalObject(jsGlobalContext);
-		
-		JSObjectRef iosObject = JSObjectMake( jsGlobalContext, globalClass, NULL );
-		JSObjectSetProperty(
-                            jsGlobalContext, globalObject,
-                            JSStringCreateWithUTF8CString("Ejecta"), iosObject,
-                            kJSPropertyAttributeDontDelete | kJSPropertyAttributeReadOnly, NULL
-                            );
-        
+
         // Register for application lifecycle notifications
         
         // Register the instance to observe willResignActive notifications
+/*
         [[NSNotificationCenter defaultCenter] addObserver:self
                                                  selector:@selector(pauseNotification:)
                                                      name:UIApplicationWillResignActiveNotification
@@ -174,115 +155,201 @@ static WizCanvasView * ejectaInstance = NULL;
                                                  selector:@selector(clearCachesNotification:)
                                                      name:UIApplicationDidReceiveMemoryWarningNotification
                                                    object:nil];
-        
+*/
         // Load the initial JavaScript source files
 	    [self loadScriptAtPath:EJECTA_BOOT_JS];
         
         // Load wizViewManager JS plugin
-	    [self loadScriptAtPath:WIZVIEWMANAGER_BOOT_JS];
+	    // [self loadScriptAtPath:WIZVIEWMANAGER_BOOT_JS];
         
         // Push ViewManager to Window
-        [self evaluateScript:[NSString stringWithFormat:@"window.wizViewManager = new Ejecta.WizViewManager('%@');", viewName]];
+        // [self evaluateScript:[NSString stringWithFormat:@"window.wizViewManager = new Ejecta.WizViewManager('%@');", viewName]];
         
         // Additional boot file
         if (![src isEqualToString:@""]) {
             [self loadScriptAtPath:src];
         }
-        // self loadScriptAtPath:EJECTA_MAIN_JS];
         
 	}
 	return self;
 }
 
 - (void)dealloc {
-    // Stop the instance from observing all notification center notifications.
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-	
-    JSGlobalContextRelease(jsGlobalContext);
-	[currentRenderingContext release];
-	[touchDelegate release];
-	[jsClasses release];
-	[opQueue release];
-	
-	[displayLink release];
-	[timers release];
-	[super dealloc];
+    // Wait until all background operations are finished. If we would just release the
+    // backgroundQueue it would cancel running operations (such as texture loading) and
+    // could keep some dependencies dangling
+    [backgroundQueue waitUntilAllOperationsAreFinished];
+    [backgroundQueue release];
+
+    // Careful, order is important! The JS context has to be released first; it will release
+    // the canvas objects which still need the openGLContext to be present, to release
+    // textures etc.
+    // Set 'jsGlobalContext' to null before releasing it, because it may be referenced by
+    // bound objects' dealloc method
+    JSValueUnprotect(jsGlobalContext, jsUndefined);
+    JSGlobalContextRef ctxref = jsGlobalContext;
+    jsGlobalContext = NULL;
+    JSGlobalContextRelease(ctxref);
+
+    // Remove from notification center
+    self.pauseOnEnterBackground = false;
+
+    // Remove from display link
+    [displayLink invalidate];
+    [displayLink release];
+
+    [textureCache release];
+    [openALManager release];
+    [classLoader release];
+
+    if( jsBlockFunctionClass ) {
+        JSClassRelease(jsBlockFunctionClass);
+    }
+    [screenRenderingContext finish];
+    [screenRenderingContext release];
+    [currentRenderingContext release];
+
+    [touchDelegate release];
+    [windowEventsDelegate release];
+    [deviceMotionDelegate release];
+
+    [timers release];
+
+    [openGLContext release];
+    [appFolder release];
+    [super dealloc];
 }
 
+- (void)setPauseOnEnterBackground:(BOOL)pauses {
+    NSArray *pauseN = @[
+            UIApplicationWillResignActiveNotification,
+            UIApplicationDidEnterBackgroundNotification,
+            UIApplicationWillTerminateNotification
+    ];
+    NSArray *resumeN = @[
+            UIApplicationWillEnterForegroundNotification,
+            UIApplicationDidBecomeActiveNotification
+    ];
 
--(NSUInteger)supportedInterfaceOrientations {
-	if( landscapeMode ) {
-		// Allow Landscape Left and Right
-		return UIInterfaceOrientationMaskLandscape;
-	}
-	else {
-		if( UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad ) {
-			// Allow Portrait UpsideDown on iPad
-			return UIInterfaceOrientationMaskPortrait | UIInterfaceOrientationMaskPortraitUpsideDown;
-		}
-		else {
-			// Only Allow Portrait
-			return UIInterfaceOrientationMaskPortrait;
-		}
-	}
+    if (pauses) {
+        [self observeKeyPaths:pauseN selector:@selector(pause)];
+        [self observeKeyPaths:resumeN selector:@selector(resume)];
+    }
+    else {
+        [self removeObserverForKeyPaths:pauseN];
+        [self removeObserverForKeyPaths:resumeN];
+    }
+    pauseOnEnterBackground = pauses;
+}
+
+- (void)removeObserverForKeyPaths:(NSArray*)keyPaths {
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    for( NSString *name in keyPaths ) {
+        [nc removeObserver:proxy name:name object:nil];
+    }
+}
+
+- (void)observeKeyPaths:(NSArray*)keyPaths selector:(SEL)selector {
+    NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
+    for( NSString *name in keyPaths ) {
+        [nc addObserver:proxy selector:selector name:name object:nil];
+    }
+}
+
+- (void)layoutSubviews {
+
+    // [super layoutSubviews];
+
+    // Check if we did resize
+    CGSize newSize = self.view.bounds.size;
+    if( newSize.width != oldSize.width || newSize.height != oldSize.height ) {
+        [windowEventsDelegate resize];
+        oldSize = newSize;
+    }
+}
+
+- (NSUInteger)supportedInterfaceOrientations {
+    if (landscapeMode) {
+        // Allow Landscape Left and Right
+        return UIInterfaceOrientationMaskLandscape;
+    }
+    else {
+        if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+            // Allow Portrait UpsideDown on iPad
+            return UIInterfaceOrientationMaskPortrait | UIInterfaceOrientationMaskPortraitUpsideDown;
+        }
+        else {
+            // Only Allow Portrait
+            return UIInterfaceOrientationMaskPortrait;
+        }
+    }
 }
 
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)orientation {
-	// Deprecated in iOS6 - supportedInterfaceOrientations is the new way to do this
-	// We just use the mask returned by supportedInterfaceOrientations here to check if
-	// this particular orientation is allowed.
-	return (self.supportedInterfaceOrientations & (1 << orientation) );
+    // Deprecated in iOS6 - supportedInterfaceOrientations is the new way to do this
+    // We just use the mask returned by supportedInterfaceOrientations here to check if
+    // this particular orientation is allowed.
+    return (self.supportedInterfaceOrientations & (1 << orientation));
 }
 
 
-// ---------------------------------------------------------------------------------
-// The run loop
+#pragma mark -
+#pragma mark Run loop
 
 - (void)run:(CADisplayLink *)sender {
-	if( paused ) { return; }
-    
-	// Check all timers
-	[timers update];
-	
-	// Redraw the canvas
-	self.currentRenderingContext = screenRenderingContext;
-	[screenRenderingContext present];
+    if(isPaused) { return; }
+
+    // We rather poll for device motion updates at the beginning of each frame instead of
+    // spamming out updates that will never be seen.
+    [deviceMotionDelegate triggerDeviceMotionEvents];
+
+    // Check all timers
+    [timers update];
+
+    // Redraw the canvas
+    self.currentRenderingContext = screenRenderingContext;
+    [screenRenderingContext present];
 }
 
 
 - (void)pause {
-	[displayLink removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-	[screenRenderingContext finish];
-	paused = true;
-}
+    if( isPaused ) { return; }
 
+    [windowEventsDelegate pause];
+    [displayLink removeFromRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    [screenRenderingContext finish];
+    isPaused = true;
+}
 
 - (void)resume {
-	[screenRenderingContext resetGLContext];
-	[displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
-	paused = false;
-}
+    if( !isPaused ) { return; }
 
+    [windowEventsDelegate resume];
+    [EAGLContext setCurrentContext:glCurrentContext];
+    [displayLink addToRunLoop:[NSRunLoop currentRunLoop] forMode:NSDefaultRunLoopMode];
+    isPaused = false;
+}
 
 - (void)clearCaches {
-	JSGarbageCollect(jsGlobalContext);
+    JSGarbageCollect(jsGlobalContext);
 }
 
+- (void)setCurrentRenderingContext:(EJCanvasContext *)renderingContext {
+    if( renderingContext != currentRenderingContext ) {
+        [currentRenderingContext flushBuffers];
+        [currentRenderingContext release];
 
-- (void)pauseNotification:(NSNotification *)notification
-{
-    [self pause];
-}
+        // Switch GL Context if different
+        if( renderingContext && renderingContext.glContext != glCurrentContext ) {
+            glFlush();
+            glCurrentContext = renderingContext.glContext;
+            [EAGLContext setCurrentContext:glCurrentContext];
+        }
 
-- (void)resumeNotification:(NSNotification *)notification
-{
-    [self resume];
-}
-
-- (void)clearCachesNotification:(NSNotification *)notification
-{
-    [self clearCaches];
+        [renderingContext prepare];
+        currentRenderingContext = [renderingContext retain];
+    }
 }
 
 - (void)hideLoadingScreen {
@@ -295,8 +362,9 @@ static WizCanvasView * ejectaInstance = NULL;
 	return [NSString stringWithFormat:@"%@/" EJECTA_APP_FOLDER "%@", [[NSBundle mainBundle] resourcePath], path];
 }
 
-// ---------------------------------------------------------------------------------
-// Script loading and execution
+#pragma mark -
+#pragma mark Script loading and execution
+
 - (void)evaluateScript:(NSString *)script {
 
 	if( !script ) {
@@ -335,104 +403,134 @@ static WizCanvasView * ejectaInstance = NULL;
 	JSStringRelease( scriptJS );
 }
 
-- (JSValueRef)invokeCallback:(JSObjectRef)callback thisObject:(JSObjectRef)thisObject argc:(size_t)argc argv:(const JSValueRef [])argv {
-	JSValueRef exception = NULL;
-	JSValueRef result = JSObjectCallAsFunction( jsGlobalContext, callback, thisObject, argc, argv, &exception );
-	[self logException:exception ctx:jsGlobalContext];
-	return result;
+- (JSValueRef)loadModuleWithId:(NSString *)moduleId module:(JSValueRef)module exports:(JSValueRef)exports {
+    NSString *path = [moduleId stringByAppendingString:@".js"];
+    NSString *script = [NSString stringWithContentsOfFile:[self pathForResource:path]
+                                                 encoding:NSUTF8StringEncoding error:NULL];
+
+    if( !script ) {
+        NSLog(@"Error: Can't Find Module %@", moduleId );
+        return NULL;
+    }
+
+    NSLog(@"Loading Module: %@", moduleId );
+
+    JSStringRef scriptJS = JSStringCreateWithCFString((CFStringRef)script);
+    JSStringRef pathJS = JSStringCreateWithCFString((CFStringRef)path);
+    JSStringRef parameterNames[] = {
+            JSStringCreateWithUTF8CString("module"),
+            JSStringCreateWithUTF8CString("exports"),
+    };
+
+    JSValueRef exception = NULL;
+    JSObjectRef func = JSObjectMakeFunction(jsGlobalContext, NULL, 2, parameterNames, scriptJS, pathJS, 0, &exception );
+
+    JSStringRelease( scriptJS );
+    JSStringRelease( pathJS );
+    JSStringRelease(parameterNames[0]);
+    JSStringRelease(parameterNames[1]);
+
+    if( exception ) {
+        [self logException:exception ctx:jsGlobalContext];
+        return NULL;
+    }
+
+    JSValueRef params[] = { module, exports };
+    return [self invokeCallback:func thisObject:NULL argc:2 argv:params];
 }
 
-- (JSClassRef)getJSClassForClass:(id)classId {
-	JSClassRef jsClass = [[jsClasses objectForKey:classId] pointerValue];
-	// Not already loaded? Ask the objc class for the JSClassRef!
-	if( !jsClass ) {
-		jsClass = [classId getJSClass];
-		[jsClasses setObject:[NSValue valueWithPointer:jsClass] forKey:classId];
-	}
-	return jsClass;
+- (JSValueRef)invokeCallback:(JSObjectRef)callback thisObject:(JSObjectRef)thisObject argc:(size_t)argc argv:(const JSValueRef [])argv {
+    if( !jsGlobalContext ) { return NULL; } // May already have been released
+
+    JSValueRef exception = NULL;
+    JSValueRef result = JSObjectCallAsFunction(jsGlobalContext, callback, thisObject, argc, argv, &exception );
+    [self logException:exception ctx:jsGlobalContext];
+    return result;
 }
 
 - (void)logException:(JSValueRef)exception ctx:(JSContextRef)ctxp {
-	if( !exception ) return;
-	
-	JSStringRef jsLinePropertyName = JSStringCreateWithUTF8CString("line");
-	JSStringRef jsFilePropertyName = JSStringCreateWithUTF8CString("sourceURL");
-	
-	JSObjectRef exObject = JSValueToObject( ctxp, exception, NULL );
-	JSValueRef line = JSObjectGetProperty( ctxp, exObject, jsLinePropertyName, NULL );
-	JSValueRef file = JSObjectGetProperty( ctxp, exObject, jsFilePropertyName, NULL );
-	
-	NSLog(
-          @"%@ at line %@ in %@",
-          JSValueToNSString( ctxp, exception ),
-          JSValueToNSString( ctxp, line ),
-          JSValueToNSString( ctxp, file )
-          );
-	
-	JSStringRelease( jsLinePropertyName );
-	JSStringRelease( jsFilePropertyName );
+    if( !exception ) return;
+
+    JSStringRef jsLinePropertyName = JSStringCreateWithUTF8CString("line");
+    JSStringRef jsFilePropertyName = JSStringCreateWithUTF8CString("sourceURL");
+
+    JSObjectRef exObject = JSValueToObject( ctxp, exception, NULL );
+    JSValueRef line = JSObjectGetProperty( ctxp, exObject, jsLinePropertyName, NULL );
+    JSValueRef file = JSObjectGetProperty( ctxp, exObject, jsFilePropertyName, NULL );
+
+    NSLog(
+            @"%@ at line %@ in %@",
+            JSValueToNSString( ctxp, exception ),
+            JSValueToNSString( ctxp, line ),
+            JSValueToNSString( ctxp, file )
+    );
+
+    JSStringRelease( jsLinePropertyName );
+    JSStringRelease( jsFilePropertyName );
 }
 
 
 
-// ---------------------------------------------------------------------------------
-// Touch handlers
-
+#pragma mark -
+#pragma mark Touch handlers
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    
-    [touchDelegate triggerEvent:@"touchstart" withChangedTouches:touches allTouches:[event allTouches]];
+    [touchDelegate triggerEvent:@"touchstart" all:event.allTouches changed:touches remaining:event.allTouches];
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    
-    [touchDelegate triggerEvent:@"touchend" withChangedTouches:touches allTouches:[event allTouches]];
+    NSMutableSet *remaining = [event.allTouches mutableCopy];
+    [remaining minusSet:touches];
+
+    [touchDelegate triggerEvent:@"touchend" all:event.allTouches changed:touches remaining:remaining];
+    [remaining release];
 }
 
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
-    [touchDelegate triggerEvent:@"touchend" withChangedTouches:touches allTouches:[event allTouches]];
+    [self touchesEnded:touches withEvent:event];
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    [touchDelegate triggerEvent:@"touchmove" withChangedTouches:touches allTouches:[event allTouches]];
+    [touchDelegate triggerEvent:@"touchmove" all:event.allTouches changed:touches remaining:event.allTouches];
 }
 
 
-// ---------------------------------------------------------------------------------
-// Timers
+#pragma mark
+#pragma mark Timers
 
 - (JSValueRef)createTimer:(JSContextRef)ctxp argc:(size_t)argc argv:(const JSValueRef [])argv repeat:(BOOL)repeat {
-	if( argc != 2 || !JSValueIsObject(ctxp, argv[0]) || !JSValueIsNumber(jsGlobalContext, argv[1]) ) {
-		return NULL;
-	}
-	
-	JSObjectRef func = JSValueToObject(ctxp, argv[0], NULL);
-	float interval = JSValueToNumberFast(ctxp, argv[1])/1000;
-	
-	// Make sure short intervals (< 18ms) run each frame
-	if( interval < 0.018 ) {
-		interval = 0;
-	}
-	
-	int timerId = [timers scheduleCallback:func interval:interval repeat:repeat];
-	return JSValueMakeNumber( ctxp, timerId );
+    if( argc != 2 || !JSValueIsObject(ctxp, argv[0]) || !JSValueIsNumber(jsGlobalContext, argv[1]) ) {
+        return NULL;
+    }
+
+    JSObjectRef func = JSValueToObject(ctxp, argv[0], NULL);
+    float interval = JSValueToNumberFast(ctxp, argv[1])/1000;
+
+    // Make sure short intervals (< 18ms) run each frame
+    if( interval < 0.018 ) {
+        interval = 0;
+    }
+
+    int timerId = [timers scheduleCallback:func interval:interval repeat:repeat];
+    return JSValueMakeNumber( ctxp, timerId );
 }
 
 - (JSValueRef)deleteTimer:(JSContextRef)ctxp argc:(size_t)argc argv:(const JSValueRef [])argv {
-	if( argc != 1 || !JSValueIsNumber(ctxp, argv[0]) ) return NULL;
-	
-	[timers cancelId:JSValueToNumberFast(ctxp, argv[0])];
-	return NULL;
+    if( argc != 1 || !JSValueIsNumber(ctxp, argv[0]) ) return NULL;
+
+    [timers cancelId:JSValueToNumberFast(ctxp, argv[0])];
+    return NULL;
 }
 
-- (void)setCurrentRenderingContext:(EJCanvasContext *)renderingContext {
-	if( renderingContext != currentRenderingContext ) {
-		[currentRenderingContext flushBuffers];
-		[currentRenderingContext release];
-		[renderingContext prepare];
-		currentRenderingContext = [renderingContext retain];
-	}
-}
+- (JSObjectRef)createFunctionWithBlock:(JSValueRef (^)(JSContextRef ctx, size_t argc, const JSValueRef argv[]))block {
+    if( !jsBlockFunctionClass ) {
+        JSClassDefinition blockFunctionClassDef = kJSClassDefinitionEmpty;
+        blockFunctionClassDef.callAsFunction = EJBlockFunctionCallAsFunction;
+        blockFunctionClassDef.finalize = EJBlockFunctionFinalize;
+        jsBlockFunctionClass = JSClassCreate(&blockFunctionClassDef);
+    }
 
+    return JSObjectMake( jsGlobalContext, jsBlockFunctionClass, (void *)Block_copy(block) );
+}
 
 @end

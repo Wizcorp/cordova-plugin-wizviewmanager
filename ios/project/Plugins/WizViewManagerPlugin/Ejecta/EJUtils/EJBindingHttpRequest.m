@@ -1,12 +1,19 @@
 #import "EJBindingHttpRequest.h"
+#import <JavaScriptCore/JSTypedArray.h>
+#import "WizCanvasView.h"
 
 @implementation EJBindingHttpRequest
 
-- (id)initWithContext:(JSContextRef)ctxp object:(JSObjectRef)obj argc:(size_t)argc argv:(const JSValueRef [])argv {
-	if( self  = [super initWithContext:ctxp object:obj argc:argc argv:argv] ) {
+- (id)initWithContext:(JSContextRef)ctxp argc:(size_t)argc argv:(const JSValueRef [])argv {
+	if( self = [super initWithContext:ctxp argc:argc argv:argv] ) {
 		requestHeaders = [[NSMutableDictionary alloc] init];
 	}
 	return self;
+}
+
+- (void)prepareGarbageCollection {
+	[self clearRequest];
+	[self clearConnection];
 }
 
 - (void) dealloc {
@@ -31,13 +38,27 @@
 	[password release]; password = NULL;
 }
 
+- (int)getStatusCode {
+	if( !response ) {
+		return 0;
+	}
+	else if( [response isKindOfClass:[NSHTTPURLResponse class]] ) {
+		return ((NSHTTPURLResponse *)response).statusCode;;
+	}
+	else {
+		return 200; // assume everything went well for non-HTTP resources
+	}
+}
+
 - (NSString *)getResponseText {
 	if( !response || !responseBody ) { return NULL; }
 	
 	NSStringEncoding encoding = NSASCIIStringEncoding;
-	CFStringEncoding cfEncoding = CFStringConvertIANACharSetNameToEncoding((CFStringRef) [response textEncodingName]);
-	if( cfEncoding != kCFStringEncodingInvalidId ) {
-		encoding = CFStringConvertEncodingToNSStringEncoding(cfEncoding);
+	if ( response.textEncodingName ) {
+		CFStringEncoding cfEncoding = CFStringConvertIANACharSetNameToEncoding((CFStringRef) [response textEncodingName]);
+		if( cfEncoding != kCFStringEncodingInvalidId ) {
+			encoding = CFStringConvertEncodingToNSStringEncoding(cfEncoding);
+		}
 	}
 
 	return [[[NSString alloc] initWithData:responseBody encoding:encoding] autorelease];
@@ -45,18 +66,21 @@
 
 - (void)connection:(NSURLConnection *)connection willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge {
 	if( user && password && [challenge previousFailureCount] == 0 ) {
-        NSURLCredential * credentials = [NSURLCredential
+		NSURLCredential *credentials = [NSURLCredential
 			credentialWithUser:user
 			password:password
 			persistence:NSURLCredentialPersistenceNone];
 		[[challenge sender] useCredential:credentials forAuthenticationChallenge:challenge];
-    }
+	}
+	else if( [challenge previousFailureCount] == 0 ) {
+		[[challenge sender] continueWithoutCredentialForAuthenticationChallenge:challenge];
+	}
 	else {
 		[[challenge sender] cancelAuthenticationChallenge:challenge];
 		state = kEJHttpRequestStateDone;
 		[self triggerEvent:@"abort" argc:0 argv:NULL];
-		NSLog(@"XHR: Aborting Request %@ - wrong or no credentials", url);
-    }
+		NSLog(@"XHR: Aborting Request %@ - wrong credentials", url);
+	}
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connectionp {
@@ -127,10 +151,10 @@ EJ_BIND_FUNCTION(open, ctx, argc, argv) {
 EJ_BIND_FUNCTION(setRequestHeader, ctx, argc, argv) {
 	if( argc < 2 ) { return NULL; }
 	
-	NSString * header = JSValueToNSString( ctx, argv[0] );
-	NSString * value = JSValueToNSString( ctx, argv[1] );
+	NSString *header = JSValueToNSString( ctx, argv[0] );
+	NSString *value = JSValueToNSString( ctx, argv[1] );
 	
-	[requestHeaders setObject:value forKey:header];
+	requestHeaders[header] = value;
 	return NULL;
 }
 
@@ -143,22 +167,27 @@ EJ_BIND_FUNCTION(abort, ctx, argc, argv) {
 }
 
 EJ_BIND_FUNCTION(getAllResponseHeaders, ctx, argc, argv) {
-	if( !response ) { return NULL; }
+	if( !response || ![response isKindOfClass:[NSHTTPURLResponse class]] ) {
+		return NULL;
+	}
 	
-	NSMutableString * headers = [NSMutableString string];
-	for( NSString * key in [response allHeaderFields] ) {
-		id value = [[response allHeaderFields] objectForKey:key];
-		[headers appendFormat:@"%@: %@\n", key, value];
+	NSHTTPURLResponse *urlResponse = (NSHTTPURLResponse *)response;
+	NSMutableString *headers = [NSMutableString string];
+	for( NSString *key in urlResponse.allHeaderFields ) {
+		[headers appendFormat:@"%@: %@\n", key, urlResponse.allHeaderFields[key]];
 	}
 	
 	return NSStringToJSValue(ctx, headers);
 }
 
 EJ_BIND_FUNCTION(getResponseHeader, ctx, argc, argv) {
-	if( argc < 1 || !response ) { return NULL; }
+	if( argc < 1 || !response || ![response isKindOfClass:[NSHTTPURLResponse class]] ) {
+		return NULL;
+	}
 	
-	NSString * header = JSValueToNSString( ctx, argv[0] );
-	NSString * value = [[response allHeaderFields] objectForKey:header];
+	NSHTTPURLResponse *urlResponse = (NSHTTPURLResponse *)response;
+	NSString *header = JSValueToNSString( ctx, argv[0] );
+	NSString *value = urlResponse.allHeaderFields[header];
 	
 	return value ? NSStringToJSValue(ctx, value) : NULL;
 }
@@ -172,17 +201,22 @@ EJ_BIND_FUNCTION(send, ctx, argc, argv) {
 	if( !method || !url ) { return NULL; }
 	
 	[self clearConnection];
-	
-	NSMutableURLRequest * request = [[NSMutableURLRequest alloc] initWithURL:[NSURL URLWithString:url]];
+
+	NSURL *requestUrl = [NSURL URLWithString:url];
+	if( !requestUrl.host ) {
+		// No host? Assume we have a local file
+		requestUrl = [NSURL fileURLWithPath:[scriptView pathForResource:requestUrl.path]];
+	}
+	NSMutableURLRequest *request = [[NSMutableURLRequest alloc] initWithURL:requestUrl];
 	[request setHTTPMethod:method];
 	
-	for( NSString * header in requestHeaders ) {
-		[request setValue:[requestHeaders objectForKey:header] forHTTPHeaderField:header];
+	for( NSString *header in requestHeaders ) {
+		[request setValue:requestHeaders[header] forHTTPHeaderField:header];
 	}
 	
 	if( argc > 0 ) {
-		NSString * requestBody = JSValueToNSString( ctx, argv[0] );
-		NSData * requestData = [NSData dataWithBytes:[requestBody UTF8String] length:[requestBody length]];
+		NSString *requestBody = JSValueToNSString( ctx, argv[0] );
+		NSData *requestData = [NSData dataWithBytes:[requestBody UTF8String] length:[requestBody length]];
 		[request setHTTPBody:requestData];
 	}
 	
@@ -197,16 +231,20 @@ EJ_BIND_FUNCTION(send, ctx, argc, argv) {
 	if( async ) {
 		state = kEJHttpRequestStateLoading;
 		connection = [[NSURLConnection alloc] initWithRequest:request delegate:self];
-		[connection setDelegateQueue:[WizCanvasView instance].opQueue];
-		[connection start];
 	}
 	else {	
-		NSData * data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:nil];
+		NSData *data = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:nil];
 		responseBody = [[NSMutableData alloc] initWithData:data];
 		[response retain];
 		
 		state = kEJHttpRequestStateDone;
-		if( response.statusCode == 200 ) {
+		if( [response isKindOfClass:[NSHTTPURLResponse class]] ) {
+			NSHTTPURLResponse *urlResponse = (NSHTTPURLResponse *)response;
+			if( urlResponse.statusCode == 200 ) {
+				[self triggerEvent:@"load" argc:0 argv:NULL];
+			}
+		}
+		else {
 			[self triggerEvent:@"load" argc:0 argv:NULL];
 		}
 		[self triggerEvent:@"loadend" argc:0 argv:NULL];
@@ -222,7 +260,16 @@ EJ_BIND_GET(readyState, ctx) {
 }
 
 EJ_BIND_GET(response, ctx) {
-	NSString * responseText = [self getResponseText];
+	if( !response || !responseBody ) { return NULL; }
+	
+	if( type == kEJHttpRequestTypeArrayBuffer ) {
+		JSObjectRef array = JSTypedArrayMake(ctx, kJSTypedArrayTypeArrayBuffer, responseBody.length);
+		memcpy(JSTypedArrayGetDataPtr(ctx, array, NULL), responseBody.bytes, responseBody.length);
+		return array;
+	}
+	
+	
+	NSString *responseText = [self getResponseText];
 	if( !responseText ) { return NULL; }
 	
 	if( type == kEJHttpRequestTypeJSON ) {
@@ -237,19 +284,17 @@ EJ_BIND_GET(response, ctx) {
 }
 
 EJ_BIND_GET(responseText, ctx) {
-	NSString * responseText = [self getResponseText];	
+	NSString *responseText = [self getResponseText];	
 	return responseText ? NSStringToJSValue( ctx, responseText ) : NULL;
 }
 
 EJ_BIND_GET(status, ctx) {
-	return JSValueMakeNumber( ctx, response ? response.statusCode : 0 );
+	return JSValueMakeNumber( ctx, [self getStatusCode] );
 }
 
 EJ_BIND_GET(statusText, ctx) {
-	if( !response ) { return NULL; }
-	
 	// FIXME: should be "200 OK" instead of just "200"
-	NSString * code = [NSString stringWithFormat:@"%d", response.statusCode];
+	NSString *code = [NSString stringWithFormat:@"%d", [self getStatusCode]];	
 	return NSStringToJSValue(ctx, code);
 }
 
@@ -261,13 +306,20 @@ EJ_BIND_SET(timeout, ctx, value) {
 	timeout = JSValueToNumberFast( ctx, value );
 }
 
-EJ_BIND_ENUM(responseType, EJHttpRequestTypeNames, type);
+EJ_BIND_ENUM(responseType, type,
+	"",				// kEJHttpRequestTypeString
+	"arraybuffer",	// kEJHttpRequestTypeArrayBuffer
+	"blob",			// kEJHttpRequestTypeBlob
+	"document",		// kEJHttpRequestTypeDocument
+	"json",			// kEJHttpRequestTypeJSON
+	"text"			// kEJHttpRequestTypeText
+);
 
-EJ_BIND_GET(UNSENT, ctx) { return JSValueMakeNumber(ctx, kEJHttpRequestStateUnsent); }
-EJ_BIND_GET(OPENED, ctx) { return JSValueMakeNumber(ctx, kEJHttpRequestStateOpened); }
-EJ_BIND_GET(HEADERS_RECEIVED, ctx) { return JSValueMakeNumber(ctx, kEJHttpRequestStateHeadersReceived); }
-EJ_BIND_GET(LOADING, ctx) { return JSValueMakeNumber(ctx, kEJHttpRequestStateLoading); }
-EJ_BIND_GET(DONE, ctx) { return JSValueMakeNumber(ctx, kEJHttpRequestStateDone); }
+EJ_BIND_CONST(UNSENT, kEJHttpRequestStateUnsent);
+EJ_BIND_CONST(OPENED, kEJHttpRequestStateOpened);
+EJ_BIND_CONST(HEADERS_RECEIVED, kEJHttpRequestStateHeadersReceived);
+EJ_BIND_CONST(LOADING, kEJHttpRequestStateLoading);
+EJ_BIND_CONST(DONE, kEJHttpRequestStateDone);
 
 EJ_BIND_EVENT(readystatechange);
 EJ_BIND_EVENT(loadend);

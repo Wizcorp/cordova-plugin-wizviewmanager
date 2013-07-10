@@ -2,15 +2,27 @@
 
 #import <AudioToolbox/AudioToolbox.h>
 #import <AudioToolbox/ExtendedAudioFile.h>
+// #import "EJAppViewController.h"
+#import "WizCanvasView.h"
 
 @implementation EJOpenALBuffer
-
 @synthesize bufferId;
+@synthesize duration;
+
++ (id)cachedBufferWithPath:(NSString *)path {
+	EJOpenALBuffer *buffer = [EJSharedOpenALManager instance].buffers[path];
+	if( !buffer ) {
+		buffer = [[[EJOpenALBuffer alloc] initWithPath:path] autorelease];
+		[EJSharedOpenALManager instance].buffers[path] = buffer;
+	}
+	return buffer;
+}
 
 - (id)initWithPath:(NSString *)pathp {
 	if( self = [super init] ) {
-		NSURL * url = [NSURL fileURLWithPath:pathp];
-		void * data = [self getAudioDataWithURL:url];
+		path = [pathp retain];
+		NSURL *url = [NSURL fileURLWithPath:pathp];
+		void *data = [self getAudioDataWithURL:url];
 
 		if( data ) {
 			alGenBuffers( 1, &bufferId );
@@ -22,6 +34,9 @@
 }
 
 - (void)dealloc {
+	[[EJSharedOpenALManager instance].buffers removeObjectForKey:path];
+	[path release];
+	
 	if( bufferId ) {
 		alDeleteBuffers(1, &bufferId);
 	}
@@ -30,7 +45,7 @@
 
 - (void*)getAudioDataWithURL:(NSURL *)url {
 	
-	void * data = NULL;
+	void *data = NULL;
 	
 	// Open the file
 	ExtAudioFileRef	file = NULL;
@@ -52,6 +67,7 @@
 		NSLog(@"OpenALSource: Unsupported Format, channel count is greater than stereo"); 
 		goto Exit;
 	}
+	
 
 	// Set the client format to 16 bit signed integer (native-endian) data
 	// Maintain the channel count and sample rate of the original source format
@@ -99,6 +115,8 @@
 		size = (ALsizei)dataSize;
 		format = (outputFormat.mChannelsPerFrame > 1) ? AL_FORMAT_STEREO16 : AL_FORMAT_MONO16;
 		sampleRate = (ALsizei)outputFormat.mSampleRate;
+		
+		duration = (float)frameCount / sampleRate;
 	}
 	else { 
 		// failure

@@ -1,43 +1,36 @@
 #import "EJBindingTouchInput.h"
 
-
 @implementation EJBindingTouchInput
 
-- (id)initWithContext:(JSContextRef)ctx object:(JSObjectRef)obj argc:(size_t)argc argv:(const JSValueRef [])argv {
-	if( self = [super initWithContext:ctx object:obj argc:argc argv:argv] ) {
-        
-		// Create the JavaScript arrays that will be passed to the callback
-		jsAllTouches = JSObjectMakeArray(ctx, 0, NULL, NULL);
-		JSValueProtect(ctx, jsAllTouches);
-		
-		jsChangedTouches = JSObjectMakeArray(ctx, 0, NULL, NULL);
-		JSValueProtect(ctx, jsChangedTouches);
-		
-		// Create some JSStrings for property access
-		jsLengthName = JSStringCreateWithUTF8CString("length");
-		
-		jsIdentifierName = JSStringCreateWithUTF8CString("identifier");
-		jsPageXName = JSStringCreateWithUTF8CString("pageX");
-		jsPageYName = JSStringCreateWithUTF8CString("pageY");
-		jsClientXName = JSStringCreateWithUTF8CString("clientX");
-		jsClientYName = JSStringCreateWithUTF8CString("clientY");
-		
-		// Create all touch objects
-		for( int i = 0; i < EJ_TOUCH_INPUT_MAX_TOUCHES; i++ ) {
-			jsTouchesPool[i] = JSObjectMake( ctx, NULL, NULL );
-			JSValueProtect( ctx, jsTouchesPool[i] );
-		}
-		
-		[WizCanvasView instance].touchDelegate = self;
-	}
-	return self;
+- (void)createWithJSObject:(JSObjectRef)obj scriptView:(WizCanvasView *)view {
+	[super createWithJSObject:obj scriptView:view];
+	
+	JSContextRef ctx = scriptView.jsGlobalContext;
+	
+	// Create the JavaScript arrays that will be passed to the callback
+	jsRemainingTouches = JSObjectMakeArray(ctx, 0, NULL, NULL);
+	JSValueProtect(ctx, jsRemainingTouches);
+	
+	jsChangedTouches = JSObjectMakeArray(ctx, 0, NULL, NULL);
+	JSValueProtect(ctx, jsChangedTouches);
+	
+	// Create some JSStrings for property access
+	jsLengthName = JSStringCreateWithUTF8CString("length");
+	
+	jsIdentifierName = JSStringCreateWithUTF8CString("identifier");
+	jsPageXName = JSStringCreateWithUTF8CString("pageX");
+	jsPageYName = JSStringCreateWithUTF8CString("pageY");
+	jsClientXName = JSStringCreateWithUTF8CString("clientX");
+	jsClientYName = JSStringCreateWithUTF8CString("clientY");
+	
+	scriptView.touchDelegate = self;
 }
 
 - (void)dealloc {
-	JSContextRef ctx = [WizCanvasView instance].jsGlobalContext;
+	JSContextRef ctx = scriptView.jsGlobalContext;
 	
-	JSValueUnprotect( ctx, jsAllTouches );
-	JSValueUnprotect( ctx, jsChangedTouches );
+	JSValueUnprotectSafe( ctx, jsRemainingTouches );
+	JSValueUnprotectSafe( ctx, jsChangedTouches );
 	JSStringRelease( jsLengthName );
 	
 	JSStringRelease( jsIdentifierName );
@@ -46,50 +39,63 @@
 	JSStringRelease( jsClientXName );
 	JSStringRelease( jsClientYName );
 	
-	for( int i = 0; i < EJ_TOUCH_INPUT_MAX_TOUCHES; i++ ) {
-		JSValueUnprotect( ctx, jsTouchesPool[i] );
+	for( int i = 0; i < touchesInPool; i++ ) {
+		JSValueUnprotectSafe( ctx, jsTouchesPool[i] );
 	}
 	
 	[super dealloc];
 }
 
-- (void)triggerEvent:(NSString *)name withChangedTouches:(NSSet *)changed allTouches:(NSSet *)all {
-	WizCanvasView * ejecta = [WizCanvasView instance];
-	JSContextRef ctx = ejecta.jsGlobalContext;
-	float scale = ejecta.internalScaling;
+- (void)triggerEvent:(NSString *)name all:(NSSet *)all changed:(NSSet *)changed remaining:(NSSet *)remaining {
+	JSContextRef ctx = scriptView.jsGlobalContext;
 	
-	JSObjectSetProperty(ctx, jsAllTouches, jsLengthName, JSValueMakeNumber(ctx, all.count), kJSPropertyAttributeNone, NULL);
-	JSObjectSetProperty(ctx, jsChangedTouches, jsLengthName, JSValueMakeNumber(ctx, changed.count), kJSPropertyAttributeNone, NULL);
+	int remainingCount = MIN(remaining.count, EJ_TOUCH_INPUT_MAX_TOUCHES);
+	int changedCount = MIN(changed.count, EJ_TOUCH_INPUT_MAX_TOUCHES);
+	int totalCount = MAX(remainingCount, changedCount);
 	
-	int allTouchesIndex = 0,
-    changedTouchesIndex = 0;
-    
-	for( UITouch * touch in all ) {
+	JSObjectSetProperty(ctx, jsRemainingTouches, jsLengthName, JSValueMakeNumber(ctx, remainingCount), kJSPropertyAttributeNone, NULL);
+	JSObjectSetProperty(ctx, jsChangedTouches, jsLengthName, JSValueMakeNumber(ctx, changedCount), kJSPropertyAttributeNone, NULL);
+	
+	// More touches than we have in our pool? Create some!
+	if( touchesInPool < totalCount ) {
+		for( int i = touchesInPool; i < totalCount; i++ ) {
+			jsTouchesPool[i] = JSObjectMake( ctx, NULL, NULL );
+			JSValueProtect( ctx, jsTouchesPool[i] );
+		}
+		touchesInPool = totalCount;
+	}
+	
+	int
+		poolIndex = 0,
+		remainingIndex = 0,
+		changedIndex = 0;
+		
+	for( UITouch *touch in all ) {
 		CGPoint pos = [touch locationInView:touch.view];
 		
 		JSValueRef identifier = JSValueMakeNumber(ctx, [touch hash] );
-		JSValueRef x = JSValueMakeNumber(ctx, pos.x / scale );
-		JSValueRef y = JSValueMakeNumber(ctx, pos.y / scale );
+		JSValueRef x = JSValueMakeNumber(ctx, pos.x);
+		JSValueRef y = JSValueMakeNumber(ctx, pos.y);
 		
-		JSObjectRef jsTouch = jsTouchesPool[allTouchesIndex];
+		JSObjectRef jsTouch = jsTouchesPool[poolIndex++];
 		JSObjectSetProperty( ctx, jsTouch, jsIdentifierName, identifier, kJSPropertyAttributeNone, NULL );
 		JSObjectSetProperty( ctx, jsTouch, jsPageXName, x, kJSPropertyAttributeNone, NULL );
 		JSObjectSetProperty( ctx, jsTouch, jsPageYName, y, kJSPropertyAttributeNone, NULL );
 		JSObjectSetProperty( ctx, jsTouch, jsClientXName, x, kJSPropertyAttributeNone, NULL );
 		JSObjectSetProperty( ctx, jsTouch, jsClientYName, y, kJSPropertyAttributeNone, NULL );
 		
-		JSObjectSetPropertyAtIndex(ctx, jsAllTouches, allTouchesIndex, jsTouch, NULL);
-		allTouchesIndex++;
-		
-		if( [changed member:touch] ) {
-			JSObjectSetPropertyAtIndex(ctx, jsChangedTouches, changedTouchesIndex, jsTouch, NULL);
-			changedTouchesIndex++;
+		if( [remaining member:touch] ) {
+			JSObjectSetPropertyAtIndex(ctx, jsRemainingTouches, remainingIndex++, jsTouch, NULL);
 		}
 		
-		if( allTouchesIndex >= EJ_TOUCH_INPUT_MAX_TOUCHES ) { break; }
+		if( [changed member:touch] ) {
+			JSObjectSetPropertyAtIndex(ctx, jsChangedTouches, changedIndex++, jsTouch, NULL);
+		}
+		
+		if( poolIndex >= touchesInPool ) { break; }
 	}
 	
-	[self triggerEvent:name argc:2 argv:(JSValueRef[]){ jsAllTouches, jsChangedTouches }];
+	[self triggerEvent:name argc:2 argv:(JSValueRef[]){ jsRemainingTouches, jsChangedTouches }];
 }
 
 EJ_BIND_EVENT(touchstart);

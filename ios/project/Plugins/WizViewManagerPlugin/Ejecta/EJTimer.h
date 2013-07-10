@@ -1,12 +1,16 @@
 #import <Foundation/Foundation.h>
-#import "WizCanvasView.h"
+#import <JavaScriptCore/JavaScriptCore.h>
+
+@class WizCanvasView;
 
 @interface EJTimerCollection : NSObject {
-	NSMutableDictionary * timers;
+	NSMutableDictionary *timers;
 	int lastId;
+	WizCanvasView *scriptView;
 }
 
-- (int)scheduleCallback:(JSObjectRef)callback interval:(float)interval repeat:(BOOL)repeat;
+- (id)initWithScriptView:(WizCanvasView *)scriptView;
+- (int)scheduleCallback:(JSObjectRef)callback interval:(NSTimeInterval)interval repeat:(BOOL)repeat;
 - (void)cancelId:(int)timerId;
 - (void)update;
 
@@ -17,9 +21,13 @@
 	NSTimeInterval interval;
 	JSObjectRef callback;
 	BOOL active, repeat;
+	WizCanvasView *scriptView;
 }
 
-- (id)initWithCallback:(JSObjectRef)callbackp interval:(float)intervalp repeat:(BOOL)repeatp;
+- (id)initWithScriptView:(WizCanvasView *)scriptViewp
+	callback:(JSObjectRef)callbackp
+	interval:(NSTimeInterval)intervalp
+	repeat:(BOOL)repeatp;
 - (void)check;
 
 @property (readonly) BOOL active;

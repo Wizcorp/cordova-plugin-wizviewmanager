@@ -1,5 +1,6 @@
 #import "EJBindingImage.h"
 #import "WizCanvasView.h"
+#import "EJNonRetainingProxy.h"
 
 @implementation EJBindingImage
 @synthesize texture;
@@ -8,41 +9,46 @@
 	// This will begin loading the texture in a background thread and will call the
 	// JavaScript onload callback when done
 	loading = YES;
-	oldContext = [EAGLContext currentContext];
 	
-	NSInvocationOperation* loadOp = [[NSInvocationOperation alloc] initWithTarget:self
-				selector:@selector(load:) object:oldContext];
-	[loadOp setThreadPriority:0.0];
-	[[WizCanvasView instance].opQueue addOperation:loadOp];
-	[loadOp release];
+	// Protect this image object from garbage collection, as its callback function
+	// may be the only thing holding on to it
+	JSValueProtect(scriptView.jsGlobalContext, jsObject);
+	
+	NSLog(@"Loading Image: %@", path);
+	NSString *fullPath = [scriptView pathForResource:path];
+	
+	// Use a non-retaining proxy for the callback operation and take care that the
+	// loadCallback is always cancelled when dealloc'ing
+	loadCallback = [[NSInvocationOperation alloc]
+		initWithTarget:[EJNonRetainingProxy proxyWithTarget:self]
+		selector:@selector(endLoad) object:nil];
+	
+	texture = [[EJTexture cachedTextureWithPath:fullPath
+		loadOnQueue:scriptView.backgroundQueue callback:loadCallback] retain];
 }
 
-- (void)load:(EAGLContext *)context {
-	NSAutoreleasePool *autoreleasepool = [[NSAutoreleasePool alloc] init];
-	
-	NSLog(@"Loading Image: %@", path );
-	EJTexture * tempTex = [[[EJTexture alloc] initWithPath:[[WizCanvasView instance] pathForResource:path] context:context] autorelease];
-	[self performSelectorOnMainThread:@selector(endLoad:) withObject:tempTex waitUntilDone:NO];
-	
-	[autoreleasepool release];
-}
-
-- (void)endLoad:(EJTexture *)tex {
-	[EAGLContext setCurrentContext:oldContext];
-	loading = NO;
-	texture = [tex retain];
-	if( tex.textureId ) {
-		[self triggerEvent:@"load" argc:0 argv:NULL];
-	}
-	else {
-		[self triggerEvent:@"error" argc:0 argv:NULL];
-	}
+- (void)prepareGarbageCollection {
+	[loadCallback cancel];
+	[loadCallback release];
+	loadCallback = nil;
 }
 
 - (void)dealloc {
+	[loadCallback cancel];
+	[loadCallback release];
+	
 	[texture release];
 	[path release];
 	[super dealloc];
+}
+
+- (void)endLoad {
+	loading = NO;
+	[loadCallback release];
+	loadCallback = nil;
+	
+	[self triggerEvent:(texture.textureId ? @"load" : @"error") argc:0 argv:NULL];		
+	JSValueUnprotect(scriptView.jsGlobalContext, jsObject);
 }
 
 EJ_BIND_GET(src, ctx ) { 
@@ -57,7 +63,7 @@ EJ_BIND_SET(src, ctx, value) {
 	// This will break some edge cases; FIXME
 	if( loading ) { return; }
 	
-	NSString * newPath = JSValueToNSString( ctx, value );
+	NSString *newPath = JSValueToNSString( ctx, value );
 	
 	// Same as the old path? Nothing to do here
 	if( [path isEqualToString:newPath] ) { return; }
@@ -79,11 +85,15 @@ EJ_BIND_SET(src, ctx, value) {
 }
 
 EJ_BIND_GET(width, ctx ) {
-	return JSValueMakeNumber( ctx, texture ? texture.width : 0);
+	return JSValueMakeNumber( ctx, texture ? (texture.width / texture.contentScale) : 0);
 }
 
 EJ_BIND_GET(height, ctx ) { 
-	return JSValueMakeNumber( ctx, texture ? texture.height : 0 );
+	return JSValueMakeNumber( ctx, texture ? (texture.height / texture.contentScale) : 0 );
+}
+
+EJ_BIND_GET(complete, ctx ) {
+	return JSValueMakeBoolean(ctx, (texture && texture.textureId) );
 }
 
 EJ_BIND_EVENT(load);

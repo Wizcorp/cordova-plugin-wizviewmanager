@@ -1,13 +1,12 @@
 #import <Foundation/Foundation.h>
+// #import "EJAppViewController.h"
 #import "WizCanvasView.h"
 
-id objc_msgSend(id theReceiver, SEL theSelector, ...);
-
-extern JSValueRef ej_global_undefined;
+#include <objc/message.h>
 
 // (Not sure if clever hack or really stupid...)
 
-// All classes derived from this JS_BaseClass will return a JSClassRef through the 
+// All classes derived from this EJBindingBase will return a JSClassRef through the 
 // 'getJSClass' class method. The properties and functions that are exposed to 
 // JavaScript are defined through the 'staticFunctions' and 'staticValues' in this 
 // JSClassRef.
@@ -20,10 +19,12 @@ extern JSValueRef ej_global_undefined;
 // and gather all function pointers.
 
 
+#define EJ_BINDING_CLASS_PREFIX "EJBinding"
+
 // The class method that returns a pointer to the static C callback function
-#define __EJ_GET_CALLBACK_CLASS_METHOD(NAME) \
-	+ (JSObjectCallAsFunctionCallback)_callback_for##NAME {\
-		return (JSObjectCallAsFunctionCallback)&NAME;\
+#define __EJ_GET_POINTER_TO(NAME) \
+	+ (void *)_ptr_to##NAME { \
+		return (void *)&NAME; \
 	}
 
 
@@ -43,9 +44,9 @@ extern JSValueRef ej_global_undefined;
 	) { \
 		id instance = (id)JSObjectGetPrivate(object); \
 		JSValueRef ret = (JSValueRef)objc_msgSend(instance, @selector(_func_##NAME:argc:argv:), ctx, argc, argv); \
-		return ret ? ret : ej_global_undefined; \
+		return ret ? ret : ((EJBindingBase *)instance)->scriptView->jsUndefined; \
 	} \
-	__EJ_GET_CALLBACK_CLASS_METHOD(_func_##NAME)\
+	__EJ_GET_POINTER_TO(_func_##NAME)\
 	\
 	/* The actual implementation for this method */ \
 	- (JSValueRef)_func_##NAME:(JSContextRef)CTX_NAME argc:(size_t)ARGC_NAME argv:(const JSValueRef [])ARGV_NAME
@@ -66,7 +67,7 @@ extern JSValueRef ej_global_undefined;
 		id instance = (id)JSObjectGetPrivate(object); \
 		return (JSValueRef)objc_msgSend(instance, @selector(_get_##NAME:), ctx); \
 	} \
-	__EJ_GET_CALLBACK_CLASS_METHOD(_get_##NAME)\
+	__EJ_GET_POINTER_TO(_get_##NAME)\
 	\
 	/* The actual implementation for this getter */ \
 	- (JSValueRef)_get_##NAME:(JSContextRef)CTX_NAME
@@ -89,7 +90,7 @@ extern JSValueRef ej_global_undefined;
 		objc_msgSend(instance, @selector(_set_##NAME:value:), ctx, value); \
 		return true; \
 	} \
-	__EJ_GET_CALLBACK_CLASS_METHOD(_set_##NAME) \
+	__EJ_GET_POINTER_TO(_set_##NAME) \
 	\
 	/* The actual implementation for this setter */ \
 	- (void)_set_##NAME:(JSContextRef)CTX_NAME value:(JSValueRef)VALUE_NAME
@@ -99,55 +100,154 @@ extern JSValueRef ej_global_undefined;
 // ------------------------------------------------------------------------------------
 // Shorthand to define a function that logs a "not implemented" warning
 
-#define EJ_BIND_FUNCTION_NOT_IMPLEMENTED( NAME ) \
-	EJ_BIND_FUNCTION( NAME, ctx, argc, argv ) { \
+#define EJ_BIND_FUNCTION_NOT_IMPLEMENTED(NAME) \
+	static JSValueRef _func_##NAME( \
+		JSContextRef ctx, \
+		JSObjectRef function, \
+		JSObjectRef object, \
+		size_t argc, \
+		const JSValueRef argv[], \
+		JSValueRef* exception \
+	) { \
 		static bool didShowWarning; \
 		if( !didShowWarning ) { \
-			NSLog(@"Warning: method %s() is not yet implemented!", #NAME); \
+			NSLog(@"Warning: method " @ #NAME @" is not yet implemented!"); \
 			didShowWarning = true; \
 		} \
-		return NULL; \
-	}
+		id instance = (id)JSObjectGetPrivate(object); \
+		return ((EJBindingBase *)instance)->scriptView->jsUndefined; \
+	} \
+	__EJ_GET_POINTER_TO(_func_##NAME)
 
 
 // ------------------------------------------------------------------------------------
-// Shorthand to bind enums with name tables
+// Shorthand to bind enums with name tables - use with
+// EJ_BIND_ENUM( name, target, "name1", "name2", ...) );
 
-#define EJ_BIND_ENUM(name, enumNames, target) \
-	EJ_BIND_GET(name, ctx) { \
-		JSStringRef src = JSStringCreateWithUTF8CString( enumNames[target] ); \
+
+#define EJ_BIND_ENUM(NAME, TARGET, ...) \
+	static const char *_##NAME##EnumNames[] = {__VA_ARGS__}; \
+	EJ_BIND_GET(NAME, ctx) { \
+		JSStringRef src = JSStringCreateWithUTF8CString( _##NAME##EnumNames[TARGET] ); \
 		JSValueRef ret = JSValueMakeString(ctx, src); \
 		JSStringRelease(src); \
 		return ret; \
 	} \
 	\
-	EJ_BIND_SET(name, ctx, value) { \
-		JSStringRef str = JSValueToStringCopy(ctx, value, NULL); \
-		const JSChar * strptr = JSStringGetCharactersPtr( str ); \
-		int length = JSStringGetLength(str)-1; \
-		for( int i = 0; i < sizeof(enumNames)/sizeof(enumNames[0]); i++ ) { \
-			if( JSStrIsEqualToStr( strptr, enumNames[i], length) ) { \
-				target = i; \
-				break; \
-			} \
-		} \
-		JSStringRelease( str );\
+	EJ_BIND_SET(NAME, ctx, value) { \
+		JSStringRef _str = JSValueToStringCopy(ctx, value, NULL); \
+		const JSChar *_strptr = JSStringGetCharactersPtr( _str ); \
+		int _length = JSStringGetLength(_str)-1; \
+		const char ** _names = _##NAME##EnumNames; \
+		int _target; \
+		EJ_MAP_EXT(0, _EJ_LITERAL(else), _EJ_BIND_ENUM_COMPARE, __VA_ARGS__) \
+		else { JSStringRelease( _str ); return; } \
+		TARGET = _target; \
+		JSStringRelease( _str );\
 	}
 
-static inline bool JSStrIsEqualToStr( const JSChar * s1, const char * s2, int length ) {
-	for( int i = 0; i < length && *s1 != '\0' && *s1 == *s2; i++ ) {
+#define _EJ_BIND_ENUM_COMPARE(INDEX, NAME) \
+	if( _length == sizeof(NAME)-2 && JSStrIsEqualToStr( _strptr, _names[INDEX], _length) ) { _target = INDEX; }
+	
+static inline bool JSStrIsEqualToStr( const JSChar *s1, const char *s2, int length ) {
+	for( int i = 0; i < length && *s1 == *s2; i++ ) {
 		s1++;
 		s2++;
 	}
 	return (*s1 == *s2);
 }
-	
 
+
+// ------------------------------------------------------------------------------------
+// Shorthand to bind const numbers
+
+#define EJ_BIND_CONST(NAME, VALUE) \
+	static JSValueRef _get_##NAME( \
+		JSContextRef ctx, \
+		JSObjectRef object, \
+		JSStringRef propertyName, \
+		JSValueRef* exception \
+	) { \
+		return JSValueMakeNumber(ctx, VALUE); \
+	} \
+	__EJ_GET_POINTER_TO(_get_##NAME)
+
+
+// Commas can't be used directly in macro arguments
+#define _EJ_COMMA() ,
+#define _EJ_EMPTY()
+#define _EJ_LITERAL(X) X _EJ_EMPTY
+
+
+// ------------------------------------------------------------------------------------
+// Expand a F(INDEX,ARG) macro for each argument, max 16 arguments - use with
+// EJ_MAP( F, arg1, arg2, ... );
+
+// An offset for the index as well as a joiner (a macro that is expanded between each
+// F() expansion) can be specified with
+// EJ_MAP_EXT( OFFSET, JOINER, F, arg1, arg2 );
+
+// Adopted from https://github.com/swansontec/map-macro
+
+#define EJ_MAP_EXT(OFFSET, JOINER, F, ...) _EJ_EVAL(_EJ_MAP1(OFFSET, JOINER, F, __VA_ARGS__, (), 0))
+#define EJ_MAP(F, ...) _EJ_EVAL(_EJ_MAP1(0, _EJ_EMPTY, F, __VA_ARGS__, (), 0))
+
+#define _EJ_EVAL0(...) __VA_ARGS__
+#define _EJ_EVAL1(...) _EJ_EVAL0( _EJ_EVAL0(__VA_ARGS__) )
+#define _EJ_EVAL2(...) _EJ_EVAL1( _EJ_EVAL1(__VA_ARGS__) )
+#define _EJ_EVAL(...) _EJ_EVAL2( _EJ_EVAL2(__VA_ARGS__) )
+
+#define _EJ_MAP_END(...)
+#define _EJ_MAP_OUT
+#define _EJ_MAP_GET_END() 0, _EJ_MAP_END
+#define _EJ_MAP_NEXT0(ITEM, NEXT, ...) NEXT _EJ_MAP_OUT
+#define _EJ_MAP_NEXT1(JOINER, ITEM, NEXT) _EJ_MAP_NEXT0 (ITEM, JOINER() NEXT, 0)
+#define _EJ_MAP_NEXT(JOINER, ITEM, NEXT) _EJ_MAP_NEXT1 (JOINER, _EJ_MAP_GET_END ITEM, NEXT)
+
+#define _EJ_MAP0(IDX, JOINER, F, NAME, PEEK, ...) F(IDX, NAME) _EJ_MAP_NEXT(JOINER, PEEK, _EJ_MAP1) (IDX+1, JOINER, F, PEEK, __VA_ARGS__)
+#define _EJ_MAP1(IDX, JOINER, F, NAME, PEEK, ...) F(IDX, NAME) _EJ_MAP_NEXT(JOINER, PEEK, _EJ_MAP0) (IDX+1, JOINER, F, PEEK, __VA_ARGS__)
+
+
+// ------------------------------------------------------------------------------------
+// EJ_ARGC(...) - get the argument count in a macro with __VA_ARGS__; max 16 args
+
+#define EJ_ARGC(...) _EJ_ARGC_SEQ(__VA_ARGS__,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1)
+#define _EJ_ARGC_SEQ(x1,x2,x3,x4,x5,x6,x7,x8,x9,x10,x11,x12,x13,x14,x15,x16,n,...) n
+
+
+// ------------------------------------------------------------------------------------
+// Unpack JavaScript values to numbers - use with
+// EJ_UNPACK_ARGV(float value1, int value2, ...);
+// or with an offset into argv
+// EJ_UNPACK_ARGV_OFFSET(OFFSET, float value1, int value2, ...);
+
+#define EJ_UNPACK_ARGV(...) EJ_UNPACK_ARGV_OFFSET(0, __VA_ARGS__)
+#define EJ_UNPACK_ARGV_OFFSET(OFFSET, ...) \
+	if( argc < EJ_ARGC(__VA_ARGS__)+OFFSET ) { \
+		return NULL; \
+	} \
+	EJ_MAP_EXT(OFFSET, _EJ_LITERAL(;), _EJ_UNPACK_NUMBER, __VA_ARGS__)
+	
+#define _EJ_UNPACK_NUMBER(INDEX, NAME) NAME = JSValueToNumberFast(ctx, argv[INDEX])
+
+
+@class WizCanvasView;
 @interface EJBindingBase : NSObject {
 	JSObjectRef jsObject;
+	
+	// Puplic for fast access to instance->scriptView->jsUndefined in bound functions
+	@public	WizCanvasView *scriptView;
 }
 
-- (id)initWithContext:(JSContextRef)ctxp object:(JSObjectRef)obj argc:(size_t)argc argv:(const JSValueRef [])argv;
-+ (JSClassRef)getJSClass;
+- (id)initWithContext:(JSContextRef)ctxp argc:(size_t)argc argv:(const JSValueRef [])argv;
+- (void)createWithJSObject:(JSObjectRef)obj scriptView:(WizCanvasView *)view;
+- (void)prepareGarbageCollection;
++ (JSObjectRef)createJSObjectWithContext:(JSContextRef)ctx
+	scriptView:(WizCanvasView *)scriptView
+	instance:(EJBindingBase *)instance;
+void EJBindingBaseFinalize(JSObjectRef object);
+
+@property (nonatomic, readonly) WizCanvasView *scriptView;
 
 @end
+

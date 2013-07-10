@@ -9,15 +9,6 @@ typedef enum {
 	kEJHttpRequestTypeText
 } EJHttpRequestType;
 
-static const char * EJHttpRequestTypeNames[] = {
-	[kEJHttpRequestTypeString] = "",
-	[kEJHttpRequestTypeArrayBuffer] = "arraybuffer",
-	[kEJHttpRequestTypeBlob] = "blob",
-	[kEJHttpRequestTypeDocument] = "document",
-	[kEJHttpRequestTypeJSON] = "json",
-	[kEJHttpRequestTypeText] = "text"
-};
-
 typedef enum {
 	kEJHttpRequestStateUnsent = 0,
 	kEJHttpRequestStateOpened = 1,
@@ -28,18 +19,18 @@ typedef enum {
 
 @interface EJBindingHttpRequest : EJBindingEventedBase <NSURLConnectionDelegate> {
 	EJHttpRequestType type;
-	NSString * method;
-	NSString * url;
+	NSString *method;
+	NSString *url;
 	BOOL async;
-	NSString * user;
-	NSString * password;
+	NSString *user;
+	NSString *password;
 	int timeout;
-	NSMutableDictionary * requestHeaders;
+	NSMutableDictionary *requestHeaders;
 	
 	EJHttpRequestState state;	
-	NSURLConnection * connection;
-	NSHTTPURLResponse * response;
-	NSMutableData * responseBody;
+	NSURLConnection *connection;
+	NSURLResponse *response;
+	NSMutableData *responseBody;
 }
 
 - (void)clearConnection;

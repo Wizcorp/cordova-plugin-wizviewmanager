@@ -1,5 +1,6 @@
 #import "EJBindingAudio.h"
-
+#import "WizCanvasView.h"
+#import "EJNonRetainingProxy.h"
 
 @implementation EJBindingAudio
 
@@ -7,9 +8,10 @@
 @synthesize path;
 @synthesize preload;
 
-- (id)initWithContext:(JSContextRef)ctx object:(JSObjectRef)obj argc:(size_t)argc argv:(const JSValueRef [])argv {
-	if( self = [super initWithContext:ctx object:obj argc:argc argv:argv] ) {
+- (id)initWithContext:(JSContextRef)ctx argc:(size_t)argc argv:(const JSValueRef [])argv {
+	if( self = [super initWithContext:ctx argc:argc argv:argv] ) {
 		volume = 1;
+		paused = true;
 		preload = kEJAudioPreloadNone;
 		
 		if( argc > 0 ) {
@@ -20,6 +22,9 @@
 }
 
 - (void)dealloc {
+	[loadCallback cancel];
+	[loadCallback release];
+
 	[source release];
 	[path release];
 	[super dealloc];
@@ -32,7 +37,7 @@
 		source = NULL;
 		
 		path = [pathp retain];
-		if( preload == kEJAudioPreloadAuto ) {
+		if( preload != kEJAudioPreloadNone ) {
 			[self load];
 		}
 	}
@@ -44,57 +49,71 @@
 	// This will begin loading the sound in a background thread
 	loading = YES;
 	
-	NSString * fullPath = [[WizCanvasView instance] pathForResource:path];
-	NSInvocationOperation* loadOp = [[NSInvocationOperation alloc] initWithTarget:self
-				selector:@selector(loadOperation:) object:fullPath];
-	[loadOp setThreadPriority:0.0];
-	[[WizCanvasView instance].opQueue addOperation:loadOp];
+	// Protect this Audio object from garbage collection, as its callback function
+	// may be the only thing holding on to it
+	JSValueProtect(scriptView.jsGlobalContext, jsObject);
+	
+	
+	EJNonRetainingProxy *proxy = [EJNonRetainingProxy proxyWithTarget:self];
+	
+	loadCallback = [[NSInvocationOperation alloc]
+		initWithTarget:proxy selector:@selector(endLoad) object:nil];
+	
+	NSOperation *loadOp = [[NSInvocationOperation alloc]
+		initWithTarget:proxy selector:@selector(backgroundLoad) object:nil];
+		
+	[scriptView.backgroundQueue addOperation:loadOp];
 	[loadOp release];
 }
 
-- (void)loadOperation:(NSString *)fullPath {
-	NSAutoreleasePool *autoreleasepool = [[NSAutoreleasePool alloc] init];
-	
+- (void)prepareGarbageCollection {
+	[loadCallback cancel];
+}
+
+- (void)backgroundLoad {
 	// Decide whether to load the sound as OpenAL or AVAudioPlayer source
+	NSString *fullPath = [scriptView pathForResource:path];
 	unsigned long long size = [[[NSFileManager defaultManager] attributesOfItemAtPath:fullPath error:nil] fileSize];
 	
-	NSObject<EJAudioSource> * src;
 	if( size <= EJ_AUDIO_OPENAL_MAX_SIZE ) {
 		NSLog(@"Loading Sound(OpenAL): %@", path);
-		src = [[EJAudioSourceOpenAL alloc] initWithPath:fullPath];
+		source = [[EJAudioSourceOpenAL alloc] initWithPath:fullPath];
 	}
 	else {
 		NSLog(@"Loading Sound(AVAudio): %@", path);
-		src = [[EJAudioSourceAVAudio alloc] initWithPath:fullPath];
-		((EJAudioSourceAVAudio *)src).delegate = self;
+		source = [[EJAudioSourceAVAudio alloc] initWithPath:fullPath];
 	}
-	[src autorelease];
-	
-	[self performSelectorOnMainThread:@selector(endLoad:) withObject:src waitUntilDone:NO];
-	[autoreleasepool release];
+
+	[NSOperationQueue.mainQueue addOperation:loadCallback];
 }
 
-- (void)endLoad:(NSObject<EJAudioSource> *)src {
-	source = [src retain];
+- (void)endLoad {
+	[loadCallback release];
+	loadCallback = nil;
+		
+	source.delegate = self;
 	[source setLooping:loop];
 	[source setVolume:volume];
 	
 	if( playAfterLoad ) {
 		[source play];
 	}
-	loading = NO;
 	
+	loading = NO;
 	[self triggerEvent:@"canplaythrough" argc:0 argv:NULL];
+	[self triggerEvent:@"loadedmetadata" argc:0 argv:NULL];
+	
+	JSValueUnprotectSafe(scriptView.jsGlobalContext, jsObject);
 }
 
-- (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag {
+- (void)sourceDidFinishPlaying:(NSObject<EJAudioSource> *)source {
 	ended = true;
 	[self triggerEvent:@"ended" argc:0 argv:NULL];
 }
 
 - (void)setPreload:(EJAudioPreload)preloadp {
 	preload = preloadp;
-	if( preload == kEJAudioPreloadAuto ) {
+	if( preload != kEJAudioPreloadNone ) {
 		[self load];
 	}
 }
@@ -107,6 +126,7 @@ EJ_BIND_FUNCTION(play, ctx, argc, argv) {
 	}
 	else {
 		[source play];
+		paused = false;
 		ended = false;
 	}
 	return NULL;
@@ -117,6 +137,7 @@ EJ_BIND_FUNCTION(pause, ctx, argc, argv) {
 		playAfterLoad = NO;
 	}
 	else {
+		paused = true;
 		[source pause];
 	}
 	return NULL;
@@ -128,9 +149,9 @@ EJ_BIND_FUNCTION(load, ctx, argc, argv) {
 }
 
 EJ_BIND_FUNCTION(canPlayType, ctx, argc, argv) {
-	if( argc != 1 ) return NULL;
+	if( argc != 1 ) return NSStringToJSValue(ctx, @"");
 	
-	NSString * mime = JSValueToNSString(ctx, argv[0]);
+	NSString *mime = JSValueToNSString(ctx, argv[0]);
 	if( 
 		[mime hasPrefix:@"audio/x-caf"] ||
 		[mime hasPrefix:@"audio/mpeg"] ||
@@ -138,16 +159,12 @@ EJ_BIND_FUNCTION(canPlayType, ctx, argc, argv) {
 	) {
 		return NSStringToJSValue(ctx, @"probably");
 	}
-	return NULL;
+	return NSStringToJSValue(ctx, @"");
 }
 
 EJ_BIND_FUNCTION(cloneNode, ctx, argc, argv) {
-	// Create new JS object
-	JSClassRef audioClass = [[WizCanvasView instance] getJSClassForClass:[EJBindingAudio class]];
-	JSObjectRef obj = JSObjectMake( ctx, audioClass, NULL );
-	
-	// Create the native instance
-	EJBindingAudio * audio = [[EJBindingAudio alloc] initWithContext:ctx object:obj argc:0 argv:NULL];
+	EJBindingAudio *audio = [[EJBindingAudio alloc] initWithContext:ctx argc:0 argv:NULL];
+	JSObjectRef clone = [EJBindingAudio createJSObjectWithContext:ctx scriptView:scriptView instance:audio];
 	
 	audio.loop = loop;
 	audio.volume = volume;
@@ -160,9 +177,12 @@ EJ_BIND_FUNCTION(cloneNode, ctx, argc, argv) {
 		[audio load];
 	}
 	
-	// Attach the native instance to the js object
-	JSObjectSetPrivate( obj, (void *)audio );
-	return obj;
+	[audio release];
+	return clone;
+}
+
+EJ_BIND_GET(duration, ctx) {
+	return JSValueMakeNumber(ctx, source.duration);
 }
 
 EJ_BIND_GET(loop, ctx) {
@@ -184,12 +204,12 @@ EJ_BIND_SET(volume, ctx, value) {
 }
 
 EJ_BIND_GET(currentTime, ctx) {
-	return JSValueMakeNumber( ctx, source ? [source getCurrentTime] : 0 );
+	return JSValueMakeNumber( ctx, source ? source.currentTime : 0 );
 }
 
 EJ_BIND_SET(currentTime, ctx, value) {
 	[self load];
-	[source setCurrentTime:JSValueToNumberFast(ctx, value)];
+	source.currentTime = JSValueToNumberFast(ctx, value);
 }
 
 EJ_BIND_GET(src, ctx) {
@@ -198,7 +218,7 @@ EJ_BIND_GET(src, ctx) {
 
 EJ_BIND_SET(src, ctx, value) {
 	[self setSourcePath:JSValueToNSString(ctx, value)];
-	if( preload == kEJAudioPreloadAuto ) {
+	if( preload != kEJAudioPreloadNone ) {
 		[self load];
 	}
 }
@@ -207,8 +227,17 @@ EJ_BIND_GET(ended, ctx) {
 	return JSValueMakeBoolean(ctx, ended);
 }
 
-EJ_BIND_ENUM(preload, EJAudioPreloadNames, self.preload);
+EJ_BIND_GET(paused, ctx) {
+	return JSValueMakeBoolean(ctx, paused);
+}
 
+EJ_BIND_ENUM(preload, self.preload,
+	"none",		// kEJAudioPreloadNone
+	"metadata", // kEJAudioPreloadMetadata
+	"auto"		// kEJAudioPreloadAuto
+);
+
+EJ_BIND_EVENT(loadedmetadata);
 EJ_BIND_EVENT(canplaythrough);
 EJ_BIND_EVENT(ended);
 

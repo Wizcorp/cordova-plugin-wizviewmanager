@@ -11,11 +11,19 @@
 #import <Cordova/CDVCordovaView.h>
 
 
+#import <UIKit/UIKit.h>
 #import <QuartzCore/QuartzCore.h>
-#import "JavaScriptCore/JavaScriptCore.h"
+#import <JavaScriptCore/JavaScriptCore.h>
 #import "EJConvert.h"
+#import "EJCanvasContext.h"
+#import "EJPresentable.h"
 
-#define EJECTA_VERSION @"1.1"
+#import "EJSharedOpenALManager.h"
+#import "EJSharedTextureCache.h"
+#import "EJSharedOpenGLContext.h"
+#import "EJNonRetainingProxy.h"
+
+#define EJECTA_VERSION @"1.3"
 #define EJECTA_APP_FOLDER @"www/"
 
 #define EJECTA_BOOT_JS @"phonegap/plugin/wizViewManager/ejecta.js"
@@ -23,65 +31,105 @@
 #define EJECTA_MAIN_JS @"index.js"
 
 @protocol EJTouchDelegate
-- (void)triggerEvent:(NSString *)name withChangedTouches:(NSSet *)changed allTouches:(NSSet *)all;
+- (void)triggerEvent:(NSString *)name all:(NSSet *)all changed:(NSSet *)changed remaining:(NSSet *)remaining;
+@end
+
+@protocol EJDeviceMotionDelegate
+- (void)triggerDeviceMotionEvents;
+@end
+
+@protocol EJWindowEventsDelegate
+- (void)resume;
+- (void)pause;
+- (void)resize;
 @end
 
 @class EJTimerCollection;
-@class EJCanvasContext;
-@class EJCanvasContextScreen;
+@class EJClassLoader;
 
 @interface WizCanvasView : UIViewController {
-    BOOL paused;
-	BOOL landscapeMode;
-	JSGlobalContextRef jsGlobalContext;
-	UIView * window;
-	NSMutableDictionary * jsClasses;
-	UIImageView * loadingScreen;
-	NSObject<EJTouchDelegate> * touchDelegate;
-	
-	EJTimerCollection * timers;
-	NSTimeInterval currentTime;
-	
-	CADisplayLink * displayLink;
-	
-	NSOperationQueue * opQueue;
-	EJCanvasContext * currentRenderingContext;
-	EJCanvasContextScreen * screenRenderingContext;
-	
-	float internalScaling;
+    CGSize oldSize;
+    NSString *appFolder;
+
+    BOOL landscapeMode;
+    BOOL pauseOnEnterBackground;
+    BOOL hasScreenCanvas;
+
+    BOOL isPaused;
+
+    EJNonRetainingProxy	*proxy;
+
+    JSGlobalContextRef jsGlobalContext;
+    EJClassLoader *classLoader;
+
+    EJTimerCollection *timers;
+
+    EJSharedOpenGLContext *openGLContext;
+    EJSharedTextureCache *textureCache;
+    EJSharedOpenALManager *openALManager;
+
+    EJCanvasContext *currentRenderingContext;
+    EAGLContext *glCurrentContext;
+
+    CADisplayLink *displayLink;
+
+    NSObject<EJWindowEventsDelegate> *windowEventsDelegate;
+    NSObject<EJTouchDelegate> *touchDelegate;
+    NSObject<EJDeviceMotionDelegate> *deviceMotionDelegate;
+    EJCanvasContext<EJPresentable> *screenRenderingContext;
+
+    NSOperationQueue *backgroundQueue;
+    JSClassRef jsBlockFunctionClass;
+
+	UIView *window;
+
+    // Public for fast access in bound functions
+    @public JSValueRef jsUndefined;
 }
 
+@property (nonatomic, copy) NSString *appFolder;
+
+@property (nonatomic, assign) BOOL pauseOnEnterBackground;
+@property (nonatomic, assign, getter = isPaused) BOOL isPaused; // Pauses drawing/updating of the JSView
+@property (nonatomic, assign) BOOL hasScreenCanvas;
+
+@property (nonatomic, readonly) JSGlobalContextRef jsGlobalContext;
+@property (nonatomic, readonly) EJSharedOpenGLContext *openGLContext;
+
+@property (nonatomic, retain) NSObject<EJWindowEventsDelegate> *windowEventsDelegate;
+@property (nonatomic, retain) NSObject<EJTouchDelegate> *touchDelegate;
+@property (nonatomic, retain) NSObject<EJDeviceMotionDelegate> *deviceMotionDelegate;
+
+@property (nonatomic, retain) EJCanvasContext *currentRenderingContext;
+@property (nonatomic, retain) EJCanvasContext<EJPresentable> *screenRenderingContext;
+
+@property (nonatomic, retain) NSOperationQueue *backgroundQueue;
+@property (nonatomic, retain) EJClassLoader *classLoader;
+
+@property (nonatomic, readonly) UIView * window;
+
+- (id)initWithFrame:(CGRect)frame;
 - (id)initWithWindow:(UIView *)window name:(NSString*)viewName sourceToLoad:(NSString*)src;
 
-- (void)run:(CADisplayLink *)sender;
-- (void)pause;
-- (void)resume;
-- (void)clearCaches;
-- (NSString *)pathForResource:(NSString *)resourcePath;
-- (JSValueRef)createTimer:(JSContextRef)ctx argc:(size_t)argc argv:(const JSValueRef [])argv repeat:(BOOL)repeat;
-- (JSValueRef)deleteTimer:(JSContextRef)ctx argc:(size_t)argc argv:(const JSValueRef [])argv;
-
-- (JSClassRef)getJSClassForClass:(id)classId;
-- (void)hideLoadingScreen;
-// Added for pure script injection wizardry - ao.
-- (void)evaluateScript:(NSString *)path;
 - (void)loadScriptAtPath:(NSString *)path;
-- (JSValueRef)invokeCallback:(JSObjectRef)callback thisObject:(JSObjectRef)thisObject argc:(size_t)argc argv:(const JSValueRef [])argv;
-- (void)logException:(JSValueRef)exception ctx:(JSContextRef)ctxp;
+- (JSValueRef)evaluateScript:(NSString *)script;
+- (JSValueRef)evaluateScript:(NSString *)script sourceURL:(NSString *)sourceURL;
 
+- (void)clearCaches;
+
+- (JSValueRef)invokeCallback:(JSObjectRef)callback thisObject:(JSObjectRef)thisObject argc:(size_t)argc argv:(const JSValueRef [])argv;
+- (NSString *)pathForResource:(NSString *)resourcePath;
+- (JSValueRef)deleteTimer:(JSContextRef)ctx argc:(size_t)argc argv:(const JSValueRef [])argv;
+- (JSValueRef)loadModuleWithId:(NSString *)moduleId module:(JSValueRef)module exports:(JSValueRef)exports;
+- (JSValueRef)createTimer:(JSContextRef)ctxp argc:(size_t)argc argv:(const JSValueRef [])argv repeat:(BOOL)repeat;
+- (JSObjectRef)createFunctionWithBlock:(JSValueRef (^)(JSContextRef ctx, size_t argc, const JSValueRef argv[]))block;
+
+
+// Added for pure script injection wizardry - ao.
+// - (void)evaluateScript:(NSString *)path;
+// - (void)loadScriptAtPath:(NSString *)path;
 
 + (WizCanvasView *)instance;
-
-
-@property (nonatomic, readonly) BOOL landscapeMode;
-@property (nonatomic, readonly) JSGlobalContextRef jsGlobalContext;
-@property (nonatomic, readonly) UIView * window;
-@property (nonatomic, retain) NSObject<EJTouchDelegate> * touchDelegate;
-
-@property (nonatomic, readonly) NSOperationQueue * opQueue;
-@property (nonatomic, assign) EJCanvasContext * currentRenderingContext;
-@property (nonatomic, assign) EJCanvasContextScreen * screenRenderingContext;
-@property (nonatomic) float internalScaling;
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event;
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event;
