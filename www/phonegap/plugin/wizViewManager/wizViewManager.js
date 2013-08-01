@@ -1,10 +1,10 @@
-/* WizViewManager for cordova - Handle Views create/remove/show/hide etc.
+/* WizViewManager for Cordova - Handle Views create/remove/show/hide etc.
 *
  * @author Ally Ogilvie  
  * @author Ron Korving
- * @copyright WizCorp Inc. [ Incorporated Wizards ] 2012
+ * @copyright Wizcorp Inc. [ Incorporated Wizards ] 2012
  * @file - wizViewManager.js
- * @about - JavaScript cordova bridge for view management
+ * @about - JavaScript Cordova bridge for view management
  *
  *
 */
