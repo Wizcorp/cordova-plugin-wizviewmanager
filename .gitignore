@@ -11,3 +11,12 @@ example/ios/www/*
 *.ipr
 *.iws
 .idea/
+
+# Android folders
+.classpath
+.project
+bin/
+gen/
+out/
+proguard/
+example/android/assets/www/*
