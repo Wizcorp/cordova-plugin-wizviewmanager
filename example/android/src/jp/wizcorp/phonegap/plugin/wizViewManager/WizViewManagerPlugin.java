@@ -13,7 +13,9 @@
 package jp.wizcorp.phonegap.plugin.wizViewManager;
 
 import android.view.ViewGroup;
-import android.webkit.JsPromptResult;
+import android.webkit.WebResourceResponse;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import org.apache.cordova.CordovaWebView;
 import org.apache.cordova.api.CordovaInterface;
 import org.apache.cordova.api.PluginResult;
@@ -28,33 +30,102 @@ import android.webkit.WebView;
 import org.apache.cordova.api.CallbackContext;
 import org.apache.cordova.api.CordovaPlugin;
 
+import java.io.ByteArrayInputStream;
+
 public class WizViewManagerPlugin extends CordovaPlugin {
 
 	private String TAG = "WizViewManagerPlugin";
 	static JSONObject viewList = new JSONObject();
     static CordovaInterface _cordova;
+    static CordovaWebView _webView;
+    @Override
+    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+        _cordova = cordova;
+        _webView = webView;
+        Log.d(TAG, "Initialize Plugin");
+        // By default, get a pointer to mainView and add mainView to the viewList as it always exists (hold phonegap's view)
+        if (!viewList.has("mainView")) {
+            // Cordova view is not in the viewList so add it.
+            try {
+                viewList.put("mainView", webView);
+                Log.d(TAG, "Found CordovaView ****** " + webView);
+            } catch (JSONException e) {
+                // Error handle (this should never happen!)
+                Log.e(TAG, "Critical error. Failed to retrieve Cordova's view");
+            }
+       }
+        super.initialize(cordova, webView);
+    }
+
+    @Override
+    @android.annotation.TargetApi(11)
+    public WebResourceResponse shouldInterceptRequest(String url) {
+        ByteArrayInputStream stream = new ByteArrayInputStream(url.getBytes());
+        this.onOverrideUrlLoading(url);
+        return new WebResourceResponse("text/plain", "UTF-8", stream);
+    }
 
 
+    @Override
+    public boolean onOverrideUrlLoading(String url) {
+
+        Log.d(TAG, "[Override URL] ****** "+ url);
+
+        String[] urlArray;
+        String splitter = "://";
+
+        // Split url by only 2 in the event "://" occurs elsewhere (SHOULD be impossible because you string encoded right!?)
+        urlArray = url.split(splitter,2);
+
+        if (urlArray[0].equalsIgnoreCase("wizmessageview") ) {
+
+            String[] msgData;
+            splitter = "\\?";
+
+            // Split url by only 2 again to make sure we only spit at the first "?"
+            msgData = urlArray[1].split(splitter);
+
+
+            // target View = msgData[0] and message = msgData[1]
+
+            // Get webview list from View Manager
+            JSONObject viewList = WizViewManagerPlugin.getViews();
+
+            if (viewList.has(msgData[0]) ) {
+
+                WebView targetView;
+                try {
+                    targetView = (WebView) viewList.get(msgData[0]);
+
+                    // send data to mainView
+                    String data2send = msgData[1];
+                    data2send = data2send.replace("'", "\\'");
+                    Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> "+data2send );
+                    targetView.loadUrl("javascript:(wizMessageReceiver('"+data2send+"'))");
+
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            // app will handle this url, don't change the browser url
+            return true;
+        }
+
+        return super.onOverrideUrlLoading(url);
+    }
+
+
+/*
+    @Override
+    public void onPageFinished(WebView wView, String url) {
+        WizViewManagerPlugin.updateViewList();
+    }
+*/
 	@Override
 	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
 
-        _cordova = this.cordova;
-
         Log.d(TAG, "[action] ****** " + action );
-
-		// By default, get a pointer to mainView and add mainView to the viewList as it always exists (hold phonegap's view)
-		if (!viewList.has("mainView")) {
-			// Cordova view is not in the viewList so add it.
-			try {
-				viewList.put("mainView", this.webView);
-				Log.d(TAG, "Found CordovaView ****** " + this.webView);
-			} catch (JSONException e) {
-				// Error handle (this should never happen!)
-				callbackContext.error("Critical error. Failed to retrieve Cordova's view");
-                Log.e(TAG, "Critical error. Failed to retrieve Cordova's view");
-				return true;
-			}
-		}
 
 		if (action.equals("createView")) {
 			// Create a new view
@@ -75,7 +146,8 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 			}
 
             // Create a final link so we can run on UI thread
-            final CordovaWebView _cordovaWebView = this.webView;
+            Log.d(TAG, "list: " + viewList.names().toString());
+
             // Create link to callback
             final CallbackContext create_cb = callbackContext;
 
@@ -83,9 +155,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                     new Runnable() {
                         @Override
                         public void run() {
-                            ViewGroup parent = (ViewGroup) _cordovaWebView.getParent().getParent();
-                            WizWebView wizWebView = new WizWebView(viewName, settings, parent, cordova.getActivity(), create_cb);
-
+                            WizWebView wizWebView = new WizWebView(viewName, settings, cordova.getActivity(), create_cb);
                             // Put our new View into viewList
                             try {
                                 viewList.put(viewName, wizWebView);
@@ -464,21 +534,40 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
         } else if (action.equals("setLayout")) {
 
-            String viewName = args.getString(0);
-            final JSONObject options = args.getJSONObject(1);
+            try {
+                String viewName = args.getString(0);
+                final JSONObject options = args.getJSONObject(1);
 
-            final WizWebView targetView = (WizWebView) viewList.get(viewName);
+                if (viewName.equals("mainView")) {
+                    final CordovaWebView targetView = (CordovaWebView) viewList.get(viewName);
 
-            cordova.getActivity().runOnUiThread(
-                    new Runnable() {
-                        @Override
-                        public void run() {
-                            targetView.setLayout(options);
-                        }
-                    }
-            );
+                    cordova.getActivity().runOnUiThread(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    WizViewManagerPlugin.setLayout(targetView, options);
+                                }
+                            }
+                    );
+                } else {
+                    final WizWebView targetView = (WizWebView) viewList.get(viewName);
+
+                    cordova.getActivity().runOnUiThread(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    targetView.setLayout(options);
+                                }
+                            }
+                    );
+                }
+
+            } catch (Exception e) {
+                    Log.e(TAG, "Error: " + e);
+            }
 
             callbackContext.success();
+
             return true;
 
 		} else if (action.equals("updateView")) {
@@ -541,8 +630,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 	}
 
 	public static JSONObject getViews() {
-        // TODO: return view list
-		return null;
+		return viewList;
 	}
 
 
@@ -576,4 +664,125 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         targetView = null;
         jsString = null;
     }
+
+    public static void setLayout(CordovaWebView webView, JSONObject settings) {
+
+        Log.d("WizViewManager", "Setting up mainView layout...");
+        Log.d("WizViewManager", webView.toString());
+
+        String url;
+        // Size
+        int _height = webView.getHeight();
+        int _width = webView.getWidth();
+        // Margins
+        int _x = 0;
+        int _y = 0;
+        int _top = 0;
+        int _bottom = 0;
+
+        int _right = 0;
+        int _left = 0;
+
+        if (settings.has("src")) {
+            try {
+                url = settings.getString("src");
+                webView.loadUrl(url);
+            } catch (JSONException e) {
+                // default
+                // nothing to load
+            }
+        }
+
+        if (settings.has("height")) {
+            try {
+                _height = settings.getInt("height");
+            } catch (JSONException e) {
+                // default
+                _height = ViewGroup.LayoutParams.MATCH_PARENT;
+            }
+        }
+
+        if (settings.has("width")) {
+            try {
+                _width = settings.getInt("width");
+            } catch (JSONException e) {
+                // default
+                _width = ViewGroup.LayoutParams.MATCH_PARENT;
+            }
+        }
+
+        if (settings.has("x")) {
+            try {
+                _x = settings.getInt("x");
+            } catch (JSONException e) {
+                // default
+                _x = 0;
+            }
+        }
+
+        if (settings.has("y")) {
+            try {
+                _y = settings.getInt("y");
+            } catch (JSONException e) {
+                // default
+                _y = 0;
+            }
+        }
+
+        if (settings.has("left")) {
+            try {
+                _left = _x + settings.getInt("left");
+                _width -= _left;
+            } catch (JSONException e) {
+                // default
+                _left = _x;
+            }
+        }
+
+        if (settings.has("right")) {
+            try {
+                _right = settings.getInt("right");
+                _width += _right;
+            } catch (JSONException e) {
+                // default
+                _right = 0;
+            }
+        }
+
+        if (settings.has("top")) {
+            try {
+                _top = _y + settings.getInt("top");
+            } catch (JSONException e) {
+                // default
+                _top = _y;
+            }
+        }
+        if (settings.has("bottom")) {
+            try {
+                _bottom = settings.getInt("bottom") - _y;
+            } catch (JSONException e) {
+                // default
+                _bottom = 0 - _y;
+            }
+        }
+/*
+        ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) webView.getLayoutParams();
+        Log.d("WizViewManager", marginParams.toString());
+        marginParams.setMargins(_left, _top, _right, _bottom);
+
+        webView.setLayoutParams(marginParams);
+*/
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) webView.getLayoutParams();
+        Log.d("WizViewManager", layoutParams.toString());
+        layoutParams.setMargins(_left, _top, _right, _bottom);
+        layoutParams.height = _height;
+        layoutParams.width = _width;
+
+        webView.setLayoutParams(layoutParams);
+
+//         webView.invalidate();
+
+        Log.d("WizViewManager", "new layout -> width: " + layoutParams.width + " - height: " + layoutParams.height + " - margins: " + layoutParams.leftMargin + "," + layoutParams.topMargin + "," + layoutParams.rightMargin + "," + layoutParams.bottomMargin);
+    }
+
 }

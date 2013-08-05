@@ -12,24 +12,24 @@
 */
 package jp.wizcorp.phonegap.plugin.wizViewManager;
 
+import android.app.Activity;
 import android.graphics.Color;
 import android.os.Build;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import org.apache.cordova.api.CallbackContext;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-import android.widget.FrameLayout;
-import android.widget.RelativeLayout;
 
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -42,15 +42,19 @@ public class WizWebView extends WebView  {
     private CallbackContext create_cb;
     private CallbackContext load_cb;
 
+    /*
     static final FrameLayout.LayoutParams COVER_SCREEN_GRAVITY_CENTER =
+
             new FrameLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     Gravity.CENTER);
+                    */
 
-	public WizWebView(String viewName, JSONObject settings, final ViewGroup parentView, Context context, CallbackContext callbackContext) {
+	public WizWebView(String viewName, JSONObject settings, Context context, CallbackContext callbackContext) {
         // Constructor method
         super(context);
+
 		Log.d("WizWebView", "[WizWebView] *************************************");
 		Log.d("WizWebView", "[WizWebView] building - new Wizard View");
 		Log.d("WizWebView", "[WizWebView] -> " + viewName);
@@ -66,8 +70,16 @@ public class WizWebView extends WebView  {
         this.getSettings().setJavaScriptEnabled(true);
         this.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 
+
+        ViewGroup frame = (ViewGroup) ((Activity) context).findViewById(android.R.id.content);
+
+        // Creating a new RelativeLayout fill its parent by default
+        RelativeLayout.LayoutParams rlp = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.FILL_PARENT,
+                RelativeLayout.LayoutParams.FILL_PARENT);
+
         // Default full screen
-        parentView.addView(this, COVER_SCREEN_GRAVITY_CENTER);
+        frame.addView(this, rlp);
 
         // Set a transparent background
         this.setBackgroundColor(Color.TRANSPARENT);
@@ -111,7 +123,7 @@ public class WizWebView extends WebView  {
                             // send data to mainView
                             String data2send = msgData[1];
                             data2send = data2send.replace("'", "\\'");
-                            Log.d("WizWebView", "[GapViewClient] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> "+data2send );
+                            Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> "+data2send );
                             targetView.loadUrl("javascript:(wizMessageReceiver('"+data2send+"'))");
 
                         } catch (JSONException e) {
@@ -156,18 +168,124 @@ public class WizWebView extends WebView  {
 	} // ************ END CONSTRUCTOR **************
 
     public void setLayout(JSONObject settings) {
-
         Log.d(TAG, "Setting up layout...");
 
         String url;
+
+        // Set default settings to max screen
+        ViewGroup parent = (ViewGroup) this.getParent();
+
         // Size
-        int _height = this.getHeight();
-        int _width = this.getWidth();
+        int _parentHeight = parent.getHeight();
+        int _parentWidth = parent.getWidth();
+        int _height = _parentHeight;
+        int _width = _parentWidth;
+
         // Margins
         int _x = 0;
         int _y = 0;
         int _top = 0;
         int _bottom = 0;
+        int _right = 0;
+        int _left = 0;
+
+        if (settings.has("height")) {
+            try {
+                _height = settings.getInt("height");
+            } catch (JSONException e) {
+                // ignore
+                Log.e(TAG, "Error obtaining 'height' in settings");
+            }
+        }
+
+        if (settings.has("width")) {
+            try {
+                _width = settings.getInt("width");
+            } catch (JSONException e) {
+                // ignore
+                Log.e(TAG, "Error obtaining 'width' in settings");
+            }
+        }
+
+        if (settings.has("x")) {
+            try {
+                _x = settings.getInt("x");
+                _left = _x;
+                _width = _width + _x;
+            } catch (JSONException e) {
+                // ignore
+                Log.e(TAG, "Error obtaining 'x' in settings");
+            }
+        }
+
+        if (settings.has("y")) {
+            try {
+                _y = settings.getInt("y");
+                _top = _y;
+                _height = _height + _y;
+            } catch (JSONException e) {
+                // ignore
+                Log.e(TAG, "Error obtaining 'y' in settings");
+            }
+        }
+
+        if (settings.has("left")) {
+            try {
+                _left = _left + settings.getInt("left");
+                _width -= _left;
+            } catch (JSONException e) {
+                // ignore
+                Log.e(TAG, "Error obtaining 'left' in settings");
+            }
+        } else {
+            // default
+            if (_x != 0) {
+                _left = _x;
+            }
+        }
+
+        if (settings.has("right")) {
+            try {
+                _right = settings.getInt("right");
+                _width = _width - _right;
+            } catch (JSONException e) {
+                // ignore
+                Log.e(TAG, "Error obtaining 'right' in settings");
+            }
+        }
+
+        if (settings.has("top")) {
+            try {
+                _top = _top + settings.getInt("top");
+            } catch (JSONException e) {
+                // ignore
+                Log.e(TAG, "Error obtaining 'top' in settings");
+            }
+        } else {
+            // default
+            if (_y != 0) {
+                _top = _y;
+            }
+        }
+
+        if (settings.has("bottom")) {
+            try {
+                _top = _top + _parentHeight - _height - settings.getInt("bottom");
+                _bottom = - settings.getInt("bottom");
+            } catch (JSONException e) {
+                // ignore
+                Log.e(TAG, "Error obtaining 'bottom' in settings");
+            }
+        }
+
+        FrameLayout.LayoutParams newLayoutParams = (FrameLayout.LayoutParams) this.getLayoutParams();
+        newLayoutParams.setMargins(_left, _top, _right, _bottom);
+        newLayoutParams.height = _height;
+        newLayoutParams.width = _width;
+
+        this.setLayoutParams(newLayoutParams);
+
+        Log.d(TAG, "new layout -> width: " + newLayoutParams.width + " - height: " + newLayoutParams.height + " - margins: " + newLayoutParams.leftMargin + "," + newLayoutParams.topMargin + "," + newLayoutParams.rightMargin + "," + newLayoutParams.bottomMargin);
 
         if (settings.has("src")) {
             try {
@@ -176,74 +294,11 @@ public class WizWebView extends WebView  {
             } catch (JSONException e) {
                 // default
                 // nothing to load
+                Log.e(TAG, "Loading source from settings exception : " + e);
             }
+        } else {
+            Log.e(TAG, "No source to load");
         }
-
-        if (settings.has("height")) {
-            try {
-                _height = settings.getInt("height");
-            } catch (JSONException e) {
-                // default
-                _height = ViewGroup.LayoutParams.MATCH_PARENT;
-            }
-        }
-
-        if (settings.has("width")) {
-            try {
-                _width = settings.getInt("width");
-            } catch (JSONException e) {
-                // default
-                _width = ViewGroup.LayoutParams.MATCH_PARENT;
-            }
-        }
-
-        if (settings.has("x")) {
-            try {
-                _x = settings.getInt("x");
-            } catch (JSONException e) {
-                // default
-                _x = 0;
-            }
-        }
-
-        if (settings.has("y")) {
-            try {
-                _y = settings.getInt("y");
-            } catch (JSONException e) {
-                // default
-                _y = 0;
-            }
-        }
-
-        if (settings.has("top")) {
-            try {
-                _top = settings.getInt("top");
-            } catch (JSONException e) {
-                // default
-                _top = 0;
-            }
-        }
-        if (settings.has("bottom")) {
-            try {
-                _top = settings.getInt("top");
-            } catch (JSONException e) {
-                // default
-                _bottom = 0;
-            }
-        }
-
-        ViewGroup.MarginLayoutParams params = (MarginLayoutParams) this.getLayoutParams();
-        params.setMargins(_x, _y, _top, _bottom);
-
-        this.setLayoutParams(params);
-
-        ViewGroup.LayoutParams layoutParams = (ViewGroup.LayoutParams) this.getLayoutParams();
-        layoutParams.height = _height;
-        layoutParams.width = _width;
-
-        this.setLayoutParams(layoutParams);
-
-        Log.d(TAG, "new layout -> width: " + layoutParams.width + " - height: " + layoutParams.height + " - margins: " + params.leftMargin + "," + params.topMargin + "," + params.rightMargin + "," + params.bottomMargin);
     }
 
     public void load(String source, CallbackContext callbackContext) {
