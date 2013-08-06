@@ -56,7 +56,7 @@ Project tree<br />
 
 2) Add to config.xml in the plugins array;
 
-```<plugin name="WizViewManagerPlugin" value="jp.wizcorp.phonegap.plugin.wizViewManager.WizViewManagerPlugin" />```
+```<plugin name="WizViewManagerPlugin" value="WizViewManagerPlugin" />```
 
 3) Add `<script>` tag to your index.html
 
