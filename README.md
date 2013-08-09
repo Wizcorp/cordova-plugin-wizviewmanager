@@ -77,7 +77,19 @@ Project tree<br />
 	"$(SRCROOT)/modules/phonegap-plugin-wizViewManager/ios/project/Plugins/WizViewManagerPlugin/JavaScriptCore"
 
 
-5) Follow example code below.
+5) Required .frameworks;
+
+- StoreKit
+- iAd
+- OpenGLES
+- GameKit
+- CoreText
+- Security
+- libstdc++.dylib
+- libicucore.dylib
+
+
+6) Follow example code below.
 
 # Install (Android)
 
