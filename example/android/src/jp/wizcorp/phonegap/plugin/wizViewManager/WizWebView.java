@@ -282,7 +282,7 @@ public class WizWebView extends WebView  {
         newLayoutParams.setMargins(_left, _top, _right, _bottom);
         newLayoutParams.height = _height;
         newLayoutParams.width = _width;
-
+        newLayoutParams.gravity = Gravity.CENTER;
         this.setLayoutParams(newLayoutParams);
 
         Log.d(TAG, "new layout -> width: " + newLayoutParams.width + " - height: " + newLayoutParams.height + " - margins: " + newLayoutParams.leftMargin + "," + newLayoutParams.topMargin + "," + newLayoutParams.rightMargin + "," + newLayoutParams.bottomMargin);
