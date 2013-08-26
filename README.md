@@ -66,11 +66,30 @@ Project tree<br />
 
 (assuming your index.html is setup like tree above)
 
-4) Add the following to header AND library search paths in Xcode Build Settings
+4) Add the following to header AND library search paths in Xcode Build Settings (You may need to adjust your path depending on location of plugin)
 
-```$(SRCROOT)/modules/phonegap-plugin-wizViewManager/ios/project/Plugins/WizViewManagerPlugin```
+*Head Search Paths*
 
-5) Follow example code below.
+	$(SRCROOT)/modules/phonegap-plugin-wizViewManager/ios/project/Plugins/WizViewManagerPlugin"
+
+*Library Search Paths*
+
+	"$(SRCROOT)/modules/phonegap-plugin-wizViewManager/ios/project/Plugins/WizViewManagerPlugin/JavaScriptCore"
+
+
+5) Required .frameworks;
+
+- StoreKit
+- iAd
+- OpenGLES
+- GameKit
+- CoreText
+- Security
+- libstdc++.dylib
+- libicucore.dylib
+
+
+6) Follow example code below.
 
 # Install (Android)
 
