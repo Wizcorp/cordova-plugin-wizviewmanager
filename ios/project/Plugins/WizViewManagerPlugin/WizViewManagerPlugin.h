@@ -1,7 +1,7 @@
 /* WizViewManager - Handle Popup UIViews and communtications.
  *
  * @author Ally Ogilvie
- * @copyright WizCorp Inc. [ Incorporated Wizards ] 2011
+ * @copyright Wizcorp Inc. [ Incorporated Wizards ] 2013
  * @file WizViewManager.h for PhoneGap
  *
  */ 
@@ -32,7 +32,6 @@
 - (void)createView:(CDVInvokedUrlCommand*)command;
 - (void)hideView:(CDVInvokedUrlCommand*)command;
 - (void)showView:(CDVInvokedUrlCommand*)command;
-- (void)updateView:(CDVInvokedUrlCommand*)command;
 - (void)load:(CDVInvokedUrlCommand*)command;;
 - (void)removeView:(CDVInvokedUrlCommand*)command;
 - (void)setLayout:(CDVInvokedUrlCommand*)command;
@@ -44,10 +43,6 @@
  
  **/
 - (void)sendMessage:(NSString*)viewName withMessage:(NSString*)message;
-- (void)showWebView:(CDVInvokedUrlCommand*)command;
-- (void)showCanvasView:(CDVInvokedUrlCommand*)command;
-- (void)hideWebView:(CDVInvokedUrlCommand*)command;
-- (void)hideCanvasView:(CDVInvokedUrlCommand*)command;
 - (void)updateViewList;
 
 /**

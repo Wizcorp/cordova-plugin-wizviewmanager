@@ -17,26 +17,17 @@
  under the License.
  */
 
-//
-//  AppDelegate.h
-//  exampleWizSpinner
-//
-//  Created by ___FULLUSERNAME___ on ___DATE___.
-//  Copyright ___ORGANIZATIONNAME___ ___YEAR___. All rights reserved.
-//
+#import <Foundation/Foundation.h>
+#import <CoreLocation/CoreLocation.h>
 
-#import <UIKit/UIKit.h>
+@interface NSError (JSONMethods)
 
-#import <Cordova/CDVViewController.h>
+- (NSString*)JSONRepresentation;
 
-@interface AppDelegate : NSObject <UIApplicationDelegate>{}
+@end
 
-// invoke string is passed to your app on launch, this is only valid if you
-// edit exampleWizSpinner-Info.plist to add a protocol
-// a simple tutorial can be found here :
-// http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
+@interface CLLocation (JSONMethods)
 
-@property (nonatomic, strong) IBOutlet UIWindow* window;
-@property (nonatomic, strong) IBOutlet CDVViewController* viewController;
+- (NSString*)JSONRepresentation;
 
 @end

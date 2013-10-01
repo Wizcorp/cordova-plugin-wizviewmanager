@@ -1,6 +1,7 @@
-.DS_Store
+*.DS_Store
 example/ios/exampleWizViewManager.xcodeproj/xcuserdata/*
 example/ios/exampleWizViewManager.xcodeproj/project.xcworkspace/*
 example/ios/CordovaLib/CordovaLib.xcodeproj/xcuserdata/*
 example/ios/www/*
-!example/ios/www/cordova-2.3.0.js
+!example/ios/www/cordova.js
+!example/ios/www/phonegap/plugin/wizViewManager/wizViewManager.js

@@ -1,14 +1,13 @@
 /* WizWebView - Creates Instance of wizard UIWebView.
  *
- * @author WizCorp Inc. [ Incorporated Wizards ] 
- * @copyright 2011
+ * @author Wizcorp Inc. [ Incorporated Wizards ]
+ * @copyright 2013
  * @file WizWebView.h for PhoneGap
  *
  */ 
 
 #import <Foundation/Foundation.h>
 #import <Cordova/CDVPlugin.h>
-#import <Cordova/CDVCordovaView.h>
 
 @interface WizWebView : NSObject <UIWebViewDelegate> {
 

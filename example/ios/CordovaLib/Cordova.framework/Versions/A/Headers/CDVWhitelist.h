@@ -17,26 +17,18 @@
  under the License.
  */
 
-//
-//  AppDelegate.h
-//  exampleWizSpinner
-//
-//  Created by ___FULLUSERNAME___ on ___DATE___.
-//  Copyright ___ORGANIZATIONNAME___ ___YEAR___. All rights reserved.
-//
+#import <Foundation/Foundation.h>
 
-#import <UIKit/UIKit.h>
+extern NSString* const kCDVDefaultWhitelistRejectionString;
 
-#import <Cordova/CDVViewController.h>
+@interface CDVWhitelist : NSObject
 
-@interface AppDelegate : NSObject <UIApplicationDelegate>{}
+@property (nonatomic, copy) NSString* whitelistRejectionFormatString;
 
-// invoke string is passed to your app on launch, this is only valid if you
-// edit exampleWizSpinner-Info.plist to add a protocol
-// a simple tutorial can be found here :
-// http://iphonedevelopertips.com/cocoa/launching-your-own-application-via-a-custom-url-scheme.html
-
-@property (nonatomic, strong) IBOutlet UIWindow* window;
-@property (nonatomic, strong) IBOutlet CDVViewController* viewController;
+- (id)initWithArray:(NSArray*)array;
+- (BOOL)schemeIsAllowed:(NSString*)scheme;
+- (BOOL)URLIsAllowed:(NSURL*)url;
+- (BOOL)URLIsAllowed:(NSURL*)url logFailure:(BOOL)logFailure;
+- (NSString*)errorStringForURL:(NSURL*)url;
 
 @end

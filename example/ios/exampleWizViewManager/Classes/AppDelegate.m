@@ -19,7 +19,7 @@
 
 //
 //  AppDelegate.m
-//  exampleWizViewManager
+//  exampleWizSpinner
 //
 //  Created by ___FULLUSERNAME___ on ___DATE___.
 //  Copyright ___ORGANIZATIONNAME___ ___YEAR___. All rights reserved.
@@ -60,7 +60,6 @@
     self.window.autoresizesSubviews = YES;
 
     self.viewController = [[[MainViewController alloc] init] autorelease];
-    self.viewController.useSplashScreen = YES;
     self.viewController.wwwFolderName = @"www";
     self.viewController.startPage = @"index.html";
 
@@ -74,7 +73,7 @@
 }
 
 // this happens while we are running ( in the background, or from within our own app )
-// only valid if exampleWizViewManager-Info.plist specifies a protocol to handle
+// only valid if exampleWizSpinner-Info.plist specifies a protocol to handle
 - (BOOL)application:(UIApplication*)application handleOpenURL:(NSURL*)url
 {
     if (!url) {
