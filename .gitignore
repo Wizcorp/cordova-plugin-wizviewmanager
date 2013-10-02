@@ -6,3 +6,9 @@ example/ios/www/*
 !example/ios/www/cordova.js
 !example/ios/www/cordova_plugins.js	
 !example/ios/www/phonegap/plugin/wizViewManager/wizViewManager.js
+.idea/
+bin/
+gen/
+*.iml
+*.iws
+log/
