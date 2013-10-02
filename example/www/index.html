@@ -347,7 +347,7 @@
 	        var customViewInstallPath = "/Users/Ally/Library/Application Support/iPhone Simulator/6.0/Applications/EB544FA8-1278-4941-B708-05D53F4E7DEC/exampleWizViewManager.app/www/customview.html";
 	        
 	        function createView() {
-	            wizViewManager.create("newView", { src: "http://google.com", height: "50%", top: 0 }, onSuccess("created & finished loading view"), onFail);
+	            wizViewManager.create("newView", { src: "http://google.com", height: 300, top: 0 }, onSuccess("created & finished loading view"), onFail);
 	        }
 	        
 	        function removeView() {
@@ -394,9 +394,9 @@
 				}
 				currentLayout = i;
 			    var params = [
-			    	{ height: "50%", top: 0 },
-			    	{ height: "25%", bottom: 0 }, 
-			    	{ height: "25%", top: 0 } 
+			    	{ height: 450, top: 0 },
+			    	{ height: 150, bottom: 0 },
+			    	{ height: 150, top: 0 }
 			    ];
 	            wizViewManager.setLayout("newView", params[i], null, onFail);
 	        }
