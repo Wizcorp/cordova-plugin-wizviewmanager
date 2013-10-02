@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    id="jp.wizcorp.phonegap.plugin.wizViewManagerPlugin"
+    version="1.0.0">
+
+    <name>Wizard View Manager Plugin</name>
+    
+    <description>This plugin allows you to create and control native UIWebViews.</description>
+    
+    <author>Ally Ogilvie - aogilvie@wizcorp.jp</author>
+    
+    <keywords>webview, view, wizcorp, wizard</keywords>
+	
+	<engines>
+	    <engine name="cordova" version=">=2.6.0" />
+	</engines>
+
+    <license>MIT</license>
+
+    <js-module src="www/phonegap/plugin/wizViewManager/wizViewManager.js" name="wizViewManagerPlugin" target="phonegap/plugin/wizViewManager/wizViewManager.js">
+        <clobbers target="window.wizViewManager" />
+    </js-module>
+    <js-module src="www/phonegap/plugin/wizViewMessenger/wizViewMessenger.js" name="wizViewMessenger" target="phonegap/plugin/wizViewMessenger/wizViewMessenger.js">
+        <clobbers target="window.wizViewMessenger" />
+    </js-module>
+    
+    <!-- ios -->
+    <platform name="ios">
+
+        <config-file target="config.xml" parent="/*">
+        	<feature name="WizViewManagerPlugin">
+                <param name="ios-package" value="WizViewManagerPlugin"/>
+                <param name="onload" value="true" />
+            </feature>
+        	<plugin name="WizViewManagerPlugin" value="WizViewManagerPlugin"/>
+        </config-file>
+               
+        <!-- Plugin files -->
+        <header-file src="ios/project/Plugins/WizViewManagerPlugin/WizViewManagerPlugin.h" />
+        <source-file src="ios/project/Plugins/WizViewManagerPlugin/WizViewManagerPlugin.m" compiler-flags="-fno-objc-arc" />
+        
+        <header-file src="ios/project/Plugins/WizViewManagerPlugin/WizWebView.h" />
+        <source-file src="ios/project/Plugins/WizViewManagerPlugin/WizWebView.m" compiler-flags="-fno-objc-arc" />
+        	
+        <!-- Logger -->
+        <source-file src="ios/project/Plugins/WizViewManagerPlugin/WizDebugLog.h" compiler-flags="-fno-objc-arc" />
+
+    </platform>
+    
+    <license>MIT</license>
+
+</plugin>
