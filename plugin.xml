@@ -48,6 +48,30 @@
 
     </platform>
     
+    <!-- android -->
+    <platform name="android">
+    
+		<config-file target="res/xml/config.xml" parent="/*">
+			<feature name="WizViewManagerPlugin" >
+				<param name="android-package" value="jp.wizcorp.phonegap.plugin.wizViewManager.WizViewManagerPlugin"/>
+			</feature>
+	    </config-file>
+	    
+	    <config-file target="AndroidManifest.xml" parent="/manifest/application">
+	        <activity android:name="com.custom.plugin.CustomCordovaPlugin"
+	            android:label="@string/app_name">
+	            <intent-filter>
+	            </intent-filter>
+	        </activity>
+	    </config-file>
+	
+	    <source-file src="android/jp/wizcorp/phonegap/plugin/wizViewManager/WizViewManagerPlugin.java" 
+	            target-dir="src/jp/wizcrop/phonegap/plugin/wizViewManager"/>
+	    <source-file src="android/jp/wizcorp/phonegap/plugin/wizViewManager/WizWebView.java" 
+	            target-dir="src/jp/wizcorp/phonegap/plugin/wizViewManager"/>
+
+    </platform>
+    
     <license>MIT</license>
 
 </plugin>
