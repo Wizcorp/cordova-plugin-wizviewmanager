@@ -1,4 +1,3 @@
-cordova.define("jp.wizcorp.phonegap.plugin.wizViewManagerPlugin", function(require, exports, module) {
 /* WizViewManager for cordova - Handle Views create/remove/show/hide etc.
 *
  * @author Ally Ogilvie  
@@ -162,4 +161,3 @@ WizViewManager.prototype.updateViewList = function (list) {
 // instantiate the wizViewManager (always named "mainView" in Cordova)
 window.wizViewManager = new WizViewManager('mainView');
 module.exports = wizViewManager;
-});

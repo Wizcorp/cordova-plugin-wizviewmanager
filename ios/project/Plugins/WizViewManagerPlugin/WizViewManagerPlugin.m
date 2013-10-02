@@ -98,7 +98,13 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     
     // Assign arguments
     NSString *viewName      = [command.arguments objectAtIndex:0];
-    NSDictionary *options   = [command.arguments objectAtIndex:1];
+    NSDictionary *options = nil;
+    if ([[command.arguments objectAtIndex:1] class] == [NSNull class]) {
+        // options are null
+        WizLog(@"Null options");
+    } else {
+        options = [command.arguments objectAtIndex:1];
+    }
     
     WizLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@", viewName, options);
 
@@ -195,7 +201,13 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     // Assign arguments
     WizLog(@"Start hideView with callback :  %@", command.callbackId);
     NSString *viewName = [command.arguments objectAtIndex:0];
-    NSDictionary *options = [command.arguments objectAtIndex:1];
+    NSDictionary *options = nil;
+    if ([[command.arguments objectAtIndex:1] class] == [NSNull class]) {
+        // options are null
+        WizLog(@"Null options");
+    } else {
+        options = [command.arguments objectAtIndex:1];
+    }
 
     CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     
@@ -331,8 +343,14 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     // Assign arguments
     WizLog(@"Start showWebView with callback :  %@", command.callbackId);
     NSString *viewName = [command.arguments objectAtIndex:0];
-    NSDictionary *options = [command.arguments objectAtIndex:1];
-    
+    NSDictionary *options = nil;
+    if ([[command.arguments objectAtIndex:1] class] == [NSNull class]) {
+        // options are null
+        WizLog(@"Null options");
+    } else {
+        options = [command.arguments objectAtIndex:1];
+    }
+
     CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
     CDVPluginResult *pluginResultERROR = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR];
 
@@ -369,12 +387,12 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
             if (options) {
                 
-                NSDictionary* animationDict = [options objectForKey:@"animation"];
+                NSDictionary *animationDict = [options objectForKey:@"animation"];
                 
-                if ( animationDict ) {
+                if (animationDict) {
 
                     WizLog(@"[WizViewManager] ******* with options : %@ ", options);
-                    NSString* type               = [animationDict objectForKey:@"type"];
+                    NSString *type               = [animationDict objectForKey:@"type"];
                     int animateTimeinMilliSecs   = [[animationDict objectForKey:@"duration"] intValue];
                     CGFloat animateTime          = (CGFloat)animateTimeinMilliSecs / 1000;
                     if (!animateTime) {
@@ -430,7 +448,6 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                     self.showViewCallbackId = nil;
                 }
 
-                
             } else {
                 // Not found do "none"
                 [self showWithNoAnimation:targetWebView];
