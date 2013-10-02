@@ -11,4 +11,6 @@ bin/
 gen/
 *.iml
 *.iws
+out/
+local.properties
 log/
