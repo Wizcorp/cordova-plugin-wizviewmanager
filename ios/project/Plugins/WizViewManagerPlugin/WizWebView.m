@@ -15,7 +15,7 @@
 
 static CDVPlugin* viewManager;
 
-- (UIWebView *)createNewInstanceViewFromManager:(CDVPlugin *)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString *)src {
+- (UIWebView *)createNewInstanceViewFromManager:(CDVPlugin *)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString *)src withOptions:(NSDictionary *)options {
     
     viewManager = myViewManager;
     
