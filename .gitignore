@@ -6,6 +6,7 @@ example/ios/www/*
 !example/ios/www/cordova.js
 !example/ios/www/cordova_plugins.js	
 !example/ios/www/phonegap/plugin/wizViewManager/wizViewManager.js
+!example/ios/www/phonegap/plugin/wizViewMessenger/wizViewMessenger.js
 .idea/
 bin/
 gen/
