@@ -911,7 +911,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     // Now return the view to normal dimension, animating this transformation
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
-                         view.transform = CGAffineTransformTranslate(view.transform, view.frame.origin.x, screenHeight);
+                         view.transform = CGAffineTransformTranslate(view.transform, 0, screenHeight);
                      }
                      completion:^(BOOL finished) {
                          if (finished) {
@@ -926,7 +926,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
-                         view.transform = CGAffineTransformTranslate(view.transform, view.frame.origin.x, -screenHeight);
+                         view.transform = CGAffineTransformTranslate(view.transform, 0, -screenHeight);
                      }
                      completion:^(BOOL finished) { 
                          if (finished) {
@@ -963,7 +963,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     // now return the view to normal dimension, animating this tranformation
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
-                         view.transform = CGAffineTransformTranslate(view.transform, view.frame.origin.x, -screenHeight);
+                         view.transform = CGAffineTransformTranslate(view.transform, 0, -screenHeight);
                      }
                      completion:^(BOOL finished) {
                          if (finished) {
@@ -978,7 +978,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
-                         view.transform = CGAffineTransformTranslate(view.transform, view.frame.origin.x, screenHeight);
+                         view.transform = CGAffineTransformTranslate(view.transform, 0, screenHeight);
                      }
                      completion:^(BOOL finished) { 
                          if (finished) {
@@ -1015,7 +1015,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     // Now return the view to normal dimension, animating this tranformation
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
-                         view.transform = CGAffineTransformTranslate(view.transform, -screenWidth, view.frame.origin.y);
+                         view.transform = CGAffineTransformTranslate(view.transform, -screenWidth, 0);
                      }
                      completion:^(BOOL finished) {
                          if (finished) {
@@ -1030,7 +1030,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
-                         view.transform = CGAffineTransformTranslate(view.transform, screenWidth, view.frame.origin.y);
+                         view.transform = CGAffineTransformTranslate(view.transform, screenWidth, 0);
                      }
                      completion:^(BOOL finished) { 
                          if (finished) {
@@ -1070,7 +1070,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
    
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
-                         view.transform = CGAffineTransformTranslate(view.transform, screenWidth, view.frame.origin.y);
+                         view.transform = CGAffineTransformTranslate(view.transform, screenWidth, 0);
                      }
                      completion:^(BOOL finished) {
                          if (finished) {
@@ -1086,7 +1086,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
-                         view.transform = CGAffineTransformTranslate(view.transform, -screenWidth, view.frame.origin.y);
+                         view.transform = CGAffineTransformTranslate(view.transform, -screenWidth, 0);
                      }
                      completion:^(BOOL finished) { 
                          if (finished) {

@@ -26,6 +26,7 @@ static CDVPlugin* viewManager;
     wizView.hidden                 = NO;
     wizView.userInteractionEnabled = YES;
     wizView.opaque = NO;
+    wizView.alpha = 0;
     
     // Set scales to fit setting based on Cordova settings.
     NSString *path = [[NSBundle mainBundle] pathForResource:@"Cordova" ofType:@"plist"];
