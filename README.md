@@ -37,7 +37,7 @@ There is no limit to the amount of views you can create, but you cannot re-use t
 Options list;
 
 	{
-	    src: "http://google.com" [local or remote http]
+	    src: "http://google.com", [local or remote http]
 	    height: 300, [accepts "300px", "30%" - default : fills height] 
 	    width: 300, [accepts "300px", "30%" - default : fills width] 
 	    x: 0,
@@ -45,8 +45,9 @@ Options list;
 	    top: 0, [string, pixels or percent - default : 0]
 	    bottom: 0, [string, pixels or percent - default : 0]
 	    left: 0, [pixels or percent - default : 0]    
-	    right:0, [string, pixels or percent - default : 0]
-	}; 
+	    right: 0, [string, pixels or percent - default : 0]
+	    scalesPageToFit: true [Boolean (iOS only) - default: false]
+	};
 	
 **NOTE:- Android only accepts ints**
 
