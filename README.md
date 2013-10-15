@@ -1,7 +1,7 @@
 # phonegap-plugin-wizViewManager 
 
 - PhoneGap Version : 3.0
-- last update : 02/10/2013
+- last update : 15/10/2013
 
 # Description
 
@@ -63,7 +63,7 @@ See `create` API for a list of options.
 
 ### Show
 
-	wizViewManager.show(String viewName, JSONObject animOptions, Function success, Function fail);
+	wizViewManager.show(String viewName, JSONObject options, Function success, Function fail);
 
 **NOTE:- Animations not currently supported on Android, they are ignored**
 
@@ -75,32 +75,36 @@ A list of animations;
 - slideInFromBottom
 - fadeIn
 
-Example animation Object;
+Example options Object;
 
-	animOptions : {
-	    type: "fadeIn", 
-	    duration: "300"
+	options : {
+		animation: {
+		   	type: "fadeIn", 
+	    	duration: "300"
+	    }
 	};
 
 ### Hide
 
-	wizViewManager.hide(String viewName, JSONObject animOptions, Function success, Function fail);
+	wizViewManager.hide(String viewName, JSONObject options, Function success, Function fail);
 
 **NOTE:- Animations not currently supported on Android, they are ignored**
 
 A list of animations;
 
-- slideOutFromLeft
-- slideOutFromRight
-- slideOutFromTop
-- slideOutFromBottom
+- slideOutToLeft
+- slideOutToRight
+- slideOutToTop
+- slideOutToBottom
 - fadeOut
 
-Example animation Object;
+Example options Object;
 
-	animOptions : {
-    	type: "fadeOut",
-    	duration: "300" 
+	options : {
+		animation : {
+    		type: "fadeOut",
+    		duration: "300"
+    	}
 	}; 
 	
 ### Messaging
