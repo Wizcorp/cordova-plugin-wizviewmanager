@@ -125,7 +125,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         CGRect newRect = [self frameWithOptions:options];
 
         // Create new wizView
-        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect sourceToLoad:src];
+        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect sourceToLoad:src withOptions:options];
 
         // Add view name to our wizard view list
         [wizViewList setObject:newWizView forKey:viewName];
@@ -158,7 +158,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         CGRect screenRect = [[UIScreen mainScreen] bounds];
 
         // Create new wizView
-        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:screenRect sourceToLoad:@""];
+        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:screenRect sourceToLoad:@"" withOptions:options];
 
         // Add view name to our wizard view list
         [wizViewList setObject:newWizView forKey:viewName];

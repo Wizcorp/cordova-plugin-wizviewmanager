@@ -31,12 +31,16 @@ static CDVPlugin* viewManager;
     // Set scales to fit setting based on Cordova settings.
     NSString *path = [[NSBundle mainBundle] pathForResource:@"Cordova" ofType:@"plist"];
     NSMutableDictionary *cordovaConfig = [NSMutableDictionary dictionaryWithContentsOfFile:path];
-    NSNumber *scaleToFit = [cordovaConfig objectForKey:@"EnableViewportScale"];
-    if ( scaleToFit ) {
-        wizView.scalesPageToFit = [scaleToFit boolValue];
+    if ([options objectForKey:@"scalesPageToFit"]) {
+        wizView.scalesPageToFit = [[options objectForKey:@"scalesPageToFit"] boolValue];
     } else {
-        wizView.scalesPageToFit = NO;
-        NSLog(@"[WizWebView] ******* WARNING  - EnableViewportScale was not specified in Cordova.plist");
+        NSNumber *scaleToFit = [cordovaConfig objectForKey:@"EnableViewportScale"];
+        if ( scaleToFit ) {
+            wizView.scalesPageToFit = [scaleToFit boolValue];
+        } else {
+            wizView.scalesPageToFit = NO;
+            NSLog(@"[WizWebView] ******* WARNING  - EnableViewportScale was not specified in Cordova.plist");
+        }
     }
     
     NSLog(@"[WizWebView] ******* building new view SOURCE IS URL? - %i", [self validateUrl:src]);
