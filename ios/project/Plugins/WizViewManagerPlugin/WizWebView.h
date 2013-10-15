@@ -15,6 +15,6 @@
 
 @property (nonatomic, retain) UIWebView *wizView;
 
--(UIWebView *)createNewInstanceViewFromManager:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src;
+-(UIWebView *)createNewInstanceViewFromManager:(CDVPlugin*)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString*)src withOptions:(NSDictionary *)options;
 
 @end
