@@ -18,12 +18,12 @@ PhoneGap plugin for
 
 ## Install (with Plugman - example iOS) 
 
-	cordova plugin add https://github.com/Wizcorp/phonegap-plugin-wizSpinner/tree/v3.0
+	cordova plugin add https://github.com/Wizcorp/phonegap-plugin-wizViewManager
 	cordova build ios
 	
 	< or >
 	
-	phonegap local plugin add https://github.com/Wizcorp/phonegap-plugin-wizSpinner
+	phonegap local plugin add https://github.com/Wizcorp/phonegap-plugin-wizViewManager
 	phonegap build ios
 
 ## APIs
