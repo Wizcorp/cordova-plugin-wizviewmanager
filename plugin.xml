@@ -21,7 +21,7 @@
     <js-module src="www/phonegap/plugin/wizViewManager/wizViewManager.js" name="wizViewManagerPlugin" target="phonegap/plugin/wizViewManager/wizViewManager.js">
         <clobbers target="window.wizViewManager" />
     </js-module>
-    <js-module src="www/phonegap/plugin/wizViewMessenger/wizViewMessenger.js" name="wizViewMessenger" target="phonegap/plugin/wizViewMessenger/wizViewMessenger.js">
+    <js-module src="www/phonegap/plugin/wizViewManager/wizViewMessenger.js" name="wizViewMessenger" target="phonegap/plugin/wizViewManager/wizViewMessenger.js">
         <clobbers target="window.wizViewMessenger" />
     </js-module>
     
