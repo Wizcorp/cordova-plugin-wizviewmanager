@@ -21,6 +21,7 @@
 @property (nonatomic, retain) UIView *canvasView;
 
 + (NSMutableDictionary *)getViews;
++ (void)removeViewLoadedCallback:(NSString *)callbackId;
 + (NSMutableDictionary *)getViewLoadedCallbackId;
 + (WizViewManagerPlugin *)instance;
 
