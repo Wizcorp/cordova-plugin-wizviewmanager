@@ -1,4 +1,4 @@
-/* WizViewManager - Handle Popup UIViews and communtications.
+/* WizViewManager - Handle Popup UIWebViews and communications.
  *
  * @author Ally Ogilvie
  * @copyright Wizcorp Inc. [ Incorporated Wizards ] 2013
@@ -18,7 +18,7 @@
 @property (nonatomic, retain) NSString *showViewCallbackId;
 @property (nonatomic, retain) NSString *hideViewCallbackId;
 @property (nonatomic, readwrite, assign) id<UIWebViewDelegate> webviewDelegate;
-@property (nonatomic, retain) UIView *canvasView;
+@property (nonatomic, retain) NSArray *supportedFileList;
 
 + (NSMutableDictionary *)getViews;
 + (NSMutableDictionary *)getViewLoadedCallbackId;

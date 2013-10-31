@@ -5,7 +5,7 @@
  * @file WizWebView.m for PhoneGap
  *
  */ 
-
+#import "WizDebugLog.h"
 #import "WizWebView.h"
 #import "WizViewManagerPlugin.h"
 
@@ -14,6 +14,10 @@
 @synthesize wizView;
 
 static CDVPlugin* viewManager;
+
+- (NSDictionary *)throwError:(int)errorCode description:(NSString *)description {
+    return @{ @"code": [NSNumber numberWithInt:errorCode], @"message": description };
+}
 
 - (UIWebView *)createNewInstanceViewFromManager:(CDVPlugin *)myViewManager newBounds:(CGRect)webViewBounds sourceToLoad:(NSString *)src withOptions:(NSDictionary *)options {
     
@@ -43,7 +47,7 @@ static CDVPlugin* viewManager;
         }
     }
     
-    NSLog(@"[WizWebView] ******* building new view SOURCE IS URL? - %i", [self validateUrl:src]);
+    WizLog(@"[WizWebView] ******* building new view SOURCE IS URL? - %i", [self validateUrl:src]);
 
     if ([self validateUrl:src]) {
         // load new source
@@ -90,51 +94,49 @@ static CDVPlugin* viewManager;
 }
 
 - (BOOL) validateUrl: (NSString *) candidate {
-    NSString* lowerCased = [candidate lowercaseString];
+    NSString *lowerCased = [candidate lowercaseString];
     return [lowerCased hasPrefix:@"http://"] || [lowerCased hasPrefix:@"https://"];
 }
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
     
-    NSMutableDictionary * callbackDict = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViewLoadedCallbackId]];
+    NSMutableDictionary *callbackDict = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViewLoadedCallbackId]];
     
-    NSLog(@"[WizViewManager] ******* viewLoadedCallbackId : %@ ", callbackDict);
-
-    NSString *messageString = [error localizedFailureReason] ?
-                                [NSString stringWithFormat:@"error - %@ : %@", [error localizedDescription], [error localizedFailureReason]] :
-                                [NSString stringWithFormat:@"error - %@", [error localizedDescription]];
-    CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:messageString];
+    WizLog(@"[WizViewManager] ******* viewLoadedCallbackId : %@ ", callbackDict);
     
+    CDVPluginResult *pluginResult;
     if ([callbackDict objectForKey:@"viewLoadedCallback"]) {
-        NSString* callbackId = [callbackDict objectForKey:@"viewLoadedCallback"];
+        NSString *callbackId = [callbackDict objectForKey:@"viewLoadedCallback"];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:203 description:@"Loading source error"]];
         [viewManager writeJavascript:[pluginResult toErrorCallbackString:callbackId]];
     }
     
     if ([callbackDict objectForKey:@"updateCallback"]) {
-        NSString* callbackId = [callbackDict objectForKey:@"updateCallback"];
+        NSString *callbackId = [callbackDict objectForKey:@"updateCallback"];
+        pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:103 description:@"Loading source error"]];
         [viewManager writeJavascript:[pluginResult toErrorCallbackString:callbackId]];
     }
 }
 
 - (void)webViewDidFinishLoad:(UIWebView *)theWebView {
 	// view is loaded
-    NSLog(@"[WizWebView] ******* view is LOADED! " );
+    NSLog(@"[WizWebView] ******* webViewDidFinishLoad" );
 
     // to send data straight to mainView onLoaded via phonegap callback
      
     NSMutableDictionary * callbackDict = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViewLoadedCallbackId]];
     
-    NSLog(@"[WizViewManager] ******* viewLoadedCallbackId : %@ ", callbackDict); 
+    WizLog(@"[WizViewManager] ******* viewLoadedCallbackId : %@ ", callbackDict);
     
     if ([callbackDict objectForKey:@"viewLoadedCallback"]) {
-        NSString* callbackId = [callbackDict objectForKey:@"viewLoadedCallback"];
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        NSString *callbackId = [callbackDict objectForKey:@"viewLoadedCallback"];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
     }
     
     if ([callbackDict objectForKey:@"updateCallback"]) {
-        NSString* callbackId = [callbackDict objectForKey:@"updateCallback"];
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        NSString *callbackId = [callbackDict objectForKey:@"updateCallback"];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
     }
     
