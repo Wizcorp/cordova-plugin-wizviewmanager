@@ -21,6 +21,7 @@
 @property (nonatomic, retain) NSArray *supportedFileList;
 
 + (NSMutableDictionary *)getViews;
++ (void)removeViewLoadedCallback:(NSString *)callbackId;
 + (NSMutableDictionary *)getViewLoadedCallbackId;
 + (WizViewManagerPlugin *)instance;
 

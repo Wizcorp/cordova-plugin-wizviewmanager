@@ -86,6 +86,11 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     return viewLoadedCallbackId;
 }
 
++ (void)removeViewLoadedCallback:(NSString *)callbackId {
+    // Remove this object for the key specified
+    [viewLoadedCallbackId removeObjectForKey:callbackId];
+}
+
 + (WizViewManagerPlugin *)instance {
 	return wizViewManagerInstance;
 }
@@ -134,10 +139,10 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         options = [command.arguments objectAtIndex:1];
     }
     
-    WizLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@", viewName, options);
+    NSLog(@"[WizViewManagerPlugin] ******* createView name:  %@ withOptions: %@, command.callbackId: %@", viewName, options, command.callbackId);
 
     // For a UIWebView we should push the callbackId to stack to use later after source is loaded.
-    [viewLoadedCallbackId setObject:command.callbackId forKey:@"updateCallback"];
+    [viewLoadedCallbackId setObject:command.callbackId forKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
 
     // Create a new wizWebView with options (if specified)
     UIWebView *newWizView;
@@ -182,7 +187,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         CGRect newRect = [self frameWithOptions:options];
 
         // Create new wizView
-        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect sourceToLoad:src withOptions:options];
+        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect viewName:viewName sourceToLoad:src withOptions:options];
         if ([newWizView isKindOfClass:[NSNull class]]) {
             // Error!
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
@@ -190,7 +195,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
             [self writeJavascript:[pluginResult toErrorCallbackString:command.callbackId]];
             return;
         }
-
+        
         // Add view name to our wizard view list
         [wizViewList setObject:newWizView forKey:viewName];
 
@@ -222,7 +227,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         CGRect screenRect = [[UIScreen mainScreen] bounds];
 
         // Create new wizView
-        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:screenRect sourceToLoad:@"" withOptions:options];
+        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:screenRect viewName:viewName sourceToLoad:@"" withOptions:options];
         if ([newWizView isKindOfClass:[NSNull class]]) {
             // Error!
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
@@ -568,7 +573,8 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
             // UIWebView requires we keep the callback to be accessed by the UIWebView itself
             // to return later once finished parsing script
-            [viewLoadedCallbackId setObject:command.callbackId forKey:@"viewLoadedCallback"];
+            [viewLoadedCallbackId setObject:command.callbackId forKey:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]];
+
             UIWebView *targetWebView = [wizViewList objectForKey:viewName];
 
             // Check source content
