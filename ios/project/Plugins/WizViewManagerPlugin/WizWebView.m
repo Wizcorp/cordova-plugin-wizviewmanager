@@ -15,6 +15,15 @@
 
 static CDVPlugin* viewManager;
 
+- (void)dealloc {
+    wizView.delegate = nil;
+}
+
+- (void) viewDidLoad
+{
+    wizView.delegate = self;
+}
+
 - (NSDictionary *)throwError:(int)errorCode description:(NSString *)description {
     return @{ @"code": [NSNumber numberWithInt:errorCode], @"message": description };
 }
@@ -46,7 +55,16 @@ static CDVPlugin* viewManager;
             NSLog(@"[WizWebView] ******* WARNING  - EnableViewportScale was not specified in Cordova.plist");
         }
     }
-    
+
+    wizView.bounds = webViewBounds;
+
+    [wizView setFrame:CGRectMake(
+            webViewBounds.origin.x,
+            webViewBounds.origin.y,
+            webViewBounds.size.width,
+            webViewBounds.size.height
+    )];
+
     WizLog(@"[WizWebView] ******* building new view SOURCE IS URL? - %i", [self validateUrl:src]);
 
     if ([self validateUrl:src]) {
@@ -64,31 +82,55 @@ static CDVPlugin* viewManager;
         [request setNetworkServiceType:NSURLNetworkServiceTypeVideo];
 
         [wizView loadRequest:request];
-        
+
     } else {
-        NSLog(@"SOURCE NOT URL %@", src);
-        NSString *fileString = src;
-        
-        NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
-        
-        NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
-        
-        [wizView loadHTMLString: newHTMLString baseURL: newURL];
-        
-        [newHTMLString release];
-        [newURL release];                    
+        // Not a URL, a local resource, check file extension
+        WizViewManagerPlugin *_WizViewManagerPlugin = [WizViewManagerPlugin instance];
+        if (![_WizViewManagerPlugin validateFileExtension:src]) {
+            NSLog(@"Invalid extension type!");
+            return NULL;
+        }
+
+        NSURL *url;
+        // Is relative path? Try to load from cache
+        NSArray *pathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+        NSString *cachePath    = [pathList  objectAtIndex:0];
+        url = [[NSURL alloc] initFileURLWithPath:src isDirectory:cachePath];
+        NSString *cacheSrc = [NSString stringWithFormat:@"%@/%@", cachePath, src];
+        WizLog(@"check: %@", cacheSrc);
+        if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:cacheSrc]) {
+            // Not in cache, try main bundle
+            url = [[NSURL alloc] initFileURLWithPath:src isDirectory:[NSBundle mainBundle]];
+            NSString *bundleSrc = [NSString stringWithFormat:@"%@/%@", [NSBundle mainBundle].bundlePath, src];
+            WizLog(@"check: %@", bundleSrc);
+            if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:bundleSrc]) {
+                // Not in main bundle, try full path
+                WizLog(@"check: %@", src);
+                if ([[NSFileManager defaultManager] fileExistsAtPath:src]) {
+                    // Valid full path source, load it
+                    url = [[NSURL alloc] initFileURLWithPath:src];
+                    WizLog(@"Full path url as string %@", url.absoluteString);
+                    [wizView loadRequest:[NSURLRequest requestWithURL:url]];
+                } else {
+                    NSLog(@"Load Error: invalid source");
+                    if (![_WizViewManagerPlugin validateFileExtension:src]) {
+                        NSLog(@"Load Error: No or NULL source");
+                        return NULL;
+                    }
+                }
+            } else {
+                url = [[NSURL alloc] initFileURLWithPath:bundleSrc];
+                WizLog(@"Relative url in bundle %@", url.absoluteString);
+                [wizView loadRequest:[NSURLRequest requestWithURL:url]];
+            }
+        } else {
+            url = [[NSURL alloc] initFileURLWithPath:cacheSrc];
+            WizLog(@"Relative url in cache %@", url.absoluteString);
+            [wizView loadRequest:[NSURLRequest requestWithURL:url]];
+        }
+        [url release];
     }
 
-    
-    wizView.bounds = webViewBounds;
-    
-    [wizView setFrame:CGRectMake(
-                                 webViewBounds.origin.x,
-                                 webViewBounds.origin.y,
-                                 webViewBounds.size.width,
-                                 webViewBounds.size.height
-                                 )];
-    
     // add this view as subview after creating instance in parent class.
     return wizView;
 }
@@ -99,10 +141,14 @@ static CDVPlugin* viewManager;
 }
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error {
-    
+
+    if (error.code == -999) {
+        // Ignore this code. It's thrown when the UIWebView is asked to load new content before finishing to load previous request
+        return;
+    }
     NSMutableDictionary *callbackDict = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViewLoadedCallbackId]];
     
-    WizLog(@"[WizViewManager] ******* viewLoadedCallbackId : %@ ", callbackDict);
+    WizLog(@"[WizViewManager] ******* didFailLoadWithError Code : %i Description : %@ Failure : %@", error.code, error.localizedDescription, error.localizedFailureReason);
     
     CDVPluginResult *pluginResult;
     if ([callbackDict objectForKey:@"viewLoadedCallback"]) {
@@ -120,7 +166,7 @@ static CDVPlugin* viewManager;
 
 - (void)webViewDidFinishLoad:(UIWebView *)theWebView {
 	// view is loaded
-    NSLog(@"[WizWebView] ******* webViewDidFinishLoad" );
+    WizLog(@"[WizWebView] ******* webViewDidFinishLoad" );
 
     // to send data straight to mainView onLoaded via phonegap callback
      

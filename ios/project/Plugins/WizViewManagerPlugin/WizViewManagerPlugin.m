@@ -10,8 +10,6 @@
 #import "WizWebView.h"
 #import "WizDebugLog.h"
 
-#import <Cordova/CDVViewController.h>
-
 @implementation WizViewManagerPlugin
 
 @synthesize showViewCallbackId, hideViewCallbackId, webviewDelegate, supportedFileList;
@@ -36,18 +34,19 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     }
     
     // Build list of supported file types for UIWebView
-    supportedFileList = @[ @".doc", @".docx",
-                           @".xls", @".xlsx", @".xlsb", @".xlsm",
-                           @".ppt", @".pptx",
-                           @".txt", @".rtf", @".csv",
-                           @".md",
-                           @".pdf",
-                           @".pages", @".numbers", @".key", @".keynote",
-                           @".h", @".m", @".c", @".cc", @".cpp",
-                           @".php", @".java", @".html", @".htm", @".xml", @".css", @".js",
-                           @".m4a", @".mp3", @".wav", @".ogm", @".au",
-                           @".mpg", @".qt" ,@".mov" ];
-    
+    supportedFileList = [[NSArray alloc] initWithObjects:@".doc", @".docx",
+                                       @".xls", @".xlsx", @".xlsb", @".xlsm",
+                                       @".ppt", @".pptx",
+                                       @".txt", @".rtf", @".csv",
+                                       @".md",
+                                       @".pdf",
+                                       @".pages", @".numbers", @".key", @".keynote",
+                                       @".h", @".m", @".c", @".cc", @".cpp",
+                                       @".php", @".java", @".html", @".htm", @".xml", @".css", @".js",
+                                       @".m4a", @".mp3", @".wav", @".ogm", @".au",
+                                       @".mpg", @".qt" , @".mov",
+                                       @".jpg", @".png", @".jpeg", @"gif", @".tif", nil];
+
     // This holds all our views, first we add MainView (PhoneGap view) to our view list by default
     wizViewList = [[NSMutableDictionary alloc ] initWithObjectsAndKeys: theWebView, @"mainView", nil];
     
@@ -72,6 +71,10 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     return self;
 }
 
+- (void)dealloc {
+    [supportedFileList release];
+}
+
 
 + (NSMutableDictionary *)getViews {
     // return instance of current view list
@@ -86,15 +89,16 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 + (WizViewManagerPlugin *)instance {
 	return wizViewManagerInstance;
 }
+
 /*
  WizViewManager Errors:
- 001: View not found
- 102: Create Error - Unsupported file extension
- 103: Create Error - Loading source error
- 200: Load Error - No or NULL source
- 201: Load Error - Unsupported file extension
- 203: Load Error - Loading source error
- 400: Show Error - Target view already shown
+ 0: View not created. Check log output.
+ 1: View not found.
+ 2: Unsupported file extension.
+ 3: Loading source error.
+ 4: No or NULL source.
+ 5: Target view already shown.
+ 6: Source could not be loaded. Path is incorrect or file does not exist.
  */
 - (NSDictionary *)throwError:(int)errorCode description:(NSString *)description {
     return @{ @"code": [NSNumber numberWithInt:errorCode], @"message": description };
@@ -144,12 +148,31 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         NSString *src = @"";
         if ([options objectForKey:@"src"] && ![[options objectForKey:@"src"] isKindOfClass:[NSNull class]]  ) {
             src = [options objectForKey:@"src"];
-            if (![self validateUrl:src]) {
-                // If not a URL check file extension
+
+            if ([self validateUrl:src]) {
+                // Create NSUrl and check content type
+                NSURL *url = [[NSURL alloc] initWithString:src];
+                // Get absolute path and check extension
+                if ([url.path length] > 0) {
+                    // We are not just loading a domain check extension in the path
+                    if (![self validateFileExtension:url.path]) {
+                        WizLog(@"Invalid extension type!");
+                        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                                      messageAsDictionary:[self throwError:0 description:@"View not created. Check log output."] ];
+                        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                        [url release];
+                        return;
+                    }
+                }
+
+                [url release];
+
+            } else {
+                // Not a URL, check file extension
                 if (![self validateFileExtension:src]) {
                     WizLog(@"Invalid extension type!");
                     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                                                                  messageAsDictionary:[self throwError:102 description:@"Invalid extension type"] ];
+                                                                  messageAsDictionary:[self throwError:0 description:@"View not created. Check log output."] ];
                     [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
                     return;
                 }
@@ -160,6 +183,13 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
         // Create new wizView
         newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect sourceToLoad:src withOptions:options];
+        if ([newWizView isKindOfClass:[NSNull class]]) {
+            // Error!
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                          messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
+            [self writeJavascript:[pluginResult toErrorCallbackString:command.callbackId]];
+            return;
+        }
 
         // Add view name to our wizard view list
         [wizViewList setObject:newWizView forKey:viewName];
@@ -193,10 +223,16 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
         // Create new wizView
         newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:screenRect sourceToLoad:@"" withOptions:options];
+        if ([newWizView isKindOfClass:[NSNull class]]) {
+            // Error!
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                          messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
+            [self writeJavascript:[pluginResult toErrorCallbackString:command.callbackId]];
+            return;
+        }
 
         // Add view name to our wizard view list
         [wizViewList setObject:newWizView forKey:viewName];
-
 
         // Move view out of display
         [newWizView setFrame:CGRectMake(
@@ -224,7 +260,8 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         [self hideWebView:command];
     } else {
         // View not found
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:001 description:@"View not found"]];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
+                [self throwError:1 description:@"View not found"]];
         [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
         return;
     }
@@ -351,7 +388,8 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
     } else {
         
-        CDVPluginResult *pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:001 description:@"View not found"]];
+        CDVPluginResult *pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
+                [self throwError:1 description:@"View not found"]];
         [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId]];
         
     }
@@ -366,7 +404,8 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         [self showWebView:command];
     } else {
         // View not found
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:001 description:@"View not found"]];
+        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
+                [self throwError:1 description:@"View not found"]];
         [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
         return;
     }
@@ -494,97 +533,137 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
             // Target already showing
             WizLog(@"[WizViewManager] ******* target already shown! ");
             CDVPluginResult *pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                                                             messageAsDictionary:[self throwError:400 description:@"Target view already shown"]];
+                                                             messageAsDictionary:[self throwError:5 description:@"Target view already shown"]];
             [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId ]];
             self.showViewCallbackId = nil;
         }
 
     } else {
                 
-        CDVPluginResult *pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:001 description:@"View not found"]];
+        CDVPluginResult *pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:1 description:@"View not found"]];
         [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId]];
     }
 }
 
 - (void)load:(CDVInvokedUrlCommand *)command {
-    // assign arguments
+    // Assign arguments
     NSString *viewName    = [command.arguments objectAtIndex:0];
     NSDictionary *options = [command.arguments objectAtIndex:1];
 
     WizLog(@"[WizViewManager] ******* Load into view : %@ - viewlist -> %@ options %@", viewName, wizViewList, options);
 
-    if (options) {
-       
+    if (options && ![options isKindOfClass:[NSNull class]]  ) {
+
         // Search for view
-        if ([wizViewList objectForKey:viewName]) {
-            
-            if ([options objectForKey:@"src"] && ![[options objectForKey:@"src"] isKindOfClass:[NSNull class]]  ) {
-                WizLog(@"[WizViewManager] ******* loading source to view : %@ ", viewName);
-            } else {
-                WizLog(@"Load Error: no source");
-                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:200 description:@"Load Error: No or NULL source"]];
-                [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
-                return;
-            }
-            
+        if (![wizViewList objectForKey:viewName]) {
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:1 description:@"View not found"]];
+            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+        }
+
+        if ([options objectForKey:@"src"] && ![[options objectForKey:@"src"] isKindOfClass:[NSNull class]]  ) {
+            WizLog(@"[WizViewManager] ******* loading source to view : %@ ", viewName);
+
             NSString *src = [options objectForKey:@"src"];
+            NSURL *url = [[NSURL alloc] initWithString:src];
 
             // UIWebView requires we keep the callback to be accessed by the UIWebView itself
             // to return later once finished parsing script
             [viewLoadedCallbackId setObject:command.callbackId forKey:@"viewLoadedCallback"];
-
             UIWebView *targetWebView = [wizViewList objectForKey:viewName];
 
+            // Check source content
             if ([self validateUrl:src]) {
-                // load new valid url source
-                // NSLog(@"SOURCE IS URL %@", src);
-                NSURL *newURL = [NSURL URLWithString:src];
 
+                // Create NSUrl and check content type
+
+                // Get absolute path and check extension
+                if ([url.path length] > 0) {
+                    // We are not just loading a domain, check extension in the path
+                    if ([url.pathExtension length] > 0) {
+                        if (![self validateFileExtension:url.path]) {
+                            WizLog(@"Invalid extension type!");
+                            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                                          messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
+                            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                            [url release];
+                            return;
+                        }
+                    }
+                }
+
+                // Valid source, load it
                 // JC- Setting the service type to video somehow seems to
                 // disable the reuse of this connection for pipelining new
                 // HTTP requests, which apparently fixes the tying of these
                 // requests to the ajax connection used for the message streams
                 // (which is initiated from the Javascript realm).
-                NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:newURL];
+                NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
                 [request setNetworkServiceType:NSURLNetworkServiceTypeVideo];
 
                 [targetWebView loadRequest:request];
+
+                [url release];
+
             } else {
-                
-                // If not a URL check file extension
-                if (![self validateFileExtension:[options objectForKey:@"src"]]) {
+                // Not a URL, a local resource, check file extension
+                if (![self validateFileExtension:src]) {
                     WizLog(@"Invalid extension type!");
                     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                                                                  messageAsDictionary:[self throwError:201 description:@"Invalid extension type"] ];
+                                                                  messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
                     [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
                     return;
                 }
-                
-                // NSLog(@"SOURCE NOT URL %@", src);
-                NSString *fileString = src;
 
-                NSString *newHTMLString = [[NSString alloc] initWithContentsOfFile: fileString encoding: NSUTF8StringEncoding error: NULL];
-
-                NSURL *newURL = [[NSURL alloc] initFileURLWithPath: fileString];
-
-                [targetWebView loadHTMLString: newHTMLString baseURL: newURL];
-
-                [newHTMLString release];
-                [newURL release];
+                NSURL *url;
+                // Is relative path? Try to load from cache
+                NSArray *pathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+                NSString *cachePath    = [pathList  objectAtIndex:0];
+                url = [[NSURL alloc] initFileURLWithPath:src isDirectory:cachePath];
+                NSString *cacheSrc = [NSString stringWithFormat:@"%@/%@", cachePath, src];
+                WizLog(@"check: %@", cacheSrc);
+                if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:cacheSrc]) {
+                    // Not in cache, try main bundle
+                    url = [[NSURL alloc] initFileURLWithPath:src isDirectory:[NSBundle mainBundle]];
+                    NSString *bundleSrc = [NSString stringWithFormat:@"%@/%@", [NSBundle mainBundle].bundlePath, src];
+                    WizLog(@"check: %@", bundleSrc);
+                    if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:bundleSrc]) {
+                        // Not in main bundle, try full path
+                        WizLog(@"check: %@", src);
+                        if ([[NSFileManager defaultManager] fileExistsAtPath:src]) {
+                            // Valid full path source, load it
+                            url = [[NSURL alloc] initFileURLWithPath:src];
+                            WizLog(@"Full path url as string %@", url.absoluteString);
+                            [targetWebView loadRequest:[NSURLRequest requestWithURL:url]];
+                        } else {
+                            NSLog(@"Load Error: invalid source");
+                            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
+                                    [self throwError:4 description:@"Load Error: No or NULL source"]];
+                            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                        }
+                    } else {
+                        url = [[NSURL alloc] initFileURLWithPath:bundleSrc];
+                        WizLog(@"Relative url in bundle %@", url.absoluteString);
+                        [targetWebView loadRequest:[NSURLRequest requestWithURL:url]];
+                    }
+                } else {
+                    url = [[NSURL alloc] initFileURLWithPath:cacheSrc];
+                    WizLog(@"Relative url in cache %@", url.absoluteString);
+                    [targetWebView loadRequest:[NSURLRequest requestWithURL:url]];
+                }
+                [url release];
             }
-
         } else {
-            
-            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:001 description:@"View not found"]];
+            NSLog(@"Load Error: no source");
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
+                    [self throwError:4 description:@"Load Error: No or NULL source"]];
             [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
-            
+            return;
         }
-        
     } else {
-        
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:002 description:@"No options passed"]];
+        NSLog(@"No options passed");
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
+                [self throwError:4 description:@"No options passed"]];
         [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
-        
     }
     
     // For UIWebViews; all view list arrays are updated once the source has been loaded.
@@ -619,12 +698,12 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
     } else {
         
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:001 description:@"View not found"]];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
+                [self throwError:1 description:@"View not found"]];
         [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
     }
     
 }
-
 
 - (CGRect)frameWithOptions:(NSDictionary *)options {
 
@@ -722,7 +801,8 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         [self writeJavascript: [pluginResult toSuccessCallbackString:command.callbackId]];
         
     } else {
-        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:001 description:@"View not found"]];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
+                [self throwError:1 description:@"View not found"]];
         [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
     }
 }
@@ -820,7 +900,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 }
 
 - (BOOL)validateFileExtension:(NSString *)candidate {
-    // Check the source filetype to avoid load errors
+    // Check the source file type to avoid load errors
     NSString *extension = [candidate lastPathComponent];
     extension = [[extension componentsSeparatedByString:@"."] lastObject];
     extension = [NSString stringWithFormat:@".%@", extension];
@@ -831,7 +911,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     for (int i = 0; i < [supportedFileList count]; i++) {
         NSString *try_extension = (NSString *)supportedFileList[i];
         // Make check
-        if ([try_extension isEqualToString:extension]) {
+        if ([try_extension isEqualToString:[extension lowercaseString]]) {
             // Extension is valid
             valid = TRUE;
             break;
@@ -1022,7 +1102,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                               )];
     [view setHidden:FALSE];
     view.alpha = 1.0;
-    // now return the view to normal dimension, animating this tranformation
+    // now return the view to normal dimension, animating this transformation
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
                          view.transform = CGAffineTransformTranslate(view.transform, 0, -screenHeight);
@@ -1074,7 +1154,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                               )];
     [view setHidden:FALSE];
     view.alpha = 1.0;
-    // Now return the view to normal dimension, animating this tranformation
+    // Now return the view to normal dimension, animating this transformation
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
                          view.transform = CGAffineTransformTranslate(view.transform, -screenWidth, 0);
@@ -1127,7 +1207,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                               )];
     [view setHidden:FALSE];
     [view setAlpha:1.0];
-    // Now return the view to normal dimension, animating this tranformation
+    // Now return the view to normal dimension, animating this transformation
     
    
     [UIView animateWithDuration:secs delay:0.0 options:option
@@ -1184,7 +1264,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                )];
     [view setHidden:FALSE];
     // [self addSubview:view];
-    // Now return the view to normal dimension, animating this tranformation
+    // Now return the view to normal dimension, animating this transformation
     [UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{
                          view.transform = CGAffineTransformScale(view.transform, 100.0, 100.0);

@@ -42,8 +42,9 @@
  INTERNALS
  
  **/
-- (void)sendMessage:(NSString*)viewName withMessage:(NSString*)message;
+- (void)sendMessage:(NSString *)viewName withMessage:(NSString*)message;
 - (void)updateViewList;
+- (BOOL)validateFileExtension:(NSString *)candidate;
 
 /**
  
