@@ -37,7 +37,7 @@ There is no limit to the amount of views you can create, but you cannot re-use t
 Options list;
 
 	{
-	    src: "http://google.com", [local or remote http]
+	    src: "http://google.com", [local or remote http, for valid URI paths see Load API]
 	    height: 300, [accepts "300px", "30%" - default : fills height] 
 	    width: 300, [accepts "300px", "30%" - default : fills width] 
 	    x: 0,
@@ -55,12 +55,27 @@ Options list;
 
 	wizViewManager.load(String viewName, String URI or URL, Function success, Function fail);
 	
+**Valid URI and URLs** : URIs are first resolved to cache, secondly bundle, then loaded exactly as passed.
+
+**URIs**
+
+- Relative to ```/www``` eg. A file at ```<my app assets>/www/image/file.png``` should be loaded as ```src: "image/file.png"```
+	
+- Relative to root of cache folder eg. A cached file at (Android example) ```data/data/<my app package>/cache/image/file.png``` (iOS example) ```/user/var/..long path../293303D0-2009-4451-A4F8-1FADAEE67250/Library/Caches/<bundle id>/image/file.png``` should be loaded as ```src: "image/file.png"```
+
+- Full path to file. Alternatively any other full system file path can be loaded eg. A file in the cache or other folder could be loaded as (Android example) ```src: "data/data/<my app package>/cache/image/file.png"``` 
+
+**URIs**
+
+- Loading files other than; ```.html .htm``` is subject to a file whitelist per platform to ensure the browser can load the file. If the file cannot be loaded, the error callback is invoked.
+
+	
 	
 ### Set Layout
 	
 	wizViewManager.setLayout(String viewName, JSONObject options, Function success, Function fail);
 
-See `create` API for a list of options.
+See `Create` API for a list of options.
 
 ### Show
 
