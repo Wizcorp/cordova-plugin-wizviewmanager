@@ -45,7 +45,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                                        @".php", @".java", @".html", @".htm", @".xml", @".css", @".js",
                                        @".m4a", @".mp3", @".wav", @".ogm", @".au",
                                        @".mpg", @".qt" , @".mov",
-                                       @".jpg", @".png", @".jpeg", @"gif", @".tif", nil];
+                                       @".jpg", @".png", @".jpeg", @"gif", @".tif", @".", nil];
 
     // This holds all our views, first we add MainView (PhoneGap view) to our view list by default
     wizViewList = [[NSMutableDictionary alloc ] initWithObjectsAndKeys: theWebView, @"mainView", nil];
