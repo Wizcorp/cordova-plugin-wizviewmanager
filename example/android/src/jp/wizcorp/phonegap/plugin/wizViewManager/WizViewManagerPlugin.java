@@ -608,8 +608,6 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                             new Runnable() {
                                 public void run() {
                                     targetView.load(url, load_cb);
-                                    // targetView.loadData(url, "text/html", "utf-8");
-                                    // targetView.loadData("file://"+url,"text/html", "utf-8" );
                                 }
                             }
                     );
@@ -689,16 +687,6 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
         int _right = 0;
         int _left = 0;
-
-        if (settings.has("src")) {
-            try {
-                url = settings.getString("src");
-                webView.loadUrl(url);
-            } catch (JSONException e) {
-                // default
-                // nothing to load
-            }
-        }
 
         if (settings.has("height")) {
             try {
