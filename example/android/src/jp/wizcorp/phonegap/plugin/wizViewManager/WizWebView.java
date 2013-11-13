@@ -13,10 +13,12 @@
 package jp.wizcorp.phonegap.plugin.wizViewManager;
 
 import android.app.Activity;
+import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.webkit.MimeTypeMap;
 import android.widget.RelativeLayout;
 import org.apache.cordova.CallbackContext;
 import org.json.JSONException;
@@ -30,6 +32,8 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -40,6 +44,7 @@ public class WizWebView extends WebView  {
 	private String TAG = "WizWebView";
     private CallbackContext create_cb;
     private CallbackContext load_cb;
+    private Context mContext;
 
     static final FrameLayout.LayoutParams COVER_SCREEN_GRAVITY_CENTER =
             new FrameLayout.LayoutParams(
@@ -50,6 +55,8 @@ public class WizWebView extends WebView  {
     public WizWebView(String viewName, JSONObject settings, Context context, CallbackContext callbackContext) {
         // Constructor method
         super(context);
+
+        mContext = context;
 
         Log.d("WizWebView", "[WizWebView] *************************************");
         Log.d("WizWebView", "[WizWebView] building - new Wizard View");
@@ -83,14 +90,11 @@ public class WizWebView extends WebView  {
         this.setBackgroundColor(Color.TRANSPARENT);
         if (Build.VERSION.SDK_INT >= 11) this.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
 
-        /*
-		 *	Override url loading on WebViewClient
-		 */
-        this.setWebViewClient(new WebViewClient(){
+        // Override url loading on WebViewClient
+        this.setWebViewClient(new WebViewClient () {
             @Override
-            public boolean shouldOverrideUrlLoading(WebView wView, String url)
-            {
-                Log.d("WizWebView", "[WizWebView] ****** "+ url);
+            public boolean shouldOverrideUrlLoading(WebView wView, String url) {
+                Log.d("WizWebView", "[WizWebView] ****** " + url);
 
                 String[] urlArray;
                 String splitter = "://";
@@ -106,9 +110,7 @@ public class WizWebView extends WebView  {
                     // Split url by only 2 again to make sure we only spit at the first "?"
                     msgData = urlArray[1].split(splitter);
 
-
                     // target View = msgData[0] and message = msgData[1]
-
                     // Get webview list from View Manager
                     JSONObject viewList = WizViewManagerPlugin.getViews();
 
@@ -121,8 +123,8 @@ public class WizWebView extends WebView  {
                             // send data to mainView
                             String data2send = msgData[1];
                             data2send = data2send.replace("'", "\\'");
-                            Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> "+data2send );
-                            targetView.loadUrl("javascript:(wizMessageReceiver('"+data2send+"'))");
+                            Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> " + data2send );
+                            targetView.loadUrl("javascript:(wizMessageReceiver('" + data2send + "'))");
 
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
@@ -155,11 +157,20 @@ public class WizWebView extends WebView  {
                     load_cb = null;
                 }
             }
+
+            public void onReceivedError(WebView view, int errorCod, String description, String failingUrl) {
+                Log.e(TAG, "Error: Cannot load " + failingUrl + " \n Reason: " + description);
+                if (create_cb != null) {
+                    create_cb.error(description);
+                    // Callback used, don't call it again.
+                    create_cb = null;
+                }
+            }
         });
 
         // Analyse settings object
         if (settings != null) {
-            this.setLayout(settings);
+            this.setLayout(settings, create_cb);
         } else {
             // Apply Defaults
             this.setLayoutParams(COVER_SCREEN_GRAVITY_CENTER);
@@ -168,7 +179,7 @@ public class WizWebView extends WebView  {
         Log.d(TAG, "Create complete");
     } // ************ END CONSTRUCTOR **************
 
-    public void setLayout(JSONObject settings) {
+    public void setLayout(JSONObject settings, CallbackContext callback) {
         Log.d(TAG, "Setting up layout...");
 
         String url;
@@ -291,7 +302,7 @@ public class WizWebView extends WebView  {
         if (settings.has("src")) {
             try {
                 url = settings.getString("src");
-                this.loadUrl(url);
+                load(url, callback);
             } catch (JSONException e) {
                 // default
                 // nothing to load
@@ -306,21 +317,104 @@ public class WizWebView extends WebView  {
         // Link up our callback
         load_cb = callbackContext;
 
-        // Check source
+        // Check source extension
         try {
-            URL u = new URL(source);    // Check for the protocol
-            u.toURI();                  // Extra checking required for validation of URI
+            URL url = new URL(source);    // Check for the protocol
+            url.toURI();                  // Extra checking required for validation of URI
 
-            // If we did not fall out here then source is a valid URI
-            Log.d(TAG, "load URL: " + source);
-            this.loadUrl(source);
+            // If we did not fall out here then source is a valid URI, check extension
+            if (url.getPath().length() > 0) {
+                // Not loading a straight domain, check extension of non-domain path
+                String ext = MimeTypeMap.getFileExtensionFromUrl(url.getPath());
+                Log.d(TAG, "URL ext: " + ext);
+                if (validateExtension("." + ext)) {
+                    // Load this
+                    this.loadUrl(source);
+                } else {
+                    // Check if file type is in the helperList
+                    if (requiresHelper("." + ext)) {
+                        // Load this
+                        this.loadUrl("http://docs.google.com/gview?embedded=true&url=" + source);
+                    } else {
+                        // Not valid extension in whitelist and cannot be helped
+                        Log.e(TAG, "Not a valid file extension!");
+                        if (load_cb != null) {
+                            load_cb.error("Not a valid file extension.");
+                            load_cb = null;
+                        }
+                    }
+                }
+                return;
+
+            } else {
+                // URL has no path, for example - http://google.com
+                Log.d(TAG, "load URL: " + source);
+                this.loadUrl(source);
+            }
+
         } catch (MalformedURLException ex1) {
-            // Missing protocol
-            Log.d(TAG, "load file://" + source);
-            this.loadUrl("file://" + source);
+            // Missing protocol, assume local file
+
+            // Check cache for latest file
+            File cache = mContext.getApplicationContext().getCacheDir();
+            File file = new File(cache.getAbsolutePath() + "/" + source);
+            if (file.exists()) {
+                // load it
+                Log.d(TAG, "load: " + "file:///" + cache.getAbsolutePath() + "/" + source);
+                source = ("file:///" + cache.getAbsolutePath() + "/" + source);
+            } else {
+                // Check file exists in bundle assets
+                AssetManager mg = mContext.getResources().getAssets();
+                try {
+                    mg.open("www/" + source);
+                    Log.d(TAG, "load: file:///android_asset/www/" + source);
+                    source = "file:///android_asset/www/" + source;
+                } catch (IOException ex) {
+                    // Not in bundle assets. Try full path
+                    file = new File(source);
+                    if (file.exists()) {
+                        Log.d(TAG, "load: file:///" + source);
+                        source = "file:///" + source;
+                        file = null;
+                    } else {
+                        // File cannot be found
+                        Log.e(TAG, "File: " + source + " cannot be found!");
+                        if (load_cb != null) {
+                            load_cb.error("File: " + source + " cannot be found!");
+                            load_cb = null;
+                        }
+                        return;
+                    }
+                }
+            }
+            this.loadUrl(source);
         } catch (URISyntaxException ex2) {
-            Log.d(TAG, "load file://" + source);
-            this.loadUrl("file://" + source);
+            Log.e(TAG, "URISyntaxException loading: file://" + source);
+            if (load_cb != null) {
+                load_cb.error("URISyntaxException loading: file://" + source);
+                load_cb = null;
+            }
         }
     }
+
+    private boolean validateExtension(String candidate) {
+        for (String s: WizViewManagerPlugin.whitelist) {
+            // Check extension exists in whitelist
+            if (s.equalsIgnoreCase(candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean requiresHelper(String candidate) {
+        for (String s: WizViewManagerPlugin.helperList) {
+            // Check extension exists in helperList
+            if (s.equalsIgnoreCase(candidate)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
+

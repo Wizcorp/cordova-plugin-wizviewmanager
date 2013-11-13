@@ -28,10 +28,29 @@ import java.io.ByteArrayInputStream;
 
 public class WizViewManagerPlugin extends CordovaPlugin {
 
+    // The following files can be open natively by the WebView
+    public static String[] whitelist = {
+        ".txt", ".md",
+        ".php", ".java", ".html", ".htm", ".xml", ".css", ".js",
+        ".jpg", ".png", ".jpeg", ".gif", ".tif", "."
+    };
+    // The following files can be opened with the helper prefix in a WebView;
+    // http://docs.google.com/a/wizcorp.jp/gview?embedded=true&url=
+    public static String[] helperList = {
+        ".docx", ".doc",
+        ".xls", ".xlsx",
+        ".ppt", ".pptx",
+        ".pdf", ".pages",
+        ".ai", ".psd",
+        ".h", ".m", ".c", ".cc", ".cpp",
+        ".webm", ".mpeg4", ".3gpp", ".mov", ".avi", ".mpegps", ".wmv", ".flv"
+    };
 	private String TAG = "WizViewManagerPlugin";
+
 	static JSONObject viewList = new JSONObject();
     static CordovaInterface _cordova;
     static CordovaWebView _webView;
+
     @Override
     public void initialize(CordovaInterface cordova, CordovaWebView webView) {
         _cordova = cordova;
@@ -47,10 +66,9 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                 // Error handle (this should never happen!)
                 Log.e(TAG, "Critical error. Failed to retrieve Cordova's view");
             }
-       }
+        }
         super.initialize(cordova, webView);
     }
-
 
     @android.annotation.TargetApi(11)
     public WebResourceResponse shouldInterceptRequest(String url) {
@@ -58,7 +76,6 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         this.onOverrideUrlLoading(url);
         return new WebResourceResponse("text/plain", "UTF-8", stream);
     }
-
 
     @Override
     public boolean onOverrideUrlLoading(String url) {
@@ -109,7 +126,6 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         return super.onOverrideUrlLoading(url);
     }
 
-
 /*
     @Override
     public void onPageFinished(WebView wView, String url) {
@@ -153,6 +169,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                             // Put our new View into viewList
                             try {
                                 viewList.put(viewName, wizWebView);
+                                updateViewList();
                             } catch (JSONException e) {
                                 // Error handle
                                 e.printStackTrace();
@@ -552,7 +569,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                             new Runnable() {
                                 @Override
                                 public void run() {
-                                    targetView.setLayout(options);
+                                    targetView.setLayout(options, null);
                                 }
                             }
                     );
@@ -566,11 +583,6 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
             return true;
 
-		} else if (action.equals("updateView")) {
-            Log.d(TAG, "[updateView] ****** ");
-            Log.i(TAG, "Method updateView is DEPRECATED! Use wizViewManager.views.[VIEW_NAME].load(source, successCallback, failureCallback)");
-			action = "load";
-
 		} else if (action.equals("load")) {
             Log.d(TAG, "[load] ****** ");
 
@@ -583,7 +595,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                 return true;
             }
 
-            // Find webview by this name and show it
+            // Find WebView by this name and show it
             if (viewList.has(viewName) ) {
                 final WizWebView targetView = (WizWebView) viewList.get(viewName);
                 JSONObject options = args.getJSONObject(1);
@@ -628,7 +640,6 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 	public static JSONObject getViews() {
 		return viewList;
 	}
-
 
     public static void updateViewList() {
         CordovaWebView targetView = null;
