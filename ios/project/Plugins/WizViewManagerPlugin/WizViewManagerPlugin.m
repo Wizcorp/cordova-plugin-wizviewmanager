@@ -630,7 +630,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                 if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:cacheSrc]) {
                     // Not in cache, try main bundle
                     url = [[NSURL alloc] initFileURLWithPath:src isDirectory:[NSBundle mainBundle]];
-                    NSString *bundleSrc = [NSString stringWithFormat:@"%@/%@", [NSBundle mainBundle].bundlePath, src];
+                    NSString *bundleSrc = [NSString stringWithFormat:@"%@/www/%@", [NSBundle mainBundle].bundlePath, src];
                     WizLog(@"check: %@", bundleSrc);
                     if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:bundleSrc]) {
                         // Not in main bundle, try full path
