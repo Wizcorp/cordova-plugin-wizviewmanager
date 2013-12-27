@@ -34,9 +34,11 @@ import android.widget.FrameLayout;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 
 @SuppressLint("SetJavaScriptEnabled")
 public class WizWebView extends WebView  {
@@ -102,29 +104,33 @@ public class WizWebView extends WebView  {
                 // Split url by only 2 in the event "://" occurs elsewhere (SHOULD be impossible because you string encoded right!?)
                 urlArray = url.split(splitter,2);
 
-                if (urlArray[0].equalsIgnoreCase("wizmessageview") ) {
+                if (urlArray[0].equalsIgnoreCase("wizpostmessage")) {
 
                     String[] msgData;
                     splitter = "\\?";
 
                     // Split url by only 2 again to make sure we only spit at the first "?"
                     msgData = urlArray[1].split(splitter);
-
                     // target View = msgData[0] and message = msgData[1]
                     // Get webview list from View Manager
                     JSONObject viewList = WizViewManagerPlugin.getViews();
 
-                    if (viewList.has(msgData[0]) ) {
+                    if (viewList.has(msgData[1]) ) {
 
                         WebView targetView;
                         try {
-                            targetView = (WebView) viewList.get(msgData[0]);
+                            targetView = (WebView) viewList.get(msgData[1]);
 
                             // send data to mainView
-                            String data2send = msgData[1];
+                            String data2send = msgData[2];
+                            try {
+                                data2send = URLDecoder.decode(data2send, "UTF-8");
+                            } catch (UnsupportedEncodingException e) {
+
+                            }
                             data2send = data2send.replace("'", "\\'");
-                            Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> " + data2send );
-                            targetView.loadUrl("javascript:(wizMessageReceiver('" + data2send + "'))");
+                            // Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
+                            targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent('" + msgData[0] + "', '" + msgData[1] + "', '" + data2send + "', '" + msgData[3] + "');");
 
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
@@ -142,6 +148,72 @@ public class WizWebView extends WebView  {
             public void onPageFinished(WebView wView, String url) {
 
                 WizViewManagerPlugin.updateViewList();
+
+                // Push wizViewMessenger
+
+                String jsString = "var WizViewMessenger = function () {};\n" +
+                        "console.log('trythis');" +
+                        "WizViewMessenger.prototype.postMessage = function (message, targetView) { \n" +
+                        "    var type;\n" +
+                        "    if (Object.prototype.toString.call(message) === \"[object Array]\") {\n" +
+                        "        type = \"Array\";\n" +
+                        "        message = JSON.stringify(message);\n" +
+                        "    } else if (Object.prototype.toString.call(message) === \"[object String]\") {\n" +
+                        "        type = \"String\";\n" +
+                        "    } else if (Object.prototype.toString.call(message) === \"[object Number]\") {\n" +
+                        "        type = \"Number\";\n" +
+                        "        message = JSON.stringify(message);\n" +
+                        "    } else if (Object.prototype.toString.call(message) === \"[object Boolean]\") {\n" +
+                        "        type = \"Boolean\";\n" +
+                        "        message = message.toString();\n" +
+                        "    } else if (Object.prototype.toString.call(message) === \"[object Function]\") {\n" +
+                        "        type = \"Function\";\n" +
+                        "        message = message.toString();\n" +
+                        "    } else if (Object.prototype.toString.call(message) === \"[object Object]\") {\n" +
+                        "        type = \"Object\";\n" +
+                        "        message = JSON.stringify(message);\n" +
+                        "    } else {\n" +
+                        "    console.error(\"WizViewMessenger posted unknown type!\");\n" +
+                        "        return;\n" +
+                        "    }\n" +
+                        "    \n" +
+                        "\tvar iframe = document.createElement('IFRAME');\n" +
+                        "\tiframe.setAttribute('src', 'wizPostMessage://'+ window.encodeURIComponent(window.name) + '?' + window.encodeURIComponent(targetView) + '?' + window.encodeURIComponent(message) + '?' + type );\n" +
+                        "\tdocument.documentElement.appendChild(iframe);\n" +
+                        "\tiframe.parentNode.removeChild(iframe);\n" +
+                        "\tiframe = null;\t\t\n" +
+                        "};\n" +
+                        "    \n" +
+                        "WizViewMessenger.prototype.__triggerMessageEvent = function (origin, target, data, type) { \n" +
+                        "    if (type === \"Array\") {\n" +
+                        "        data = JSON.parse(data);\n" +
+                        "    } else if (type === \"String\") {\n" +
+                        "        // Stringy String String\n" +
+                        "    } else if (type === \"Number\") {\n" +
+                        "        data = JSON.parse(data);\n" +
+                        "    } else if (type === \"Boolean\") {\n" +
+                        "        data = Boolean(data);\n" +
+                        "    } else if (type === \"Function\") {\n" +
+                        "    } else if (type === \"Object\") {\n" +
+                        "        data = JSON.parse(data);\n" +
+                        "    } else {\n" +
+                        "    \tconsole.error(\"Message Event received unknown type!\");\n" +
+                        "        return;\n" +
+                        "    }\n" +
+                        "\t\n" +
+                        "\tvar event = document.createEvent(\"HTMLEvents\");\n" +
+                        "\tevent.initEvent(\"message\", true, true);\n" +
+                        "\tevent.eventName = \"message\";\n" +
+                        "\tevent.memo = { };\n" +
+                        "\tevent.origin = origin;\n" +
+                        "\tevent.source = target;\n" +
+                        "\tevent.data = data;\n" +
+                        "\tdispatchEvent(event);\n" +
+                        "};\n" +
+                        "\n" +
+                        "window.wizViewMessenger = new WizViewMessenger();";
+
+                wView.loadUrl("javascript:" + jsString);
 
                 if (create_cb != null) {
                     create_cb.success();

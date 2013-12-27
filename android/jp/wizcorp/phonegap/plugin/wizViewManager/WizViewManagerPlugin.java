@@ -25,6 +25,8 @@ import android.view.View;
 import android.webkit.WebView;
 
 import java.io.ByteArrayInputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 
 public class WizViewManagerPlugin extends CordovaPlugin {
 
@@ -87,6 +89,43 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
         // Split url by only 2 in the event "://" occurs elsewhere (SHOULD be impossible because you string encoded right!?)
         urlArray = url.split(splitter,2);
+
+        if (urlArray[0].equalsIgnoreCase("wizpostmessage")) {
+
+            String[] msgData;
+            splitter = "\\?";
+
+            // Split url by only 2 again to make sure we only spit at the first "?"
+            msgData = urlArray[1].split(splitter);
+            // target View = msgData[0] and message = msgData[1]
+            // Get webview list from View Manager
+            JSONObject viewList = WizViewManagerPlugin.getViews();
+
+            if (viewList.has(msgData[1]) ) {
+
+                WebView targetView;
+                try {
+                    targetView = (WebView) viewList.get(msgData[1]);
+
+                    // send data to mainView
+                    String data2send = msgData[2];
+                    try {
+                        data2send = URLDecoder.decode(data2send, "UTF-8");
+                    } catch (UnsupportedEncodingException e) {
+
+                    }
+                    data2send = data2send.replace("'", "\\'");
+                    Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
+                    targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent('" + msgData[0] + "', '" + msgData[1] + "', '" + data2send + "', '" + msgData[3] + "');");
+
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            // app will handle this url, don't change the browser url
+            return true;
+        }
 
         if (urlArray[0].equalsIgnoreCase("wizmessageview") ) {
 

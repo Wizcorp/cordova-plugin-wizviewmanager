@@ -54,6 +54,7 @@
 		<config-file target="res/xml/config.xml" parent="/*">
 			<feature name="WizViewManagerPlugin" >
 				<param name="android-package" value="jp.wizcorp.phonegap.plugin.wizViewManager.WizViewManagerPlugin"/>
+				<url-filter value="wizpostmessage://"/>
 			</feature>
 	    </config-file>
 	    
