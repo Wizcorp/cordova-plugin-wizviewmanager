@@ -75,6 +75,7 @@ public class WizWebView extends WebView  {
         this.getSettings().setJavaScriptEnabled(true);
         this.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 
+        this.loadUrl("javascript:window.name = '" + viewName + "';");
 
         ViewGroup frame = (ViewGroup) ((Activity) context).findViewById(android.R.id.content);
 
@@ -131,6 +132,41 @@ public class WizWebView extends WebView  {
                             data2send = data2send.replace("'", "\\'");
                             // Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
                             targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent('" + msgData[0] + "', '" + msgData[1] + "', '" + data2send + "', '" + msgData[3] + "');");
+
+                        } catch (JSONException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                    }
+                    // app will handle this url, don't change the browser url
+                    return true;
+                }
+
+                if (urlArray[0].equalsIgnoreCase("wizmessageview") ) {
+
+                    String[] msgData;
+                    splitter = "\\?";
+
+                    // Split url by only 2 again to make sure we only spit at the first "?"
+                    msgData = urlArray[1].split(splitter);
+
+
+                    // target View = msgData[0] and message = msgData[1]
+
+                    // Get webview list from View Manager
+                    JSONObject viewList = WizViewManagerPlugin.getViews();
+
+                    if (viewList.has(msgData[0])) {
+
+                        WebView targetView;
+                        try {
+                            targetView = (WebView) viewList.get(msgData[0]);
+
+                            // send data to mainView
+                            String data2send = msgData[1];
+                            data2send = data2send.replace("'", "\\'");
+                            // Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0] + " -> " + targetView + " with data -> " + data2send);
+                            targetView.loadUrl("javascript:(wizMessageReceiver('" + data2send + "'))");
 
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
