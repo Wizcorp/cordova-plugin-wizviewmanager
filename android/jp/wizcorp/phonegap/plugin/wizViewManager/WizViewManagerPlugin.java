@@ -63,7 +63,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             // Cordova view is not in the viewList so add it.
             try {
                 viewList.put("mainView", webView);
-                Log.d(TAG, "Found CordovaView ****** " + webView);
+                webView.loadUrl("javascript:window.name = 'mainView';");
             } catch (JSONException e) {
                 // Error handle (this should never happen!)
                 Log.e(TAG, "Critical error. Failed to retrieve Cordova's view");
