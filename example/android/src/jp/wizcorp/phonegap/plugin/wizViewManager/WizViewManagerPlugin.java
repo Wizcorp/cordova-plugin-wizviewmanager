@@ -74,7 +74,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         super.initialize(cordova, webView);
         
         boolean enableViewportScale = true;
-        String extraEnableViewportScale = cordova.getActivity().getIntent().getStringExtra("enableviewportscale");
+        String extraEnableViewportScale = cordova.getActivity().getIntent().getStringExtra(ENABLE_VIEWPORT_SCALE);
         if (extraEnableViewportScale != null) {
         	enableViewportScale = Boolean.parseBoolean(extraEnableViewportScale);
         }
