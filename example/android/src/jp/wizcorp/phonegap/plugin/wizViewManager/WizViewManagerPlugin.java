@@ -48,6 +48,8 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         ".webm", ".mpeg4", ".3gpp", ".mov", ".avi", ".mpegps", ".wmv", ".flv"
     };
 	private String TAG = "WizViewManagerPlugin";
+    
+	static final String ENABLE_VIEWPORT_SCALE = "enableviewportscale";
 
 	static JSONObject viewList = new JSONObject();
     static CordovaInterface _cordova;
@@ -70,6 +72,13 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             }
         }
         super.initialize(cordova, webView);
+        
+        boolean enableViewportScale = true;
+        String extraEnableViewportScale = cordova.getActivity().getIntent().getStringExtra("enableviewportscale");
+        if (extraEnableViewportScale != null) {
+        	enableViewportScale = Boolean.parseBoolean(extraEnableViewportScale);
+        }
+        webView.getSettings().setUseWideViewPort(enableViewportScale);
     }
 
     @android.annotation.TargetApi(11)

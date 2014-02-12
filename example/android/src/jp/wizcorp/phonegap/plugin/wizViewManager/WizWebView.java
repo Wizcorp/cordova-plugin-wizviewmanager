@@ -25,9 +25,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
+import android.annotation.TargetApi;
 import android.content.Context;
 import android.util.Log;
 import android.view.View;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
@@ -40,6 +42,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
 
+@TargetApi(Build.VERSION_CODES.HONEYCOMB)
 @SuppressLint("SetJavaScriptEnabled")
 public class WizWebView extends WebView  {
 
@@ -72,7 +75,21 @@ public class WizWebView extends WebView  {
         this.setVisibility(View.INVISIBLE);
 
         // 	WizWebView Settings
-        this.getSettings().setJavaScriptEnabled(true);
+        WebSettings webSettings = this.getSettings();
+        
+        webSettings.setJavaScriptEnabled(true);
+        
+        boolean enableViewportScale = true;
+        String extraEnableViewportScale = ((Activity) context).getIntent().getStringExtra(WizViewManagerPlugin.ENABLE_VIEWPORT_SCALE);
+        if (extraEnableViewportScale != null) {
+        	enableViewportScale = Boolean.parseBoolean(extraEnableViewportScale);
+        }
+        webSettings.setUseWideViewPort(enableViewportScale);
+
+        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
+            Level16Apis.enableUniversalAccess(webSettings);
+        }
+        
         this.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 
         this.loadUrl("javascript:window.name = '" + viewName + "';");
@@ -215,9 +232,11 @@ public class WizWebView extends WebView  {
                         "    \n" +
                         "\tvar iframe = document.createElement('IFRAME');\n" +
                         "\tiframe.setAttribute('src', 'wizPostMessage://'+ window.encodeURIComponent(window.name) + '?' + window.encodeURIComponent(targetView) + '?' + window.encodeURIComponent(message) + '?' + type );\n" +
+                        "\tsetTimeout(function () {" +
                         "\tdocument.documentElement.appendChild(iframe);\n" +
                         "\tiframe.parentNode.removeChild(iframe);\n" +
                         "\tiframe = null;\t\t\n" +
+                        "\t}, 1);" +
                         "};\n" +
                         "    \n" +
                         "WizViewMessenger.prototype.__triggerMessageEvent = function (origin, target, data, type) { \n" +
@@ -291,6 +310,7 @@ public class WizWebView extends WebView  {
         Log.d(TAG, "Setting up layout...");
 
         String url;
+        boolean hasLocalStorage;
 
         // Set default settings to max screen
         ViewGroup parent = (ViewGroup) this.getParent();
@@ -419,6 +439,17 @@ public class WizWebView extends WebView  {
         } else {
             Log.d(TAG, "No source to load");
         }
+        
+        if (settings.has("localStorage")) {
+        	try {
+        		hasLocalStorage = settings.getBoolean("localStorage");
+        		this.getSettings().setDomStorageEnabled(hasLocalStorage);
+        	} catch (JSONException e) {
+        		// default
+        		// Local storage not enabled
+        		Log.e(TAG, "Activating local storage from settings exception : " + e);
+        	}
+        }
     }
 
     public void load(String source, CallbackContext callbackContext) {
@@ -523,6 +554,13 @@ public class WizWebView extends WebView  {
             }
         }
         return false;
+    }
+    
+    @TargetApi(16)
+    private static class Level16Apis {
+        static void enableUniversalAccess(WebSettings settings) {
+            settings.setAllowUniversalAccessFromFileURLs(true);
+        }
     }
 }
 
