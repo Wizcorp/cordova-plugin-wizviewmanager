@@ -79,12 +79,10 @@ public class WizWebView extends WebView  {
         
         webSettings.setJavaScriptEnabled(true);
         
-        boolean enableViewportScale = true;
-        String extraEnableViewportScale = ((Activity) context).getIntent().getStringExtra(WizViewManagerPlugin.ENABLE_VIEWPORT_SCALE);
-        if (extraEnableViewportScale != null) {
-        	enableViewportScale = Boolean.parseBoolean(extraEnableViewportScale);
-        }
-        webSettings.setUseWideViewPort(enableViewportScale);
+        webSettings.setDomStorageEnabled(true);
+
+        webSettings.setLoadWithOverviewMode(true);
+        webSettings.setUseWideViewPort(true);
 
         if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
             Level16Apis.enableUniversalAccess(webSettings);
@@ -310,7 +308,6 @@ public class WizWebView extends WebView  {
         Log.d(TAG, "Setting up layout...");
 
         String url;
-        boolean hasLocalStorage;
 
         // Set default settings to max screen
         ViewGroup parent = (ViewGroup) this.getParent();
@@ -438,17 +435,6 @@ public class WizWebView extends WebView  {
             }
         } else {
             Log.d(TAG, "No source to load");
-        }
-        
-        if (settings.has("localStorage")) {
-        	try {
-        		hasLocalStorage = settings.getBoolean("localStorage");
-        		this.getSettings().setDomStorageEnabled(hasLocalStorage);
-        	} catch (JSONException e) {
-        		// default
-        		// Local storage not enabled
-        		Log.e(TAG, "Activating local storage from settings exception : " + e);
-        	}
         }
     }
 
