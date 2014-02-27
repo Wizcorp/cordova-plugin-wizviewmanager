@@ -1,7 +1,7 @@
 # phonegap-plugin-wizViewManager 
 
 - PhoneGap Version : 3.0
-- last update : 15/10/2013
+- last update : 27/02/2014
 
 # Description
 

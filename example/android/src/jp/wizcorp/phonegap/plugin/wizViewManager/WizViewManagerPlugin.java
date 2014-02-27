@@ -70,6 +70,11 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             }
         }
         super.initialize(cordova, webView);
+        
+        webView.getSettings().setDomStorageEnabled(true);
+
+        webView.getSettings().setLoadWithOverviewMode(true);
+        webView.getSettings().setUseWideViewPort(true);
     }
 
     @android.annotation.TargetApi(11)
