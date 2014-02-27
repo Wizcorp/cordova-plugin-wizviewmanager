@@ -48,8 +48,6 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         ".webm", ".mpeg4", ".3gpp", ".mov", ".avi", ".mpegps", ".wmv", ".flv"
     };
 	private String TAG = "WizViewManagerPlugin";
-    
-	static final String ENABLE_VIEWPORT_SCALE = "enableviewportscale";
 
 	static JSONObject viewList = new JSONObject();
     static CordovaInterface _cordova;
