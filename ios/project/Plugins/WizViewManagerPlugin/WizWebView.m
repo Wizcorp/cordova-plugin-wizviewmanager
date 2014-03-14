@@ -13,7 +13,7 @@
 
 @synthesize wizView, viewName;
 
-static CDVPlugin* viewManager;
+static CDVPlugin *viewManager;
 
 - (void)dealloc {
     wizView.delegate = nil;
@@ -49,7 +49,7 @@ static CDVPlugin* viewManager;
         wizView.scalesPageToFit = [[options objectForKey:@"scalesPageToFit"] boolValue];
     } else {
         NSNumber *scaleToFit = [cordovaConfig objectForKey:@"EnableViewportScale"];
-        if ( scaleToFit ) {
+        if (scaleToFit) {
             wizView.scalesPageToFit = [scaleToFit boolValue];
         } else {
             wizView.scalesPageToFit = NO;
@@ -86,8 +86,8 @@ static CDVPlugin* viewManager;
 
     } else {
         // Not a URL, a local resource, check file extension
-        WizViewManagerPlugin *_WizViewManagerPlugin = [WizViewManagerPlugin instance];
-        if (![_WizViewManagerPlugin validateFileExtension:src]) {
+        WizViewManagerPlugin *wizViewManagerPlugin = [WizViewManagerPlugin instance];
+        if (![wizViewManagerPlugin validateFileExtension:src]) {
             NSLog(@"Invalid extension type!");
             return NULL;
         }
@@ -95,7 +95,7 @@ static CDVPlugin* viewManager;
         NSURL *url;
         // Is relative path? Try to load from cache
         NSArray *pathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-        NSString *cachePath    = [pathList  objectAtIndex:0];
+        NSString *cachePath = [pathList  objectAtIndex:0];
         url = [[NSURL alloc] initFileURLWithPath:src isDirectory:cachePath];
         NSString *cacheSrc = [NSString stringWithFormat:@"%@/%@", cachePath, src];
         WizLog(@"check: %@", cacheSrc);
@@ -114,7 +114,7 @@ static CDVPlugin* viewManager;
                     [wizView loadRequest:[NSURLRequest requestWithURL:url]];
                 } else {
                     NSLog(@"Load Error: invalid source");
-                    if (![_WizViewManagerPlugin validateFileExtension:src]) {
+                    if (![wizViewManagerPlugin validateFileExtension:src]) {
                         NSLog(@"Load Error: No or NULL source");
                         return NULL;
                     }
@@ -136,7 +136,7 @@ static CDVPlugin* viewManager;
     return wizView;
 }
 
-- (BOOL) validateUrl: (NSString *) candidate {
+- (BOOL)validateUrl:(NSString *)candidate {
     NSString *lowerCased = [candidate lowercaseString];
     return [lowerCased hasPrefix:@"http://"] || [lowerCased hasPrefix:@"https://"];
 }
@@ -181,7 +181,7 @@ static CDVPlugin* viewManager;
     WizLog(@"[WizViewManager] ******* viewName: %@ viewLoadedCallbackId : %@ ", callbackDict, viewName);
     
     if ([callbackDict objectForKey:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]]) {
-        NSString* callbackId = [callbackDict objectForKey:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]];
+        NSString *callbackId = [callbackDict objectForKey:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
         // Remove callback
@@ -189,7 +189,7 @@ static CDVPlugin* viewManager;
     }
     
     if ([callbackDict objectForKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]]) {
-        NSString* callbackId = [callbackDict objectForKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
+        NSString *callbackId = [callbackDict objectForKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
         [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
         // Remove callback
@@ -199,8 +199,8 @@ static CDVPlugin* viewManager;
     [callbackDict release];
     
     // Update view list array for each view
-    WizViewManagerPlugin *_WizViewManagerPlugin = [WizViewManagerPlugin instance];
-    [_WizViewManagerPlugin updateViewList];
+    WizViewManagerPlugin *wizViewManagerPlugin = [WizViewManagerPlugin instance];
+    [wizViewManagerPlugin updateViewList];
     
     
     // Feed in the view name to the view's window.name property
@@ -310,7 +310,7 @@ static CDVPlugin* viewManager;
         if ([viewList objectForKey:targetView]) {
             NSString *postDataEscaped = [data stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
             
-            UIWebView* targetWebView = [viewList objectForKey:targetView];
+            UIWebView *targetWebView = [viewList objectForKey:targetView];
             NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), '%@' );", originView, targetView, postDataEscaped, type];
             [targetWebView stringByEvaluatingJavaScriptFromString:js];
 
