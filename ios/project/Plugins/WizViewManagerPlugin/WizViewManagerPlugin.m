@@ -715,8 +715,15 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
     // Get Device width and height
     CGRect screenRect = [[UIScreen mainScreen] bounds];
-    int screenHeight = (int) screenRect.size.height;
-    int screenWidth = (int) screenRect.size.width;
+    int screenHeight;
+    int screenWidth;
+    if (UIDeviceOrientationIsLandscape(self.viewController.interfaceOrientation)) {
+        screenHeight = (int) screenRect.size.width;
+        screenWidth = (int) screenRect.size.height;
+    } else {
+        screenHeight = (int) screenRect.size.height;
+        screenWidth = (int) screenRect.size.width;
+    }
     
     // Define vars
     int top;
