@@ -2,7 +2,7 @@
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
     xmlns:android="http://schemas.android.com/apk/res/android"
     id="jp.wizcorp.phonegap.plugin.wizViewManagerPlugin"
-    version="1.0.3">
+    version="1.1.0">
 
     <name>Wizard View Manager Plugin</name>
     
@@ -37,14 +37,14 @@
         </config-file>
                
         <!-- Plugin files -->
-        <header-file src="ios/project/Plugins/WizViewManagerPlugin/WizViewManagerPlugin.h" />
-        <source-file src="ios/project/Plugins/WizViewManagerPlugin/WizViewManagerPlugin.m" compiler-flags="-fno-objc-arc" />
+        <header-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizViewManagerPlugin.h" />
+        <source-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizViewManagerPlugin.m" compiler-flags="-fno-objc-arc" />
         
-        <header-file src="ios/project/Plugins/WizViewManagerPlugin/WizWebView.h" />
-        <source-file src="ios/project/Plugins/WizViewManagerPlugin/WizWebView.m" compiler-flags="-fno-objc-arc" />
+        <header-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizWebView.h" />
+        <source-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizWebView.m" compiler-flags="-fno-objc-arc" />
         	
         <!-- Logger -->
-        <source-file src="ios/project/Plugins/WizViewManagerPlugin/WizDebugLog.h" compiler-flags="-fno-objc-arc" />
+        <source-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizDebugLog.h" compiler-flags="-fno-objc-arc" />
 
     </platform>
     
@@ -66,9 +66,9 @@
 	        </activity>
 	    </config-file>
 	
-	    <source-file src="android/jp/wizcorp/phonegap/plugin/wizViewManager/WizViewManagerPlugin.java" 
+	    <source-file src="platforms/android/src/jp/wizcorp/phonegap/plugin/wizViewManager/WizViewManagerPlugin.java" 
 	            target-dir="src/jp/wizcorp/phonegap/plugin/wizViewManager"/>
-	    <source-file src="android/jp/wizcorp/phonegap/plugin/wizViewManager/WizWebView.java" 
+	    <source-file src="platforms/android/src/jp/wizcorp/phonegap/plugin/wizViewManager/WizWebView.java" 
 	            target-dir="src/jp/wizcorp/phonegap/plugin/wizViewManager"/>
 
     </platform>

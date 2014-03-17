@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        
+        <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+            
+            <!-- iPad/iPhone specific css below, add after your main css >
+             <link rel="stylesheet" media="only screen and (max-device-width: 1024px)" href="ipad.css" type="text/css" />
+             <link rel="stylesheet" media="only screen and (max-device-width: 480px)" href="iphone.css" type="text/css" />
+             -->
+            
+            <script type='text/javascript' charset="utf-8" src="phonegap/plugin/wizViewManager/wizViewMessenger.js"></script>
+            <script type="text/javascript" charset="utf-8">
+                
+                function hideView() {
+                    var targetView = 'mainView';
+                    var action = 'hide';
+                    var params = { 'view' : 'anotherView' };
+                    
+                    wizViewMessenger.postMessage(action, targetView);
+                }
+                
+                function onBodyLoad() {
+                    
+                }
+                
+                window.addEventListener('message', wizMessageReceiver, false);
+                
+                function wizMessageReceiver(e) {
+                    var colorString = JSON.parse(e.data);
+                    document.body.style.background = colorString['color'];
+                }
+
+                
+            </script>
+    </head>
+    <body bgcolor="red" onload="onBodyLoad()">
+        <h1>Custom View</h1>
+        <div id="customViewId">
+            <input type="button" value="Hide View" onclick="hideView()" />
+        </div>
+    </body>
+</html>
