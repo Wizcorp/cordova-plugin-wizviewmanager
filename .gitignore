@@ -1,12 +1,6 @@
 *.DS_Store
-example/ios/exampleWizViewManager.xcodeproj/xcuserdata/*
-example/ios/exampleWizViewManager.xcodeproj/project.xcworkspace/*
-example/ios/CordovaLib/CordovaLib.xcodeproj/xcuserdata/*
-example/ios/www/*
-!example/ios/www/cordova.js
-!example/ios/www/cordova_plugins.js	
-!example/ios/www/phonegap/plugin/wizViewManager/wizViewManager.js
-!example/ios/www/phonegap/plugin/wizViewMessenger/wizViewMessenger.js
+*.xcworkspace
+xcuserdata
 .idea/
 bin/
 gen/
