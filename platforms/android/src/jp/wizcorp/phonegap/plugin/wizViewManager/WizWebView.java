@@ -80,7 +80,11 @@ public class WizWebView extends WebView  {
         webSettings.setJavaScriptEnabled(true);
         
         webSettings.setDomStorageEnabled(true);
-
+        // Whether or not on-screen controls are displayed can be set with setDisplayZoomControls(boolean). 
+        // The default is false.
+        // The built-in mechanisms are the only currently supported zoom mechanisms, 
+        // so it is recommended that this setting is always enabled.
+        webSettings.setBuiltInZoomControls(true);
         webSettings.setLoadWithOverviewMode(true);
         webSettings.setUseWideViewPort(true);
 
