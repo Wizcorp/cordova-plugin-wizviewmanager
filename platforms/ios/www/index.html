@@ -340,14 +340,28 @@
 		        }
 		        
 		    }
-	        
-	        // TODO: Change this path to match the location where the www/newview.html file lives.
-	        // On the simulator this is a location on your machine.
-	        // On the device, this is a location in your app bundle.
-	        var customViewInstallPath = "/Users/Ally/Library/Application Support/iPhone Simulator/6.0/Applications/EB544FA8-1278-4941-B708-05D53F4E7DEC/exampleWizViewManager.app/www/customview.html";
-	        
+
 	        function createView() {
-	            wizViewManager.create("newView", { src: "http://google.com", height: 300, top: 0 }, onSuccess("created & finished loading view"), onFail);
+	            var source;
+	            var isMobile = {
+	                Android: function () {
+	                    return /Android/i.test(navigator.userAgent);
+	                },
+	                iOS: function () {
+	                    return /iPhone|iPad|iPod/i.test(navigator.userAgent);
+	                }
+	            };
+	            if (isMobile.Android()) {
+	                source = "file:///android_asset/www/customview.html";
+	            } else if (isMobile.iOS()) {
+	                // TODO: Change this path to match the location where the www/customview.html file lives.
+	                // On the simulator this is a location on your machine.
+	                // On the device, this is a location in your app bundle.
+	                source = "customview.html";
+	            } else {
+	                source = "http://www.google.com";
+	            }
+	            wizViewManager.create("newView", { src: source, height: 300, top: 0 }, onSuccess, onFail);
 	        }
 	        
 	        function removeView() {
@@ -359,7 +373,7 @@
 	                type: "slideInFromLeft",
 	                duration: 500
 	            };
-	            wizViewManager.show("newView", { animation: animation }, setTimeout(onSuccess("view is shown"), 10), onFail);
+	            wizViewManager.show("newView", { animation: animation }, onSuccess, onFail);
 	        }
 	        
 	        function hideView() {
@@ -367,7 +381,7 @@
 	                type: "fadeOut",
 	                duration: 1000
 	            };
-	            wizViewManager.hide("newView", { animation: animation }, setTimeout(onSuccess("view is hidden"), 10), onFail);
+	            wizViewManager.hide("newView", { animation: animation }, onSuccess, onFail);
 	        }
 	        
 	        var currentSource = 1;
@@ -401,10 +415,11 @@
 	            wizViewManager.setLayout("newView", params[i], null, onFail);
 	        }
 	        
-	        /* Example Code
 	        function messageView() {
 	            var targetView = "newView";
-	            var params = { color: "blue :)" };
+	            var colors = ["blue", "orange", "green", "white"];
+	            var i = Math.floor(Math.random()*3);
+	            var params = { color: colors[i] };
 	            
 	            wizViewMessenger.postMessage(params, targetView);
 	        }
@@ -412,38 +427,44 @@
 	        window.addEventListener('message', handleMessageFromNewView, false);
 	        
 	        function handleMessageFromNewView(e) {
-	        	alert("Got message from: " + e.origin );
+	            alert("Got message from: " + e.origin );
+	            if (e.data.action === "hide") {
+	                wizViewManager.hide("newView");
+	            }
 	        }
-	        */
 	        
 	        var onSuccess = function (data) {
-	            alert("success " + data);
+	           setTimeout(function () {
+	               alert("success " + data ? data : "");
+	           }, 0);
 	        }
 	        
 	        var onFail = function (e) {
-	            alert("error = "+e);
+	            alert("error " + e ? e : "");
 	        }
 
     	</script>
     </head>
     <body onload="onBodyLoad()">
-    	<div id="container">
-			<h1>WizViewManager Plugin</h1>
-			<section class="dialog">
-		        <p>Experiment by pressing the buttons to create/show/hide/remove a view, load content in the view, or layout the view.</p>
-		        <p>Create a new view...</p>
-	            <button onclick="createView();">Create View</button>
-	            <p>Send a message to our new view from this webview...</p>
-	            <button onclick="setLayout();">Set New Layout</button>
-	            <p>Load new source into the view (can be clicked multiple times)</p>
-	            <button onclick="loadContent();">Load into View</button>
-	            <p>Hide the view from the user...</p>
-	            <button onclick="hideView();">Hide View</button>
-	            <p>Make the view visible to the user...</p>
-	            <button onclick="showView();">Show View</button>
-	            <p>Remove the view...</p>
-	            <button onclick="removeView();">Remove View</button>
-			</section>
-	    </div>
+        <div id="container">
+            <h1>WizViewManager Plugin</h1>
+            <section class="dialog">
+                <p>Experiment by pressing the buttons to create/show/hide/remove a view, load content in the view, or layout the view.</p>
+                <p>Create a new view...</p>
+                <button onclick="createView();">Create View</button>
+                <p>Send a message to our new view from this webview...</p>
+                <button onclick="setLayout();">Set New Layout</button>
+                <p>Load new source into the view (can be clicked multiple times)</p>
+                <button onclick="loadContent();">Load into View</button>
+                <p>Hide the view from the user...</p>
+                <button onclick="hideView();">Hide View</button>
+                <p>Make the view visible to the user...</p>
+                <button onclick="showView();">Show View</button>
+                <p>Remove the view...</p>
+                <button onclick="removeView();">Remove View</button>
+                <p>Message the view...</p>
+                <button onclick="messageView();">Message View</button>
+            </section>
+        </div>
     </body>
 </html>
