@@ -17,6 +17,7 @@ static CDVPlugin *viewManager;
 
 - (void)dealloc {
     wizView.delegate = nil;
+    [super dealloc];
 }
 
 - (void) viewDidLoad
@@ -96,12 +97,13 @@ static CDVPlugin *viewManager;
         // Is relative path? Try to load from cache
         NSArray *pathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
         NSString *cachePath = [pathList  objectAtIndex:0];
-        url = [[NSURL alloc] initFileURLWithPath:src isDirectory:cachePath];
+        // Better to use initFileURLWithPath:isDirectory: if you know if the path is a directory vs non-directory, as it saves an i/o
+        url = [[NSURL alloc] initFileURLWithPath:src isDirectory:NO];
         NSString *cacheSrc = [NSString stringWithFormat:@"%@/%@", cachePath, src];
         WizLog(@"check: %@", cacheSrc);
         if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:cacheSrc]) {
             // Not in cache, try main bundle
-            url = [[NSURL alloc] initFileURLWithPath:src isDirectory:[NSBundle mainBundle]];
+            url = [[NSURL alloc] initFileURLWithPath:src isDirectory:NO];
             NSString *bundleSrc = [NSString stringWithFormat:@"%@/www/%@", [NSBundle mainBundle].bundlePath, src];
             WizLog(@"check: %@", bundleSrc);
             if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:bundleSrc]) {

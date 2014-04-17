@@ -207,7 +207,6 @@ public class WizWebView extends WebView  {
                 // Push wizViewMessenger
 
                 String jsString = "var WizViewMessenger = function () {};\n" +
-                        "console.log('trythis');" +
                         "WizViewMessenger.prototype.postMessage = function (message, targetView) { \n" +
                         "    var type;\n" +
                         "    if (Object.prototype.toString.call(message) === \"[object Array]\") {\n" +

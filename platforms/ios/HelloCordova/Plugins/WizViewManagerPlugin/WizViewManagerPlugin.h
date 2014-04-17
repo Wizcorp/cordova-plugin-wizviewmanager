@@ -10,9 +10,7 @@
 #import <Cordova/CDVPlugin.h>
 
 @interface WizViewManagerPlugin : CDVPlugin <UIWebViewDelegate> {
-    
     CGRect originalWebViewBounds;
-
 }
 
 @property (nonatomic, retain) NSString *showViewCallbackId;
@@ -46,6 +44,7 @@
 - (void)sendMessage:(NSString *)viewName withMessage:(NSString *)message;
 - (void)updateViewList;
 - (BOOL)validateFileExtension:(NSString *)candidate;
+- (void)timedRestart:(UIWebView *)theWebView;
 
 /**
  
