@@ -119,7 +119,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                     } catch (UnsupportedEncodingException e) {
 
                     }
-                    data2send = data2send.replace("'", "\\'");
+                    data2send = encodeMessage(data2send);
                     Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
                     targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent('" + msgData[0] + "', '" + msgData[1] + "', '" + data2send + "', '" + msgData[3] + "');");
 
@@ -154,7 +154,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
                     // send data to mainView
                     String data2send = msgData[1];
-                    data2send = data2send.replace("'", "\\'");
+                    data2send = encodeMessage(data2send);
                     Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> "+data2send );
                     targetView.loadUrl("javascript:(wizMessageReceiver('"+data2send+"'))");
 
@@ -822,4 +822,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         Log.d("WizViewManager", "new layout -> width: " + layoutParams.width + " - height: " + layoutParams.height + " - margins: " + layoutParams.leftMargin + "," + layoutParams.topMargin + "," + layoutParams.rightMargin + "," + layoutParams.bottomMargin);
     }
 
+    private String encodeMessage(String message) {
+        return message.replace("\\", "\\\\").replace("'", "\\'");
+    }
 }

@@ -148,7 +148,7 @@ public class WizWebView extends WebView  {
                             } catch (UnsupportedEncodingException e) {
 
                             }
-                            data2send = data2send.replace("'", "\\'");
+                            data2send = encodeMessage(data2send);
                             // Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
                             targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent('" + msgData[0] + "', '" + msgData[1] + "', '" + data2send + "', '" + msgData[3] + "');");
 
@@ -183,7 +183,7 @@ public class WizWebView extends WebView  {
 
                             // send data to mainView
                             String data2send = msgData[1];
-                            data2send = data2send.replace("'", "\\'");
+                            data2send = encodeMessage(data2send);
                             // Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0] + " -> " + targetView + " with data -> " + data2send);
                             targetView.loadUrl("javascript:(wizMessageReceiver('" + data2send + "'))");
 
@@ -550,6 +550,10 @@ public class WizWebView extends WebView  {
         static void enableUniversalAccess(WebSettings settings) {
             settings.setAllowUniversalAccessFromFileURLs(true);
         }
+    }
+
+    private String encodeMessage(String message) {
+        return message.replace("\\", "\\\\").replace("'", "\\'");
     }
 }
 
