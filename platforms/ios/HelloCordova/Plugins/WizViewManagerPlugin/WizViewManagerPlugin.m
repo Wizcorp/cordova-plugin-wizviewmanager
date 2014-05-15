@@ -1451,10 +1451,8 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         
         NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
 
-        NSString *postDataEscaped = [data stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
-
         UIWebView *targetWebView = [viewList objectForKey:targetView];
-        NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), '%@' );", originView, targetView, postDataEscaped, type];
+        NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent(\"%@\", \"%@\", \"%@\", \"%@\");", originView, targetView, data, type];
         [targetWebView stringByEvaluatingJavaScriptFromString:js];
 
             // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);

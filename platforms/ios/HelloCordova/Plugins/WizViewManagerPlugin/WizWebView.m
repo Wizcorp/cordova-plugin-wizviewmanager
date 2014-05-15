@@ -251,6 +251,9 @@ static CDVPlugin *viewManager;
     }; \
  \
     WizViewMessenger.prototype.__triggerMessageEvent = function (origin, target, data, type) { \
+        origin = decodeURIComponent(origin); \
+        target = decodeURIComponent(target); \
+        data = decodeURIComponent(data); \
         if (type === 'Array') { \
             data = JSON.parse(data); \
         } else if (type === 'String') { \
@@ -310,10 +313,9 @@ static CDVPlugin *viewManager;
         NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
         
         if ([viewList objectForKey:targetView]) {
-            NSString *postDataEscaped = [data stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
             
             UIWebView *targetWebView = [viewList objectForKey:targetView];
-            NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), '%@' );", originView, targetView, postDataEscaped, type];
+            NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent(\"%@\", \"%@\", \"%@\", \"%@\");", originView, targetView, data, type];
             [targetWebView stringByEvaluatingJavaScriptFromString:js];
 
             // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);

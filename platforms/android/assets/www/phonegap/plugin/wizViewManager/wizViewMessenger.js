@@ -50,6 +50,10 @@ WizViewMessenger.prototype.postMessage = function (message, targetView) {
     
 WizViewMessenger.prototype.__triggerMessageEvent = function (origin, target, data, type) { 
 	// Trigger message event
+    origin = decodeURIComponent(origin);
+    target = decodeURIComponent(target);
+    data = decodeURIComponent(data);
+
 	// Check message type
     if (type === "Array") {
         data = JSON.parse(data);
