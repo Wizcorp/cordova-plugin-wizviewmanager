@@ -36,11 +36,9 @@ import android.widget.FrameLayout;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLDecoder;
 
 @TargetApi(Build.VERSION_CODES.HONEYCOMB)
 @SuppressLint("SetJavaScriptEnabled")
@@ -143,14 +141,8 @@ public class WizWebView extends WebView  {
 
                             // send data to mainView
                             String data2send = msgData[2];
-                            try {
-                                data2send = URLDecoder.decode(data2send, "UTF-8");
-                            } catch (UnsupportedEncodingException e) {
-
-                            }
-                            data2send = encodeMessage(data2send);
                             // Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
-                            targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent('" + msgData[0] + "', '" + msgData[1] + "', '" + data2send + "', '" + msgData[3] + "');");
+                            targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
 
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
@@ -183,7 +175,7 @@ public class WizWebView extends WebView  {
 
                             // send data to mainView
                             String data2send = msgData[1];
-                            data2send = encodeMessage(data2send);
+                            data2send = data2send.replace("'", "\\'");
                             // Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0] + " -> " + targetView + " with data -> " + data2send);
                             targetView.loadUrl("javascript:(wizMessageReceiver('" + data2send + "'))");
 
@@ -241,6 +233,9 @@ public class WizWebView extends WebView  {
                         "};\n" +
                         "    \n" +
                         "WizViewMessenger.prototype.__triggerMessageEvent = function (origin, target, data, type) { \n" +
+                        "    origin = decodeURIComponent(origin);\n" +
+                        "    target = decodeURIComponent(target);\n" +
+                        "    data = decodeURIComponent(data);\n" +
                         "    if (type === \"Array\") {\n" +
                         "        data = JSON.parse(data);\n" +
                         "    } else if (type === \"String\") {\n" +
@@ -550,10 +545,6 @@ public class WizWebView extends WebView  {
         static void enableUniversalAccess(WebSettings settings) {
             settings.setAllowUniversalAccessFromFileURLs(true);
         }
-    }
-
-    private String encodeMessage(String message) {
-        return message.replace("\\", "\\\\").replace("'", "\\'");
     }
 }
 
