@@ -58,6 +58,13 @@ static CDVPlugin *viewManager;
         }
     }
 
+    // Set bounces setting based on option settings.
+    if ([options objectForKey:@"bounces"]) {
+        wizView.scrollView.bounces = [[options objectForKey:@"bounces"] boolValue];
+    } else {
+        wizView.scrollView.bounces = NO;
+    }
+
     wizView.bounds = webViewBounds;
 
     [wizView setFrame:CGRectMake(
