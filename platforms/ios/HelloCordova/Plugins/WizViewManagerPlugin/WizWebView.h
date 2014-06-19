@@ -16,5 +16,6 @@
 @property (nonatomic, retain) NSString *viewName;
 
 - (UIWebView *)createNewInstanceViewFromManager:(CDVPlugin *)myViewManager newBounds:(CGRect)webViewBounds viewName:(NSString *)name sourceToLoad:(NSString *)src withOptions:(NSDictionary *)options;
+- (void)webView:(UIWebView *)webView canBounce:(BOOL)canBounce;
 
 @end

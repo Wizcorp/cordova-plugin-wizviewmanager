@@ -58,6 +58,13 @@ static CDVPlugin *viewManager;
         }
     }
 
+    // Set bounces setting based on option settings.
+    if ([options objectForKey:@"bounces"]) {
+        [self webView:wizView canBounce:[[options objectForKey:@"bounces"] boolValue]];
+    } else {
+        [self webView:wizView canBounce:NO];
+    }
+
     wizView.bounds = webViewBounds;
 
     [wizView setFrame:CGRectMake(
@@ -334,6 +341,18 @@ static CDVPlugin *viewManager;
     
     // Accept any other URLs
 	return YES;
+}
+
+- (void)webView:(UIWebView *)webView canBounce:(BOOL)canBounce {
+    if ([wizView respondsToSelector:@selector(scrollView)]) {
+        ((UIScrollView*)[wizView scrollView]).bounces = canBounce;
+    } else {
+        for (id subview in wizView.subviews) {
+            if ([[subview class] isSubclassOfClass:[UIScrollView class]]) {
+                ((UIScrollView*)subview).bounces = canBounce;
+            }
+        }
+    }
 }
 
 @end
