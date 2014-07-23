@@ -17,6 +17,7 @@ static CDVPlugin *viewManager;
 
 - (void)dealloc {
     wizView.delegate = nil;
+    [super dealloc];
 }
 
 - (void) viewDidLoad
@@ -55,6 +56,13 @@ static CDVPlugin *viewManager;
             wizView.scalesPageToFit = NO;
             NSLog(@"[WizWebView] ******* WARNING  - EnableViewportScale was not specified in Cordova.plist");
         }
+    }
+
+    // Set bounces setting based on option settings.
+    if ([options objectForKey:@"bounces"]) {
+        wizView.scrollView.bounces = [[options objectForKey:@"bounces"] boolValue];
+    } else {
+        wizView.scrollView.bounces = NO;
     }
 
     wizView.bounds = webViewBounds;
@@ -96,12 +104,13 @@ static CDVPlugin *viewManager;
         // Is relative path? Try to load from cache
         NSArray *pathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
         NSString *cachePath = [pathList  objectAtIndex:0];
-        url = [[NSURL alloc] initFileURLWithPath:src isDirectory:cachePath];
+        // Better to use initFileURLWithPath:isDirectory: if you know if the path is a directory vs non-directory, as it saves an i/o
+        url = [[NSURL alloc] initFileURLWithPath:src isDirectory:NO];
         NSString *cacheSrc = [NSString stringWithFormat:@"%@/%@", cachePath, src];
         WizLog(@"check: %@", cacheSrc);
         if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:cacheSrc]) {
             // Not in cache, try main bundle
-            url = [[NSURL alloc] initFileURLWithPath:src isDirectory:[NSBundle mainBundle]];
+            url = [[NSURL alloc] initFileURLWithPath:src isDirectory:NO];
             NSString *bundleSrc = [NSString stringWithFormat:@"%@/www/%@", [NSBundle mainBundle].bundlePath, src];
             WizLog(@"check: %@", bundleSrc);
             if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:bundleSrc]) {
@@ -249,6 +258,9 @@ static CDVPlugin *viewManager;
     }; \
  \
     WizViewMessenger.prototype.__triggerMessageEvent = function (origin, target, data, type) { \
+        origin = decodeURIComponent(origin); \
+        target = decodeURIComponent(target); \
+        data = decodeURIComponent(data); \
         if (type === 'Array') { \
             data = JSON.parse(data); \
         } else if (type === 'String') { \
@@ -308,10 +320,9 @@ static CDVPlugin *viewManager;
         NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
         
         if ([viewList objectForKey:targetView]) {
-            NSString *postDataEscaped = [data stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
             
             UIWebView *targetWebView = [viewList objectForKey:targetView];
-            NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), '%@' );", originView, targetView, postDataEscaped, type];
+            NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent(\"%@\", \"%@\", \"%@\", \"%@\");", originView, targetView, data, type];
             [targetWebView stringByEvaluatingJavaScriptFromString:js];
 
             // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);

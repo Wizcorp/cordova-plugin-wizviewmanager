@@ -73,6 +73,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
 - (void)dealloc {
     [supportedFileList release];
+    [super dealloc];
 }
 
 
@@ -623,13 +624,14 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                 NSURL *url;
                 // Is relative path? Try to load from cache
                 NSArray *pathList = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-                NSString *cachePath = [pathList  objectAtIndex:0];
-                url = [[NSURL alloc] initFileURLWithPath:src isDirectory:cachePath];
+                NSString *cachePath = [pathList objectAtIndex:0];
+                // Better to use initFileURLWithPath:isDirectory: if you know if the path is a directory vs non-directory, as it saves an i/o
+                url = [[NSURL alloc] initFileURLWithPath:src isDirectory:NO];
                 NSString *cacheSrc = [NSString stringWithFormat:@"%@/%@", cachePath, src];
                 WizLog(@"check: %@", cacheSrc);
                 if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:cacheSrc]) {
                     // Not in cache, try main bundle
-                    url = [[NSURL alloc] initFileURLWithPath:src isDirectory:[NSBundle mainBundle]];
+                    url = [[NSURL alloc] initFileURLWithPath:src isDirectory:NO];
                     NSString *bundleSrc = [NSString stringWithFormat:@"%@/www/%@", [NSBundle mainBundle].bundlePath, src];
                     WizLog(@"check: %@", bundleSrc);
                     if ([url.absoluteString isKindOfClass:[NSNull class]] || ![[NSFileManager defaultManager] fileExistsAtPath:bundleSrc]) {
@@ -794,7 +796,10 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 - (void)setLayout:(CDVInvokedUrlCommand *)command {
     // Assign arguments
     NSString *viewName = [command.arguments objectAtIndex:0];
-    NSDictionary *options = [command.arguments objectAtIndex:1];
+    NSDictionary *options = NULL;
+    if ([command.arguments count] > 1) {
+        options = [command.arguments objectAtIndex:1];
+    }
     
     // NSLog(@"[WizViewManagerPlugin] ******* resizeView name:  %@ withOptions: %@", viewName, options);
     
@@ -1424,7 +1429,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     if ([(NSString *)[prefixer objectAtIndex:0] caseInsensitiveCompare:@"rebootapp"] == 0) {
         
         // Perform restart a second later
-        [self performSelector:@selector(timedRestart) withObject:theWebView afterDelay:1.0f];
+        [self performSelector:@selector(timedRestart:) withObject:theWebView afterDelay:1.0f];
         
         return NO;
 		
@@ -1446,10 +1451,8 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         
         NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
 
-        NSString *postDataEscaped = [data stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
-
         UIWebView *targetWebView = [viewList objectForKey:targetView];
-        NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent( window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), window.decodeURIComponent('%@'), '%@' );", originView, targetView, postDataEscaped, type];
+        NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent(\"%@\", \"%@\", \"%@\", \"%@\");", originView, targetView, data, type];
         [targetWebView stringByEvaluatingJavaScriptFromString:js];
 
             // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);
@@ -1473,24 +1476,21 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 - (void)timedRestart:(UIWebView *)theWebView {
     // Gives time for our JS method to execute splash
 
+    // Resize mainView to normal
+    CDVInvokedUrlCommand *cmdLayout = [[CDVInvokedUrlCommand alloc] initWithArguments:[NSArray arrayWithObjects:@"mainView", nil] callbackId:@"" className:@"WizViewManagerPlugin" methodName:@"setLayout"];
+    [self setLayout:cmdLayout];
+    [cmdLayout release];
+
     // Remove all views
     NSArray *allKeys = [NSArray arrayWithArray:[wizViewList allKeys]];
-    
-    for (int i = 0; i<[allKeys count]; i++) {
-        
+    for (int i = 0; i < [allKeys count]; i++) {
         if (![[allKeys objectAtIndex:i] isEqualToString:@"mainView"]) {
-            CDVInvokedUrlCommand *cmd = [[CDVInvokedUrlCommand alloc] initWithArguments:[NSArray arrayWithObjects:[allKeys objectAtIndex:i], nil] callbackId:@"" className:@"WizViewManagerPlugin" methodName:@"removeView"];
-            [self removeView:cmd];
-            [cmd release];
+            CDVInvokedUrlCommand *cmdRemove = [[CDVInvokedUrlCommand alloc] initWithArguments:[NSArray arrayWithObjects:[allKeys objectAtIndex:i], nil] callbackId:@"" className:@"WizViewManagerPlugin" methodName:@"removeView"];
+            [self removeView:cmdRemove];
+            [cmdRemove release];
         }
-        
     }
-    
-    // Resize mainView to normal
-    CDVInvokedUrlCommand *cmd = [[CDVInvokedUrlCommand alloc] initWithArguments:[NSArray arrayWithObjects:@"mainView", nil] callbackId:@"" className:@"WizViewManagerPlugin" methodName:@"setLayout"];
-    [self setLayout:cmd];
-    [cmd release];
-    
+   
     [theWebView reload];
 }
 
