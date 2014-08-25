@@ -687,11 +687,12 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
         // Get the view from the view list
         UIWebView *targetWebView = [wizViewList objectForKey:viewName];
-
+        // Load empty text into view
+        [targetWebView loadRequest:[NSURLRequest requestWithURL:[NSURL URLWithString:@"data:text/plain;,"]]];
         // Remove the view!
         [targetWebView removeFromSuperview];
-        [targetWebView release];
         targetWebView.delegate = nil;
+        [targetWebView release];
         targetWebView = nil;
 
         // Remove the view from wizViewList
