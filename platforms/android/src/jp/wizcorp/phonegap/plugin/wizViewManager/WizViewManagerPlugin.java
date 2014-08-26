@@ -5,11 +5,11 @@
  *  \  /\  /| |/ / (_| | | | (_| |  \ V /| |  __/\ V  V /  / /\/\ \ (_| | | | | (_| | (_| |  __/ |   
  *   \/  \/ |_/___\__,_|_|  \__,_|   \_/ |_|\___| \_/\_/   \/    \/\__,_|_| |_|\__,_|\__, |\___|_|   
  *                                                                                   |___/                                                                                              |___/                           |___/        
- * @author 	Ally Ogilvie  
+ * @author  Ally Ogilvie  
  * @copyright Wizcorp Inc. [ Incorporated Wizards ] 2013
- * @file	- WizViewManagerPlugin.java
- * @about	- Handle view and communication.
-*/
+ * @file    - WizViewManagerPlugin.java
+ * @about   - Handle view and communication.
+ */
 package jp.wizcorp.phonegap.plugin.wizViewManager;
 
 import android.view.ViewGroup;
@@ -45,9 +45,9 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         ".h", ".m", ".c", ".cc", ".cpp",
         ".webm", ".mpeg4", ".3gpp", ".mov", ".avi", ".mpegps", ".wmv", ".flv"
     };
-	private String TAG = "WizViewManagerPlugin";
+    private String TAG = "WizViewManagerPlugin";
 
-	static JSONObject viewList = new JSONObject();
+    static JSONObject viewList = new JSONObject();
     static CordovaInterface _cordova;
     static CordovaWebView _webView;
 
@@ -65,12 +65,12 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                 webView.post(new Runnable() {
                     @Override
                     public void run() {
-                    	if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                    	     // Only for Kitkat and newer versions
-                    		webView.evaluateJavascript("window.name = 'mainView';", null);
-                    	} else {
-                    		webView.loadUrl("javascript:window.name = 'mainView';");
-                    	}
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                            // Only for Kitkat and newer versions
+                            webView.evaluateJavascript("window.name = 'mainView';", null);
+                        } else {
+                            webView.loadUrl("javascript:window.name = 'mainView';");
+                        }
                     }
                 });
             } catch (JSONException e) {
@@ -82,7 +82,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         webView.post(new Runnable() {
             @Override
             public void run() {
-            	webView.getSettings().setDomStorageEnabled(true);
+                webView.getSettings().setDomStorageEnabled(true);
                 webView.getSettings().setLoadWithOverviewMode(true);
                 webView.getSettings().setUseWideViewPort(true);
             }
@@ -129,11 +129,11 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
                     Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-	               	     // Only for Kitkat and newer versions
-	               		webView.evaluateJavascript("wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");", null);
-	               	} else {
-	                    targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
-	               	}
+                        // Only for Kitkat and newer versions
+                        webView.evaluateJavascript("wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");", null);
+                    } else {
+                        targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
+                    }
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -168,11 +168,11 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                     data2send = data2send.replace("'", "\\'");
                     Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> "+data2send );
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-	               	     // Only for Kitkat and newer versions
-	               		webView.evaluateJavascript("wizMessageReceiver('"+data2send+"');", null);
-	               	} else {
-	               		targetView.loadUrl("javascript:(wizMessageReceiver('"+data2send+"'))");
-	               	}
+                        // Only for Kitkat and newer versions
+                        webView.evaluateJavascript("wizMessageReceiver('"+data2send+"');", null);
+                    } else {
+                        targetView.loadUrl("javascript:(wizMessageReceiver('"+data2send+"'))");
+                    }
 
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
@@ -186,34 +186,34 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         return super.onOverrideUrlLoading(url);
     }
 
-/*
+    /*
     @Override
     public void onPageFinished(WebView wView, String url) {
         WizViewManagerPlugin.updateViewList();
     }
-*/
-	@Override
-	public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
+     */
+    @Override
+    public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
 
         Log.d(TAG, "[action] ****** " + action );
 
-		if (action.equals("createView")) {
-			// Create a new view
-			Log.d(TAG, "[createView] ****** " + args.toString() );
+        if (action.equals("createView")) {
+            // Create a new view
+            Log.d(TAG, "[createView] ****** " + args.toString() );
 
-			final String viewName;
-			final JSONObject settings;
-			try {
-				// Get view name
-				viewName = args.getString(0);
-				settings = args.optJSONObject(1);
-				Log.d(TAG, "Create view with settings : " + settings);
-				
-			} catch (Exception e) {
-				Log.e(TAG, "Exception: " + e);
-				callbackContext.error("Cannot create view. Missing view name parameter");
-				return true;
-			}
+            final String viewName;
+            final JSONObject settings;
+            try {
+                // Get view name
+                viewName = args.getString(0);
+                settings = args.optJSONObject(1);
+                Log.d(TAG, "Create view with settings : " + settings);
+
+            } catch (Exception e) {
+                Log.e(TAG, "Exception: " + e);
+                callbackContext.error("Cannot create view. Missing view name parameter");
+                return true;
+            }
 
             // Create a final link so we can run on UI thread
             Log.d(TAG, "list: " + viewList.names().toString());
@@ -236,7 +236,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                             }
                         }
                     }
-            );
+                    );
 
             // Wait for callback
             PluginResult res = new PluginResult(PluginResult.Status.NO_RESULT);
@@ -246,7 +246,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             // Clean up
             callbackContext = null;
 
-			return true;
+            return true;
 
         } else if (action.equals("removeView")) {
             // TODO: Async callback
@@ -282,7 +282,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
                 // Remove is running on a different thread, but for now assume view was removed
                 callbackContext.success();
-                return true;
+                        return true;
             } else {
                 // Cannot find view
                 Log.e(TAG, "Cannot remove view. View not found");
@@ -290,45 +290,45 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                 return true;
             }
 
-		} else if (action.equals("hideView")) {
+        } else if (action.equals("hideView")) {
             // TODO: Async callback
             // TODO: animations like iOS
 
-			// Hide a particular view...
-			Log.d(TAG, "[hideView] ****** " + args.toString() );
-			
-			final String viewName;
-			
-			// set defaults for animations
-			long animDuration = 500;
-			String animType = "none";
-			
-			try {
-				viewName = args.getString(0);
-				// analyse settings object
-				try {
-					
-					JSONObject settings = (JSONObject) args.get(1);
-									
-					if (settings.has("animation")) {
-						JSONObject animation = settings.getJSONObject("animation");
+            // Hide a particular view...
+            Log.d(TAG, "[hideView] ****** " + args.toString() );
 
-						if (animation.has("duration")) {
-							animDuration = (long)animation.getInt("duration");
-						}
-						
-						if (animation.has("type")) {
-							animType = animation.getString("type");
-						}
-					}
-					
-				} catch (Exception e) {
-					// no settings, use default
-					
-				}
-				
-				// Find WebView by this name and hide it
-				if (viewList.has(viewName) ) {
+            final String viewName;
+
+            // set defaults for animations
+            long animDuration = 500;
+            String animType = "none";
+
+            try {
+                viewName = args.getString(0);
+                // analyse settings object
+                try {
+
+                    JSONObject settings = (JSONObject) args.get(1);
+
+                    if (settings.has("animation")) {
+                        JSONObject animation = settings.getJSONObject("animation");
+
+                        if (animation.has("duration")) {
+                            animDuration = (long)animation.getInt("duration");
+                        }
+
+                        if (animation.has("type")) {
+                            animType = animation.getString("type");
+                        }
+                    }
+
+                } catch (Exception e) {
+                    // no settings, use default
+
+                }
+
+                // Find WebView by this name and hide it
+                if (viewList.has(viewName) ) {
 
                     final WebView targetView = (WebView) viewList.get(viewName);
 
@@ -343,7 +343,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                                     hideCallbackId = callbackId;
                                     result = new PluginResult(Status.NO_RESULT);
                                     result.setKeepCallback(true);
-                                    */
+                                     */
 
                                     // get current layout view then add our 999 buffer to bring back to view
                                     // final RelativeLayout layouter = (RelativeLayout) targetView.getParent();
@@ -417,7 +417,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
                                             targetView.startAnimation(animation);
                                         }
-                                        */
+                                         */
 
                                     } else {
                                         // already hidden, just callback
@@ -427,70 +427,70 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                                     }
                                 }
                             }
-                    );
+                            );
 
                     callbackContext.success();
                     return true;
 
-				} else {
-					// Error handle
-					callbackContext.error("cannot find view");
-					return true;
-				}
-				
-			} catch (JSONException e) {
-				// Error handle
-				callbackContext.error("missing view name parameter");
-				return true;
-			}
-			
-			// callbackContext.success();
-			// return true;
-	
-		} else if (action.equals("showView")) {
+                } else {
+                    // Error handle
+                    callbackContext.error("cannot find view");
+                    return true;
+                }
+
+            } catch (JSONException e) {
+                // Error handle
+                callbackContext.error("missing view name parameter");
+                return true;
+            }
+
+            // callbackContext.success();
+            // return true;
+
+        } else if (action.equals("showView")) {
             // TODO: Async callback
             // TODO: animations like iOS
-			// Show a particular view...
-			Log.d(TAG, "[showView] ****** " + args.toString() );
-			
-			String viewName;
-			
-			// Set defaults for animations
-			long animDuration = 500;
-			String animType = "none";
-			
-			try {
-				viewName = args.getString(0);
+            // Show a particular view...
+            Log.d(TAG, "[showView] ****** " + args.toString() );
 
-/*
-				// Analyse settings object
-				try {
-					JSONObject settings = (JSONObject) args.get(1);
-									
-					if (settings.has("animation")) {
-						JSONObject animation = settings.getJSONObject("animation");
+            String viewName;
 
-						if (animation.has("duration")) {
-							animDuration = (long)animation.getInt("duration");
-						}
-						
-						if (animation.has("type")) {
-							animType = animation.getString("type");
-						}
-					}
-					
-				} catch (Exception e) {
-					// No settings, use default
-					Log.d(TAG, "Do options set, using defaults");
-				}
-*/
+            // Set defaults for animations
+            long animDuration = 500;
+            String animType = "none";
 
-				// Find WebView by this name and show it
-				if (viewList.has(viewName) ) {
+            try {
+                viewName = args.getString(0);
+
+                /*
+                // Analyse settings object
+                try {
+                    JSONObject settings = (JSONObject) args.get(1);
+
+                    if (settings.has("animation")) {
+                        JSONObject animation = settings.getJSONObject("animation");
+
+                        if (animation.has("duration")) {
+                            animDuration = (long)animation.getInt("duration");
+                        }
+
+                        if (animation.has("type")) {
+                            animType = animation.getString("type");
+                        }
+                    }
+
+                } catch (Exception e) {
+                    // No settings, use default
+                    Log.d(TAG, "Do options set, using defaults");
+                }
+                 */
+
+                // Find WebView by this name and show it
+                if (viewList.has(viewName) ) {
                     Log.d(TAG, "Get WebView in view list");
-					final WebView targetView = (WebView) viewList.get(viewName);
+                    final WebView targetView = (WebView) viewList.get(viewName);
                     Log.d(TAG, targetView.toString());
-					long duration = animDuration;
+                    long duration = animDuration;
 
                     cordova.getActivity().runOnUiThread(
                             new Runnable() {
@@ -504,7 +504,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                                         Log.d(TAG, "[show - targetView.getPaddingLeft()] ****** " + targetView.getPaddingLeft());
 
                                         if (targetView.getPaddingLeft() == 999) {
-                                        /*
+                                            /*
                                             Animation animation;
 
                                             if (animType.equals("none")) {
@@ -571,9 +571,9 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                                                 targetView.startAnimation(animation);
 
                                             }
-                                            */
-                                        // callbackContext.success();
-                                        // return true;
+                                             */
+                                            // callbackContext.success();
+                                            // return true;
                                             // No animations
                                             targetView.setVisibility(View.VISIBLE);
                                             targetView.setPadding(0, 0, 0, 0);
@@ -586,24 +586,24 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                                     }
                                 }
                             }
-                    );
+                            );
 
                     callbackContext.success();
                     return true;
-					
-				} else {
-					// Error handle
+
+                } else {
+                    // Error handle
                     Log.e(TAG, "Cannot show. Cannot find view");
-					callbackContext.error("Cannot show. Cannot find view");
-					return true;
-				}
-				
-			} catch (JSONException e) {
-				// Error handle
+                    callbackContext.error("Cannot show. Cannot find view");
+                    return true;
+                }
+
+            } catch (JSONException e) {
+                // Error handle
                 Log.e(TAG, "Cannot show. Missing view name parameter");
-				callbackContext.error("Cannot show. Missing view name parameter");
-				return true;
-			}
+                callbackContext.error("Cannot show. Missing view name parameter");
+                return true;
+            }
 
         } else if (action.equals("setLayout")) {
 
@@ -621,7 +621,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                                     WizViewManagerPlugin.setLayout(targetView, options);
                                 }
                             }
-                    );
+                            );
                 } else {
                     final WizWebView targetView = (WizWebView) viewList.get(viewName);
 
@@ -632,18 +632,18 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                                     targetView.setLayout(options, null);
                                 }
                             }
-                    );
+                            );
                 }
 
             } catch (Exception e) {
-                    Log.e(TAG, "Error: " + e);
+                Log.e(TAG, "Error: " + e);
             }
 
             callbackContext.success();
 
             return true;
 
-		} else if (action.equals("load")) {
+        } else if (action.equals("load")) {
             Log.d(TAG, "[load] ****** ");
 
             String viewName;
@@ -670,7 +670,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                                     targetView.load(url, load_cb);
                                 }
                             }
-                    );
+                            );
                 } else {
                     Log.e(TAG, "Cannot load into view. No source to load.");
                     callbackContext.error("Cannot load into view.  No source to load.");
@@ -692,12 +692,12 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                 return true;
             }
         }
-		return false;
-	}
+        return false;
+    }
 
-	public static JSONObject getViews() {
-		return viewList;
-	}
+    public static JSONObject getViews() {
+        return viewList;
+    }
 
     public static void updateViewList() {
         CordovaWebView targetView = null;
@@ -719,16 +719,16 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                 new Runnable() {
                     public void run() {
                         if (_targetView != null) {
-                        	if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-	       	               	     // Only for Kitkat and newer versions
-                        		_targetView.evaluateJavascript(_jsString, null);
-	       	               	} else {
-	                            _targetView.loadUrl("javascript:" + _jsString);
-	       	               	}
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                                // Only for Kitkat and newer versions
+                                _targetView.evaluateJavascript(_jsString, null);
+                            } else {
+                                _targetView.loadUrl("javascript:" + _jsString);
+                            }
                         }
                     }
                 }
-        );
+                );
 
         // Clean up references
         targetView = null;
@@ -825,13 +825,13 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                 _bottom = 0 - _y;
             }
         }
-/*
+        /*
         ViewGroup.MarginLayoutParams marginParams = (ViewGroup.MarginLayoutParams) webView.getLayoutParams();
         Log.d("WizViewManager", marginParams.toString());
         marginParams.setMargins(_left, _top, _right, _bottom);
 
         webView.setLayoutParams(marginParams);
-*/
+         */
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) webView.getLayoutParams();
         Log.d("WizViewManager", layoutParams.toString());
         layoutParams.setMargins(_left, _top, _right, _bottom);

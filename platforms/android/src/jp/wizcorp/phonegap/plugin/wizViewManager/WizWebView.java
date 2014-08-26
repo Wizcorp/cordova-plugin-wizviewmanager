@@ -5,11 +5,11 @@
  *  \  /\  /| |/ / (_| | | | (_| |  \  /\  /  __/ |_) \ V /| |  __/\ V  V / 
  *   \/  \/ |_/___\__,_|_|  \__,_|   \/  \/ \___|_.__/ \_/ |_|\___| \_/\_/  
  *
- * @author 	Ally Ogilvie
+ * @author  Ally Ogilvie
  * @copyright Wizcorp Inc. [ Incorporated Wizards ] 2013
- * @file	- WizViewManagerPlugin.java
- * @about	- Builder and controller for Wizard WebView Navigation
-*/
+ * @file    - WizViewManagerPlugin.java
+ * @about   - Builder and controller for Wizard WebView Navigation
+ */
 package jp.wizcorp.phonegap.plugin.wizViewManager;
 
 import android.app.Activity;
@@ -44,7 +44,7 @@ import java.net.URL;
 @SuppressLint("SetJavaScriptEnabled")
 public class WizWebView extends WebView  {
 
-	private String TAG = "WizWebView";
+    private String TAG = "WizWebView";
     private CallbackContext create_cb;
     private CallbackContext load_cb;
     private Context mContext;
@@ -72,11 +72,11 @@ public class WizWebView extends WebView  {
         // Set invisible by default, developer MUST call show to see the view
         this.setVisibility(View.INVISIBLE);
 
-        // 	WizWebView Settings
+        //  WizWebView Settings
         WebSettings webSettings = this.getSettings();
-        
+
         webSettings.setJavaScriptEnabled(true);
-        
+
         webSettings.setDomStorageEnabled(true);
         // Whether or not on-screen controls are displayed can be set with setDisplayZoomControls(boolean). 
         // The default is false.
@@ -89,15 +89,15 @@ public class WizWebView extends WebView  {
         if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.ICE_CREAM_SANDWICH_MR1) {
             Level16Apis.enableUniversalAccess(webSettings);
         }
-        
+
         this.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-      	     // Only for Kitkat and newer versions
-      		this.evaluateJavascript("window.name = '" + viewName + "';", null);
-      	} else {
+            // Only for Kitkat and newer versions
+            this.evaluateJavascript("window.name = '" + viewName + "';", null);
+        } else {
             this.loadUrl("javascript:window.name = '" + viewName + "';");
-      	}
+        }
 
         ViewGroup frame = (ViewGroup) ((Activity) context).findViewById(android.R.id.content);
 
@@ -148,11 +148,11 @@ public class WizWebView extends WebView  {
                             String data2send = msgData[2];
                             // Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                         	     // Only for Kitkat and newer versions
-                            	targetView.evaluateJavascript("wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");", null);
-                         	} else {
+                                // Only for Kitkat and newer versions
+                                targetView.evaluateJavascript("wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");", null);
+                            } else {
                                 targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
-                         	}
+                            }
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -187,11 +187,11 @@ public class WizWebView extends WebView  {
                             data2send = data2send.replace("'", "\\'");
                             // Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0] + " -> " + targetView + " with data -> " + data2send);
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                        	     // Only for Kitkat and newer versions
-                            	targetView.evaluateJavascript("wizMessageReceiver('" + data2send + "');", null);
-                        	} else {
+                                // Only for Kitkat and newer versions
+                                targetView.evaluateJavascript("wizMessageReceiver('" + data2send + "');", null);
+                            } else {
                                 targetView.loadUrl("javascript:(wizMessageReceiver('" + data2send + "'))");
-                        	}
+                            }
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -278,11 +278,11 @@ public class WizWebView extends WebView  {
                         "window.wizViewMessenger = new WizViewMessenger();";
 
                 if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                	// Only for Kitkat and newer versions
-                	wView.evaluateJavascript(jsString, null);
-	           	} else {
-	           		wView.loadUrl("javascript:" + jsString);
-	           	}
+                    // Only for Kitkat and newer versions
+                    wView.evaluateJavascript(jsString, null);
+                } else {
+                    wView.loadUrl("javascript:" + jsString);
+                }
 
                 if (create_cb != null) {
                     create_cb.success();
@@ -557,7 +557,7 @@ public class WizWebView extends WebView  {
         }
         return false;
     }
-    
+
     @TargetApi(16)
     private static class Level16Apis {
         static void enableUniversalAccess(WebSettings settings) {
