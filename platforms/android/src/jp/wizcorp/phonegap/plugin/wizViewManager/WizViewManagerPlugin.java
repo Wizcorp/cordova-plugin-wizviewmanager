@@ -52,7 +52,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
     static CordovaWebView _webView;
 
     @Override
-    public void initialize(CordovaInterface cordova, CordovaWebView webView) {
+    public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
         _cordova = cordova;
         _webView = webView;
         Log.d(TAG, "Initialize Plugin");
@@ -61,18 +61,32 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             // Cordova view is not in the viewList so add it.
             try {
                 viewList.put("mainView", webView);
-                webView.loadUrl("javascript:window.name = 'mainView';");
+                // To avoid "method was called on thread 'JavaBridge'" error we use a runnable
+                webView.post(new Runnable() {
+                    @Override
+                    public void run() {
+                    	if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                    	     // Only for Kitkat and newer versions
+                    		webView.evaluateJavascript("window.name = 'mainView';", null);
+                    	} else {
+                    		webView.loadUrl("javascript:window.name = 'mainView';");
+                    	}
+                    }
+                });
             } catch (JSONException e) {
                 // Error handle (this should never happen!)
                 Log.e(TAG, "Critical error. Failed to retrieve Cordova's view");
             }
         }
         super.initialize(cordova, webView);
-        
-        webView.getSettings().setDomStorageEnabled(true);
-
-        webView.getSettings().setLoadWithOverviewMode(true);
-        webView.getSettings().setUseWideViewPort(true);
+        webView.post(new Runnable() {
+            @Override
+            public void run() {
+            	webView.getSettings().setDomStorageEnabled(true);
+                webView.getSettings().setLoadWithOverviewMode(true);
+                webView.getSettings().setUseWideViewPort(true);
+            }
+        });
     }
 
     @android.annotation.TargetApi(11)
@@ -114,8 +128,12 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                     String data2send = msgData[2];
 
                     Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
-                    targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
-
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+	               	     // Only for Kitkat and newer versions
+	               		webView.evaluateJavascript("wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");", null);
+	               	} else {
+	                    targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
+	               	}
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
                     e.printStackTrace();
@@ -149,7 +167,12 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                     String data2send = msgData[1];
                     data2send = data2send.replace("'", "\\'");
                     Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> "+data2send );
-                    targetView.loadUrl("javascript:(wizMessageReceiver('"+data2send+"'))");
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+	               	     // Only for Kitkat and newer versions
+	               		webView.evaluateJavascript("wizMessageReceiver('"+data2send+"');", null);
+	               	} else {
+	               		targetView.loadUrl("javascript:(wizMessageReceiver('"+data2send+"'))");
+	               	}
 
                 } catch (JSONException e) {
                     // TODO Auto-generated catch block
@@ -696,7 +719,12 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                 new Runnable() {
                     public void run() {
                         if (_targetView != null) {
-                            _targetView.loadUrl("javascript:" + _jsString);
+                        	if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+	       	               	     // Only for Kitkat and newer versions
+                        		_targetView.evaluateJavascript(_jsString, null);
+	       	               	} else {
+	                            _targetView.loadUrl("javascript:" + _jsString);
+	       	               	}
                         }
                     }
                 }

@@ -92,7 +92,12 @@ public class WizWebView extends WebView  {
         
         this.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
 
-        this.loadUrl("javascript:window.name = '" + viewName + "';");
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+      	     // Only for Kitkat and newer versions
+      		this.evaluateJavascript("window.name = '" + viewName + "';", null);
+      	} else {
+            this.loadUrl("javascript:window.name = '" + viewName + "';");
+      	}
 
         ViewGroup frame = (ViewGroup) ((Activity) context).findViewById(android.R.id.content);
 
@@ -142,8 +147,12 @@ public class WizWebView extends WebView  {
                             // send data to mainView
                             String data2send = msgData[2];
                             // Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
-                            targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
-
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                         	     // Only for Kitkat and newer versions
+                            	targetView.evaluateJavascript("wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");", null);
+                         	} else {
+                                targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
+                         	}
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -177,8 +186,12 @@ public class WizWebView extends WebView  {
                             String data2send = msgData[1];
                             data2send = data2send.replace("'", "\\'");
                             // Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0] + " -> " + targetView + " with data -> " + data2send);
-                            targetView.loadUrl("javascript:(wizMessageReceiver('" + data2send + "'))");
-
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                        	     // Only for Kitkat and newer versions
+                            	targetView.evaluateJavascript("wizMessageReceiver('" + data2send + "');", null);
+                        	} else {
+                                targetView.loadUrl("javascript:(wizMessageReceiver('" + data2send + "'))");
+                        	}
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
                             e.printStackTrace();
@@ -264,7 +277,12 @@ public class WizWebView extends WebView  {
                         "\n" +
                         "window.wizViewMessenger = new WizViewMessenger();";
 
-                wView.loadUrl("javascript:" + jsString);
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                	// Only for Kitkat and newer versions
+                	wView.evaluateJavascript(jsString, null);
+	           	} else {
+	           		wView.loadUrl("javascript:" + jsString);
+	           	}
 
                 if (create_cb != null) {
                     create_cb.success();
