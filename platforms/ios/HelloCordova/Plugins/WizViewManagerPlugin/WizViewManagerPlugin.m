@@ -921,6 +921,12 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 - (BOOL)validateFileExtension:(NSString *)candidate {
     // Check the source file type to avoid load errors
     NSString *extension = [candidate lastPathComponent];
+    // Check if it contains '.' separator
+    if ([extension rangeOfString:@"."].location == NSNotFound) {
+        // Path does not contain file name, assume it is a website path
+        // For example: http://wizcorp.jp/int?some=attributes&are=here
+        return TRUE;
+    }
     extension = [[extension componentsSeparatedByString:@"."] lastObject];
     extension = [NSString stringWithFormat:@".%@", extension];
     NSLog(@"extension: %@", extension);
