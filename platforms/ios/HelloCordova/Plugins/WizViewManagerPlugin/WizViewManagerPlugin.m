@@ -221,6 +221,14 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                 newWizView.backgroundColor = [self colorWithHexString:backgroundColor];
             }
         }
+        if (![options objectForKey:@"src"]) {
+            // No source so viewDidFinishLoad will not be called. We should manually call success here
+            // Remove callback
+            [viewLoadedCallbackId removeObjectForKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
+            // Call callback
+            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+            [self writeJavascript:[pluginResult toSuccessCallbackString:command.callbackId]];
+        }
 
     } else {
 
