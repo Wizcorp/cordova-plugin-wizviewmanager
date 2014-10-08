@@ -729,8 +729,13 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     int screenHeight;
     int screenWidth;
     if (UIDeviceOrientationIsLandscape(self.viewController.interfaceOrientation)) {
-        screenHeight = (int) screenRect.size.width;
-        screenWidth = (int) screenRect.size.height;
+        if (floor(NSFoundationVersionNumber) > NSFoundationVersionNumber_iOS_7_1) {
+            screenHeight = (int) screenRect.size.height;
+            screenWidth = (int) screenRect.size.width;
+        } else {
+            screenHeight = (int) screenRect.size.width;
+            screenWidth = (int) screenRect.size.height;
+        }
     } else {
         screenHeight = (int) screenRect.size.height;
         screenWidth = (int) screenRect.size.width;
