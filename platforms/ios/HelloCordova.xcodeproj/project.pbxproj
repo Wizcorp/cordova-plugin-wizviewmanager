@@ -26,6 +26,8 @@
 		308D05391370CCF300D202BF /* icon@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 308D05301370CCF300D202BF /* icon@2x.png */; };
 		30A0434814DC770100060A13 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 30A0434314DC770100060A13 /* Localizable.strings */; };
 		30FC414916E50CA1004E6F35 /* icon-72@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 30FC414816E50CA1004E6F35 /* icon-72@2x.png */; };
+		412130AF1A08E14100EC58C5 /* WizWKWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = 412130AE1A08E14100EC58C5 /* WizWKWebView.m */; };
+		412130B31A08EF7C00EC58C5 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 412130B01A08E49700EC58C5 /* WebKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		41E296BB18D6A25A003A9907 /* WizViewManagerPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 41E296B818D6A25A003A9907 /* WizViewManagerPlugin.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		41E296BC18D6A25A003A9907 /* WizWebView.m in Sources */ = {isa = PBXBuildFile; fileRef = 41E296BA18D6A25A003A9907 /* WizWebView.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		5AEE5B35173C68D80009041E /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 5AEE5B34173C68D80009041E /* CoreLocation.framework */; };
@@ -88,6 +90,9 @@
 		30A0434714DC770100060A13 /* se */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = se; path = Localizable.strings; sourceTree = "<group>"; };
 		30FC414816E50CA1004E6F35 /* icon-72@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "icon-72@2x.png"; sourceTree = "<group>"; };
 		32CA4F630368D1EE00C91783 /* HelloCordova-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "HelloCordova-Prefix.pch"; sourceTree = "<group>"; };
+		412130AD1A08E14100EC58C5 /* WizWKWebView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizWKWebView.h; sourceTree = "<group>"; };
+		412130AE1A08E14100EC58C5 /* WizWKWebView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WizWKWebView.m; sourceTree = "<group>"; };
+		412130B01A08E49700EC58C5 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		41E296B618D6A25A003A9907 /* WizDebugLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizDebugLog.h; sourceTree = "<group>"; };
 		41E296B718D6A25A003A9907 /* WizViewManagerPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WizViewManagerPlugin.h; sourceTree = "<group>"; };
 		41E296B818D6A25A003A9907 /* WizViewManagerPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WizViewManagerPlugin.m; sourceTree = "<group>"; };
@@ -115,6 +120,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				412130B31A08EF7C00EC58C5 /* WebKit.framework in Frameworks */,
 				5B1594DD16A7569C00FEF299 /* AssetsLibrary.framework in Frameworks */,
 				301BF552109A68D80062928A /* libCordova.a in Frameworks */,
 				288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */,
@@ -207,6 +213,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				412130B01A08E49700EC58C5 /* WebKit.framework */,
 				5AEE5B34173C68D80009041E /* CoreLocation.framework */,
 				5B1594DC16A7569C00FEF299 /* AssetsLibrary.framework */,
 				288765FC0DF74451002DB57D /* CoreGraphics.framework */,
@@ -291,6 +298,8 @@
 				41E296B818D6A25A003A9907 /* WizViewManagerPlugin.m */,
 				41E296B918D6A25A003A9907 /* WizWebView.h */,
 				41E296BA18D6A25A003A9907 /* WizWebView.m */,
+				412130AD1A08E14100EC58C5 /* WizWKWebView.h */,
+				412130AE1A08E14100EC58C5 /* WizWKWebView.m */,
 			);
 			path = WizViewManagerPlugin;
 			sourceTree = "<group>";
@@ -425,6 +434,7 @@
 				1D60589B0D05DD56006BFB54 /* main.m in Sources */,
 				41E296BC18D6A25A003A9907 /* WizWebView.m in Sources */,
 				1D3623260D0F684500981E51 /* AppDelegate.m in Sources */,
+				412130AF1A08E14100EC58C5 /* WizWKWebView.m in Sources */,
 				302D95F114D2391D003F00A1 /* MainViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

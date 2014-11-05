@@ -8,7 +8,10 @@
 
 #import "WizViewManagerPlugin.h"
 #import "WizWebView.h"
+#import "WizWKWebView.h"
 #import "WizDebugLog.h"
+
+#define SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(v) ([[[UIDevice currentDevice] systemVersion] compare:(v) options:NSNumericSearch] != NSOrderedAscending)
 
 @implementation WizViewManagerPlugin
 
@@ -118,14 +121,18 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     // Inject Javascript to all views
     for (NSString *key in wizViewList) {
         // Found view send message
-
-        // Update wizViewManager.views
-        UIWebView *targetWebView = [wizViewList objectForKey:key];
-        [targetWebView stringByEvaluatingJavaScriptFromString:
-                                   [NSString stringWithFormat:@"window.wizViewManager.updateViewList([%@]);", viewNamesString]];
+        if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0") && ![key isEqualToString:@"mainView"] ) {
+            // Update wizViewManager.views
+            WKWebView *targetWebView = [wizViewList objectForKey:key];
+            [targetWebView evaluateJavaScript:[NSString stringWithFormat:@"window.wizViewManager.updateViewList([%@]);", viewNamesString] completionHandler:NULL];
+        } else {
+            // Update wizViewManager.views
+            UIWebView *targetWebView = [wizViewList objectForKey:key];
+            [targetWebView stringByEvaluatingJavaScriptFromString:
+             [NSString stringWithFormat:@"window.wizViewManager.updateViewList([%@]);", viewNamesString]];
+        }
     }
     [viewNames release];
-    
 }
 
 - (void)createView:(CDVInvokedUrlCommand *)command {
@@ -146,7 +153,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     [viewLoadedCallbackId setObject:command.callbackId forKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
 
     // Create a new wizWebView with options (if specified)
-    UIWebView *newWizView;
+    UIView *newWizView;
 
     if (options) {
 
@@ -188,14 +195,28 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         CGRect newRect = [self frameWithOptions:options];
 
         // Create new wizView
-        newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect viewName:viewName sourceToLoad:src withOptions:options];
-        if ([newWizView isKindOfClass:[NSNull class]]) {
-            // Error!
-            CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
-                                                          messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
-            [self writeJavascript:[pluginResult toErrorCallbackString:command.callbackId]];
-            return;
+        if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0")) {
+            newWizView = [[WizWKWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect viewName:viewName sourceToLoad:src withOptions:options];
+
+            if ([newWizView isKindOfClass:[NSNull class]]) {
+                // Error!
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                              messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
+                [self writeJavascript:[pluginResult toErrorCallbackString:command.callbackId]];
+                return;
+            }
+        } else {
+            newWizView = [[WizWebView alloc] createNewInstanceViewFromManager:self newBounds:newRect viewName:viewName sourceToLoad:src withOptions:options];
+
+            if ([newWizView isKindOfClass:[NSNull class]]) {
+                // Error!
+                CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
+                                                              messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
+                [self writeJavascript:[pluginResult toErrorCallbackString:command.callbackId]];
+                return;
+            }
         }
+
         
         // Add view name to our wizard view list
         [wizViewList setObject:newWizView forKey:viewName];
@@ -847,11 +868,15 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
         // Escape the message
         NSString *postDataEscaped = [message stringByReplacingOccurrencesOfString:@"'" withString:@"\\'"];
-
-        // Message UIWebView
-        UIWebView *targetWebView = [wizViewList objectForKey:viewName];
-        [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
-
+        if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0") && ![viewName isEqualToString:@"mainView"] ) {
+            // Message WKWebView
+            WKWebView *targetWebView = [wizViewList objectForKey:viewName];
+            [targetWebView evaluateJavaScript:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped] completionHandler:NULL];
+        } else {
+            // Message UIWebView
+            UIWebView *targetWebView = [wizViewList objectForKey:viewName];
+            [targetWebView stringByEvaluatingJavaScriptFromString:[NSString stringWithFormat:@"wizMessageReceiver(window.decodeURIComponent('%@'));", postDataEscaped]];
+        }
     } else {
         WizLog(@"Message failed! View not found!");
     }
@@ -1471,11 +1496,18 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         
         NSMutableDictionary *viewList = [[NSMutableDictionary alloc] initWithDictionary:[WizViewManagerPlugin getViews]];
 
-        UIWebView *targetWebView = [viewList objectForKey:targetView];
-        NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent(\"%@\", \"%@\", \"%@\", \"%@\");", originView, targetView, data, type];
-        [targetWebView stringByEvaluatingJavaScriptFromString:js];
-
-            // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);
+        NSString *js = [NSString stringWithFormat:@"wizViewMessenger.__triggerMessageEvent(\"%@\", \"%@\", \"%@\", \"%@\");",
+                        originView, targetView, data, type];
+        if (SYSTEM_VERSION_GREATER_THAN_OR_EQUAL_TO(@"8.0") && ![targetView isEqualToString:@"mainView"] ) {
+            // Trigger event in WKWebView
+            WKWebView *targetWebView = [wizViewList objectForKey:targetView];
+            [targetWebView evaluateJavaScript:js completionHandler:NULL];
+        } else {
+            // Trigger event in UIWebView
+            UIWebView *targetWebView = [viewList objectForKey:targetView];
+            [targetWebView stringByEvaluatingJavaScriptFromString:js];
+        }
+        // WizLog(@"[AppDelegate wizMessageView()] ******* current views... %@", viewList);
 
         [postMessage release];
         postMessage = nil;
