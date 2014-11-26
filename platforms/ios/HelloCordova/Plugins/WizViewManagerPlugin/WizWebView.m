@@ -164,7 +164,7 @@ static CDVPlugin *viewManager;
     if ([callbackDict objectForKey:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]]) {
         NSString *callbackId = [callbackDict objectForKey:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:203 description:@"Loading source error"]];
-        [viewManager writeJavascript:[pluginResult toErrorCallbackString:callbackId]];
+        [viewManager.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
         // Remove callback
         [WizViewManagerPlugin removeViewLoadedCallback:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]];
     }
@@ -172,7 +172,7 @@ static CDVPlugin *viewManager;
     if ([callbackDict objectForKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]]) {
         NSString *callbackId = [callbackDict objectForKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
         pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:103 description:@"Loading source error"]];
-        [viewManager writeJavascript:[pluginResult toErrorCallbackString:callbackId]];
+        [viewManager.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
         // Remove callback
         [WizViewManagerPlugin removeViewLoadedCallback:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
     }
@@ -192,7 +192,7 @@ static CDVPlugin *viewManager;
     if ([callbackDict objectForKey:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]]) {
         NSString *callbackId = [callbackDict objectForKey:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
+        [viewManager.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
         // Remove callback
         [WizViewManagerPlugin removeViewLoadedCallback:[NSString stringWithFormat:@"%@_viewLoadedCallback", viewName]];
     }
@@ -200,7 +200,7 @@ static CDVPlugin *viewManager;
     if ([callbackDict objectForKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]]) {
         NSString *callbackId = [callbackDict objectForKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [viewManager writeJavascript:[pluginResult toSuccessCallbackString:callbackId]];
+        [viewManager.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
         // Remove callback
         [WizViewManagerPlugin removeViewLoadedCallback:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
     }
