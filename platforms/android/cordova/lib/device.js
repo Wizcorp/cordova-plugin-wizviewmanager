@@ -48,7 +48,7 @@ module.exports.list = function() {
  * and launches it.
  * Returns a promise.
  */
-module.exports.install = function(target) {
+module.exports.install = function(target, buildResults) {
     var launchName;
     return this.list()
     .then(function(device_list) {
@@ -56,16 +56,20 @@ module.exports.install = function(target) {
             return Q.reject('ERROR: Failed to deploy to device, no devices found.');
 
         // default device
-        target = typeof target !== 'undefined' ? target : device_list[0];
+        target = target || device_list[0];
 
         if (device_list.indexOf(target) < 0)
             return Q.reject('ERROR: Unable to find target \'' + target + '\'.');
 
-        var apk_path = build.get_apk();
-        launchName = appinfo.getActivityName();
-        console.log('Installing app on device...');
-        var cmd = 'adb -s ' + target + ' install -r "' + apk_path + '"';
-        return exec(cmd);
+        return build.detectArchitecture(target)
+        .then(function(arch) {
+            var apk_path = build.findBestApkForArchitecture(buildResults, arch);
+            launchName = appinfo.getActivityName();
+            console.log('Using apk: ' + apk_path);
+            console.log('Installing app on device...');
+            var cmd = 'adb -s ' + target + ' install -r "' + apk_path + '"';
+            return exec(cmd);
+        });
     }).then(function(output) {
         if (output.match(/Failure/)) return Q.reject('ERROR: Failed to install apk to device: ' + output);
 
@@ -79,7 +83,7 @@ module.exports.install = function(target) {
         var cmd = 'adb -s ' + target + ' shell am start -W -a android.intent.action.MAIN -n ' + launchName;
         return exec(cmd);
     }).then(function() {
-        console.log('LANCH SUCCESS');
+        console.log('LAUNCH SUCCESS');
     }, function(err) {
         return Q.reject('ERROR: Failed to launch application on device: ' + err);
     });

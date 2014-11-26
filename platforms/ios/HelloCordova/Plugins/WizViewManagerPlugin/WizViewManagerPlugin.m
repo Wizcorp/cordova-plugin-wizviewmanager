@@ -165,7 +165,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                         WizLog(@"Invalid extension type!");
                         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
                                                                       messageAsDictionary:[self throwError:0 description:@"View not created. Check log output."] ];
-                        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
                         [url release];
                         return;
                     }
@@ -179,7 +179,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                     WizLog(@"Invalid extension type!");
                     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
                                                                   messageAsDictionary:[self throwError:0 description:@"View not created. Check log output."] ];
-                    [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
                     return;
                 }
             }
@@ -193,7 +193,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
             // Error!
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
                                                           messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
-            [self writeJavascript:[pluginResult toErrorCallbackString:command.callbackId]];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
         
@@ -227,7 +227,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
             [viewLoadedCallbackId removeObjectForKey:[NSString stringWithFormat:@"%@_updateCallback", viewName]];
             // Call callback
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-            [self writeJavascript:[pluginResult toSuccessCallbackString:command.callbackId]];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }
 
     } else {
@@ -241,7 +241,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
             // Error!
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
                                                           messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
-            [self writeJavascript:[pluginResult toErrorCallbackString:command.callbackId]];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
 
@@ -276,7 +276,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         // View not found
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
                 [self throwError:1 description:@"View not found"]];
-        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
     }
 }
@@ -311,7 +311,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                 WizLog(@"[WizViewManager] ******* hideView showViewCallbackId %@", self.showViewCallbackId);
                 if (self.hideViewCallbackId.length > 0) {
                     NSLog(@"[WizViewManager] ******* hideView, callback to hide - %@", self.hideViewCallbackId);
-                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.hideViewCallbackId]];
+                    [self.commandDelegate sendPluginResult:pluginResultOK callbackId:self.hideViewCallbackId];
                     self.hideViewCallbackId = nil;
                     // We are hiding when hiding, exit.
                     WizLog(@"returning - already hiding animation");
@@ -319,7 +319,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                 }
                 if (self.showViewCallbackId.length > 0) {
                     WizLog(@"[WizViewManager] ******* showView, callback to show - %@", self.showViewCallbackId);
-                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.showViewCallbackId]];
+                    [self.commandDelegate sendPluginResult:pluginResultOK callbackId:self.showViewCallbackId];
                     self.showViewCallbackId = nil;
                 }
             }
@@ -395,7 +395,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         } else {
             // Target already hidden do nothing
             WizLog(@"[WizViewManager] ******* target already hidden! ");
-            [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
+            [self.commandDelegate sendPluginResult:pluginResultOK callbackId:command.callbackId];
         }
 
         // Other callbacks come from after view is added to animation object
@@ -404,7 +404,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         
         CDVPluginResult *pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
                 [self throwError:1 description:@"View not found"]];
-        [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId]];
+        [self.commandDelegate sendPluginResult:pluginResultErr callbackId:command.callbackId];
         
     }
 }
@@ -420,7 +420,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         // View not found
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
                 [self throwError:1 description:@"View not found"]];
-        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         return;
     }
 }
@@ -456,12 +456,12 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                 WizLog(@"[WizViewManager] ******* showView showViewCallbackId %@", self.showViewCallbackId);
                 if (self.hideViewCallbackId.length > 0) {
                     WizLog(@"[WizViewManager] ******* showView, callback to hide - %@", self.hideViewCallbackId);
-                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.hideViewCallbackId]];
+                    [self.commandDelegate sendPluginResult:pluginResultOK callbackId:self.hideViewCallbackId];
                     self.hideViewCallbackId = nil;
                 }
                 if (self.showViewCallbackId.length > 0) {
                     WizLog(@"[WizViewManager] ******* showView, callback to show - %@", self.showViewCallbackId);
-                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.showViewCallbackId]];
+                    [self.commandDelegate sendPluginResult:pluginResultOK callbackId:self.showViewCallbackId];
                     self.showViewCallbackId = nil;
                     // we are showing when showing, exit.
                     WizLog(@"returning - already showing animation");
@@ -521,7 +521,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                         [self showWithNoAnimation:targetWebView];
                         // Not animating so remove from animate store
                         [isAnimating removeObjectForKey:viewName];
-                        [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
+                        [self.commandDelegate sendPluginResult:pluginResultOK callbackId:self.showViewCallbackId];
                         self.showViewCallbackId = nil;
                     }
                     
@@ -530,7 +530,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                     [self showWithNoAnimation:targetWebView];
                     // Not animating so remove from animate store
                     [isAnimating removeObjectForKey:viewName];
-                    [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
+                    [self.commandDelegate sendPluginResult:pluginResultOK callbackId:self.showViewCallbackId];
                     self.showViewCallbackId = nil;
                 }
 
@@ -539,7 +539,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                 [self showWithNoAnimation:targetWebView];
                 // Not animating so remove from animate store
                 [isAnimating removeObjectForKey:viewName];
-                [self writeJavascript: [pluginResultOK toSuccessCallbackString:command.callbackId]];
+                [self.commandDelegate sendPluginResult:pluginResultOK callbackId:self.showViewCallbackId];
                 self.showViewCallbackId = nil;
             }
                 
@@ -548,14 +548,14 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
             WizLog(@"[WizViewManager] ******* target already shown! ");
             CDVPluginResult *pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
                                                              messageAsDictionary:[self throwError:5 description:@"Target view already shown"]];
-            [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId ]];
+            [self.commandDelegate sendPluginResult:pluginResultErr callbackId:self.showViewCallbackId];
             self.showViewCallbackId = nil;
         }
 
     } else {
                 
         CDVPluginResult *pluginResultErr = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:1 description:@"View not found"]];
-        [self writeJavascript: [pluginResultErr toErrorCallbackString:command.callbackId]];
+        [self.commandDelegate sendPluginResult:pluginResultErr callbackId:self.showViewCallbackId];
     }
 }
 
@@ -571,7 +571,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         // Search for view
         if (![wizViewList objectForKey:viewName]) {
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:[self throwError:1 description:@"View not found"]];
-            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }
 
         if ([options objectForKey:@"src"] && ![[options objectForKey:@"src"] isKindOfClass:[NSNull class]]) {
@@ -599,7 +599,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                             WizLog(@"Invalid extension type!");
                             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
                                                                           messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
-                            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
                             [url release];
                             return;
                         }
@@ -625,7 +625,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                     WizLog(@"Invalid extension type!");
                     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR
                                                                   messageAsDictionary:[self throwError:2 description:@"Invalid extension type"] ];
-                    [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                    [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
                     return;
                 }
 
@@ -654,7 +654,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
                             NSLog(@"Load Error: invalid source");
                             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
                                     [self throwError:4 description:@"Load Error: No or NULL source"]];
-                            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+                            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
                         }
                     } else {
                         url = [[NSURL alloc] initFileURLWithPath:bundleSrc];
@@ -672,14 +672,14 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
             NSLog(@"Load Error: no source");
             CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
                     [self throwError:4 description:@"Load Error: No or NULL source"]];
-            [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+            [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
             return;
         }
     } else {
         NSLog(@"No options passed");
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
                 [self throwError:4 description:@"No options passed"]];
-        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }
     
     // For UIWebViews; all view list arrays are updated once the source has been loaded.
@@ -709,7 +709,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         [self updateViewList];
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self writeJavascript: [pluginResult toSuccessCallbackString:command.callbackId]];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 
         WizLog(@"[WizViewManager] ******* removeView views left : %@ ", wizViewList);
 
@@ -717,7 +717,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
                 [self throwError:1 description:@"View not found"]];
-        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }
     
 }
@@ -830,12 +830,11 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         targetWebView.frame = newRect;
 
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self writeJavascript: [pluginResult toSuccessCallbackString:command.callbackId]];
-        
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     } else {
         CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsDictionary:
                 [self throwError:1 description:@"View not found"]];
-        [self writeJavascript: [pluginResult toErrorCallbackString:command.callbackId]];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
     }
 }
 
@@ -1044,8 +1043,8 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
         NSString *callback = self.showViewCallbackId;
         self.showViewCallbackId = nil;
         NSLog(@"[SHOW] callback to %@", callback);
-        CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-        [self writeJavascript: [pluginResult toSuccessCallbackString:callback]];
+        CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+        [self.commandDelegate sendPluginResult:pluginResult callbackId:callback];
     }
 
 }
@@ -1388,16 +1387,16 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 - (void)hideWithFadeAnimation:(UIView *)view duration:(float)secs option:(UIViewAnimationOptions)option viewName:(NSString *)viewName {
     WizLog(@"HIDE FADE view is %@, %@", view, viewName);
     // about to animate so add to animate store
-    
+
     if (![isAnimating objectForKey:viewName]) {
         view.alpha = 1.0;	// make the view transparent
     }
-    
+
     [isAnimating setObject:view forKey:viewName];
-    
-    CDVPluginResult* pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
-    [self writeJavascript: [pluginResultOK toSuccessCallbackString:self.hideViewCallbackId]];
-    
+
+    CDVPluginResult *pluginResultOK = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
+    [self.commandDelegate sendPluginResult:pluginResultOK callbackId:self.hideViewCallbackId];
+
     //[self addSubview:view];	// add it
 	[UIView animateWithDuration:secs delay:0.0 options:option
                      animations:^{view.alpha = 0.0;}
