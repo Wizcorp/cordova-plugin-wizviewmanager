@@ -29,15 +29,20 @@ COPY_HIDDEN=
 ORIG_IFS=$IFS
 IFS=$(echo -en "\n\b")
 
+if [[ -z "$BUILT_PRODUCTS_DIR" ]]; then
+  echo "The script is meant to be run as an Xcode build step and relies on env variables set by Xcode."
+  exit 1
+fi
 if [[ ! -e "$SRC_DIR" ]]; then
   echo "Path does not exist: $SRC_DIR"
   exit 1
 fi
 
+# Use full path to find to avoid conflict with macports find (CB-6383).
 if [[ -n $COPY_HIDDEN ]]; then
-  alias do_find='find "$SRC_DIR"'
+  alias do_find='/usr/bin/find "$SRC_DIR"'
 else
-  alias do_find='find -L "$SRC_DIR" -name ".*" -prune -o'
+  alias do_find='/usr/bin/find -L "$SRC_DIR" -name ".*" -prune -o'
 fi
 
 time (
@@ -73,6 +78,9 @@ for p in $(do_find -type f -print); do
     rsync -a "$SRC_DIR$subpath" "$DST_DIR$subpath" || exit 4
   fi
 done
+
+# Copy the config.xml file.
+cp -f "${PROJECT_FILE_PATH%.xcodeproj}/config.xml" "$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME"
 
 )
 IFS=$ORIG_IFS

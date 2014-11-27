@@ -143,8 +143,8 @@ module.exports.list_targets = function() {
 /*
  * Starts an emulator with the given ID,
  * and returns the started ID of that emulator.
- * If no ID is given it will used the first image availible,
- * if no image is availible it will error out (maybe create one?).
+ * If no ID is given it will used the first image available,
+ * if no image is available it will error out (maybe create one?).
  *
  * Returns a promise.
  */
@@ -178,14 +178,8 @@ module.exports.start = function(emulator_ID) {
             return Q(emulator_ID);
         }
     }).then(function() {
-        var cmd, args;
-        if(process.platform == 'win32' || process.platform == 'win64') {
-            cmd = '%comspec%';
-            args = ['/c', 'start', 'cmd', '/c', 'emulator', '-avd', emulator_ID];
-        } else {
-            cmd = 'emulator';
-            args = ['-avd', emulator_ID];
-        }
+        var cmd = 'emulator';
+        var args = ['-avd', emulator_ID];
         var proc = child_process.spawn(cmd, args, { stdio: 'inherit', detached: true });
         proc.unref(); // Don't wait for it to finish, since the emulator will probably keep running for a long time.
     }).then(function() {
@@ -274,7 +268,7 @@ module.exports.create_image = function(name, target) {
         .then(function() {
             // TODO: This seems like another error case, even though it always happens.
             console.error('ERROR : Unable to create an avd emulator, no targets found.');
-            console.error('Please insure you have targets availible by runing the "android" command');
+            console.error('Please insure you have targets available by running the "android" command');
             return Q.reject();
         }, function(error) {
             console.error('ERROR : Failed to create emulator image : ');
@@ -289,7 +283,7 @@ module.exports.create_image = function(name, target) {
  * If no started emulators are found, error out.
  * Returns a promise.
  */
-module.exports.install = function(target) {
+module.exports.install = function(target, buildResults) {
     var self = this;
     return this.list_started()
     .then(function(emulator_list) {
@@ -298,14 +292,18 @@ module.exports.install = function(target) {
         }
 
         // default emulator
-        target = typeof target !== 'undefined' ? target : emulator_list[0];
+        target = target || emulator_list[0];
         if (emulator_list.indexOf(target) < 0) {
             return Q.reject('Unable to find target \'' + target + '\'. Failed to deploy to emulator.');
         }
 
-        console.log('Installing app on emulator...');
-        var apk_path = build.get_apk();
-        return exec('adb -s ' + target + ' install -r "' + apk_path + '"');
+        return build.detectArchitecture(target)
+        .then(function(arch) {
+            var apk_path = build.findBestApkForArchitecture(buildResults, arch);
+            console.log('Installing app on emulator...');
+            console.log('Using apk: ' + apk_path);
+            return exec('adb -s ' + target + ' install -r "' + apk_path + '"');
+        });
     }).then(function(output) {
         if (output.match(/Failure/)) {
             return Q.reject('Failed to install apk to emulator: ' + output);

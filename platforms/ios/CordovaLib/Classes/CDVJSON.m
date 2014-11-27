@@ -64,7 +64,21 @@
 {
     NSError* error = nil;
     id object = [NSJSONSerialization JSONObjectWithData:[self dataUsingEncoding:NSUTF8StringEncoding]
-                                                options:kNilOptions
+                                                options:NSJSONReadingMutableContainers
+                                                  error:&error];
+
+    if (error != nil) {
+        NSLog(@"NSString JSONObject error: %@", [error localizedDescription]);
+    }
+
+    return object;
+}
+
+- (id)JSONFragment
+{
+    NSError* error = nil;
+    id object = [NSJSONSerialization JSONObjectWithData:[self dataUsingEncoding:NSUTF8StringEncoding]
+                                                options:NSJSONReadingAllowFragments
                                                   error:&error];
 
     if (error != nil) {
