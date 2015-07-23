@@ -20,13 +20,17 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.TargetApi;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.util.Log;
 import android.view.View;
 import android.webkit.WebView;
 
 import java.io.ByteArrayInputStream;
 
-public class WizViewManagerPlugin extends CordovaPlugin {
+@TargetApi(Build.VERSION_CODES.KITKAT) public class WizViewManagerPlugin extends CordovaPlugin {
 
     // The following files can be open natively by the WebView
     public static String[] whitelist = {
@@ -62,14 +66,14 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             try {
                 viewList.put("mainView", webView);
                 // To avoid "method was called on thread 'JavaBridge'" error we use a runnable
-                webView.post(new Runnable() {
+                ((View) webView).post(new Runnable() {
                     @Override
                     public void run() {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                             // Only for Kitkat and newer versions
-                            webView.evaluateJavascript("window.name = 'mainView';", null);
+                            ((WebView) webView).evaluateJavascript("window.name = 'mainView';", null);
                         } else {
-                            webView.loadUrl("javascript:window.name = 'mainView';");
+                            ((WebView) webView).loadUrl("javascript:window.name = 'mainView';");
                         }
                     }
                 });
@@ -79,12 +83,13 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             }
         }
         super.initialize(cordova, webView);
-        webView.post(new Runnable() {
+        ((View) webView).post(new Runnable() {
             @Override
             public void run() {
-                webView.getSettings().setDomStorageEnabled(true);
-                webView.getSettings().setLoadWithOverviewMode(true);
-                webView.getSettings().setUseWideViewPort(true);
+            	((View) webView).setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+                ((WebView) webView).getSettings().setDomStorageEnabled(true);
+                ((WebView) webView).getSettings().setLoadWithOverviewMode(true);
+                ((WebView) webView).getSettings().setUseWideViewPort(true);
             }
         });
     }
@@ -130,12 +135,12 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                     Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                         // Only for Kitkat and newer versions
-                        webView.evaluateJavascript("wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");", null);
+                        ((WebView) webView).evaluateJavascript("wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");", null);
                     } else {
                         targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
                     }
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
+                    //
                     e.printStackTrace();
                 }
             }
@@ -154,7 +159,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
             // target View = msgData[0] and message = msgData[1]
 
-            // Get webview list from View Manager
+            // Get ((View) webView) list from View Manager
             JSONObject viewList = WizViewManagerPlugin.getViews();
 
             if (viewList.has(msgData[0]) ) {
@@ -169,13 +174,13 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                     Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0]+ " -> " + targetView + " with data -> "+data2send );
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                         // Only for Kitkat and newer versions
-                        webView.evaluateJavascript("wizMessageReceiver('"+data2send+"');", null);
+                        ((WebView) webView).evaluateJavascript("wizMessageReceiver('"+data2send+"');", null);
                     } else {
                         targetView.loadUrl("javascript:(wizMessageReceiver('"+data2send+"'))");
                     }
 
                 } catch (JSONException e) {
-                    // TODO Auto-generated catch block
+                    // 
                     e.printStackTrace();
                 }
             }
@@ -196,7 +201,6 @@ public class WizViewManagerPlugin extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
 
         Log.d(TAG, "[action] ****** " + action );
-
         if (action.equals("createView")) {
             // Create a new view
             Log.d(TAG, "[createView] ****** " + args.toString() );
@@ -206,6 +210,11 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             try {
                 // Get view name
                 viewName = args.getString(0);
+                SharedPreferences sharedPref = cordova.getActivity().getSharedPreferences("PUSHDATA", Context.MODE_PRIVATE);
+        		SharedPreferences.Editor editor = sharedPref.edit();
+        		editor.putString("ViewName", viewName);
+        		editor.commit();
+        		System.out.println("Saaksshi current view----------"+viewName);
                 settings = args.optJSONObject(1);
                 Log.d(TAG, "Create view with settings : " + settings);
 
@@ -249,7 +258,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             return true;
 
         } else if (action.equals("removeView")) {
-            // TODO: Async callback
+            // 
             // Remove a view from the application
             Log.d(TAG, "[removeView] ****** " + args.toString() );
 
@@ -291,8 +300,8 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             }
 
         } else if (action.equals("hideView")) {
-            // TODO: Async callback
-            // TODO: animations like iOS
+            // 
+            // 
 
             // Hide a particular view...
             Log.d(TAG, "[hideView] ****** " + args.toString() );
@@ -448,8 +457,8 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             // return true;
 
         } else if (action.equals("showView")) {
-            // TODO: Async callback
-            // TODO: animations like iOS
+            // 
+            // 
             // Show a particular view...
             Log.d(TAG, "[showView] ****** " + args.toString() );
 
@@ -721,7 +730,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
                         if (_targetView != null) {
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                                 // Only for Kitkat and newer versions
-                                _targetView.evaluateJavascript(_jsString, null);
+                                ((WebView) _targetView).evaluateJavascript(_jsString, null);
                             } else {
                                 _targetView.loadUrl("javascript:" + _jsString);
                             }
@@ -742,8 +751,8 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
         String url;
         // Size
-        int _height = webView.getHeight();
-        int _width = webView.getWidth();
+        int _height = ((View) webView).getHeight();
+        int _width = ((View) webView).getWidth();
         // Margins
         int _x = 0;
         int _y = 0;
@@ -832,13 +841,13 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
         webView.setLayoutParams(marginParams);
          */
-        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) webView.getLayoutParams();
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) ((View) webView).getLayoutParams();
         Log.d("WizViewManager", layoutParams.toString());
         layoutParams.setMargins(_left, _top, _right, _bottom);
         layoutParams.height = _height;
         layoutParams.width = _width;
 
-        webView.setLayoutParams(layoutParams);
+        ((View) webView).setLayoutParams(layoutParams);
 
         Log.d("WizViewManager", "new layout -> width: " + layoutParams.width + " - height: " + layoutParams.height + " - margins: " + layoutParams.leftMargin + "," + layoutParams.topMargin + "," + layoutParams.rightMargin + "," + layoutParams.bottomMargin);
     }
