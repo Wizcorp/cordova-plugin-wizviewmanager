@@ -56,6 +56,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
     public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
         _cordova = cordova;
         _webView = webView;
+        final View view = webView.getView();
         Log.d(TAG, "Initialize Plugin");
         // By default, get a pointer to mainView and add mainView to the viewList as it always exists (hold phonegap's view)
         if (!viewList.has("mainView")) {
@@ -63,7 +64,7 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             try {
                 viewList.put("mainView", webView);
                 // To avoid "method was called on thread 'JavaBridge'" error we use a runnable
-                webView.getView().post(new Runnable() {
+                view.post(new Runnable() {
                     @Override
                     public void run() {
                         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
@@ -80,11 +81,11 @@ public class WizViewManagerPlugin extends CordovaPlugin {
             }
         }
         super.initialize(cordova, webView);
-        webView.getView().post(new Runnable() {
+        view.post(new Runnable() {
             @Override
             public void run() {
                 WebSettings settings;
-                settings = ((WebView) webView.getView()).getSettings();
+                settings = ((WebView) view).getSettings();
                 settings.setDomStorageEnabled(true);
                 settings.setLoadWithOverviewMode(true);
                 settings.setUseWideViewPort(true);
@@ -742,11 +743,12 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
         Log.d("WizViewManager", "Setting up mainView layout...");
         Log.d("WizViewManager", webView.toString());
+        View view = webView.getView();
 
         String url;
         // Size
-        int _height = webView.getView().getHeight();
-        int _width = webView.getView().getWidth();
+        int _height = view.getHeight();
+        int _width = view.getWidth();
         // Margins
         int _x = 0;
         int _y = 0;
@@ -835,13 +837,13 @@ public class WizViewManagerPlugin extends CordovaPlugin {
 
         webView.setLayoutParams(marginParams);
          */
-        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) webView.getView().getLayoutParams();
+        LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) view.getLayoutParams();
         Log.d("WizViewManager", layoutParams.toString());
         layoutParams.setMargins(_left, _top, _right, _bottom);
         layoutParams.height = _height;
         layoutParams.width = _width;
 
-        webView.getView().setLayoutParams(layoutParams);
+        view.setLayoutParams(layoutParams);
 
         Log.d("WizViewManager", "new layout -> width: " + layoutParams.width + " - height: " + layoutParams.height + " - margins: " + layoutParams.leftMargin + "," + layoutParams.topMargin + "," + layoutParams.rightMargin + "," + layoutParams.bottomMargin);
     }
