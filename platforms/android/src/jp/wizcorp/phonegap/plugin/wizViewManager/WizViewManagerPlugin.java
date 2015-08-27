@@ -83,8 +83,8 @@ public class WizViewManagerPlugin extends CordovaPlugin {
         webView.getView().post(new Runnable() {
             @Override
             public void run() {
-		WebSettings settings;
-		settings = ((WebView) webView.getView()).getSettings();
+                WebSettings settings;
+                settings = ((WebView) webView.getView()).getSettings();
                 settings.setDomStorageEnabled(true);
                 settings.setLoadWithOverviewMode(true);
                 settings.setUseWideViewPort(true);
