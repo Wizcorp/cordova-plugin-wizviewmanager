@@ -61,8 +61,6 @@
 	    <config-file target="AndroidManifest.xml" parent="/manifest/application">
 	        <activity android:name="com.custom.plugin.CustomCordovaPlugin"
 	            android:label="@string/app_name">
-	            <intent-filter>
-	            </intent-filter>
 	        </activity>
 	    </config-file>
 	
