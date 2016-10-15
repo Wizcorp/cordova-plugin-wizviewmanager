@@ -20,18 +20,16 @@ static NSMutableDictionary *viewLoadedCallbackId = nil;
 static NSMutableDictionary *isAnimating = nil;
 static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
-- (CDVPlugin *)initWithWebView:(UIWebView *)theWebView {
+- (void) pluginInitialize {
 
-    self = (WizViewManagerPlugin*)[super initWithWebView:theWebView];
-    if (self)
-	{
-		originalWebViewBounds = theWebView.bounds;
+    UIWebView* theWebView = (UIWebView*)self.webViewEngine.engineWebView;
+    
+    originalWebViewBounds = theWebView.bounds;
+    
+    self.webviewDelegate = theWebView.delegate;
+    theWebView.delegate = self;
         
-        self.webviewDelegate = theWebView.delegate;
-        theWebView.delegate = self;
-        
-        wizViewManagerInstance = self;
-    }
+    wizViewManagerInstance = self;
     
     // Build list of supported file types for UIWebView
     supportedFileList = [[NSArray alloc] initWithObjects:@".doc", @".docx",
@@ -67,8 +65,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
     self.hideViewCallbackId = nil;
     
     [self updateViewList];
-    
-    return self;
+
 }
 
 - (void)dealloc {
