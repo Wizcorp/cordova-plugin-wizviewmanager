@@ -22,7 +22,7 @@ static WizViewManagerPlugin *wizViewManagerInstance = NULL;
 
 - (void) pluginInitialize {
 
-    UIWebView* theWebView = (UIWebView*)self.webViewEngine.engineWebView;
+    UIWebView* theWebView = (UIWebView*)self.webView;
     
     originalWebViewBounds = theWebView.bounds;
     
