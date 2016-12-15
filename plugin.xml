@@ -1,76 +1,62 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <plugin xmlns="http://www.phonegap.com/ns/plugins/1.0"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    id="jp.wizcorp.phonegap.plugin.wizViewManagerPlugin"
-    version="1.3.0">
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	id="cordova-plugin-wizviewmanager"
+	version="1.3.0">
 
-    <name>Wizard View Manager Plugin</name>
-    
-    <description>This plugin allows you to create and control native UIWebViews.</description>
-    
-    <author>Ally Ogilvie - aogilvie@wizcorp.jp</author>
-    
-    <keywords>webview, view, wizcorp, wizard</keywords>
+	<name>WizViewManager</name>
+	<description>This plugin allows you to create and control native UIWebViews.</description>
+	<author>Ally Ogilvie - aogilvie@wizcorp.jp</author>
+	<keywords>webview, view, wizcorp, wizard</keywords>
 	
 	<engines>
-	    <engine name="cordova" version=">=2.6.0" />
+		<engine name="cordova" version=">=2.6.0" />
 	</engines>
 
-    <license>MIT</license>
+	<license>MIT</license>
 
-    <js-module src="www/phonegap/plugin/wizViewManager/wizViewManager.js" name="wizViewManagerPlugin" target="phonegap/plugin/wizViewManager/wizViewManager.js">
-        <clobbers target="window.wizViewManager" />
-    </js-module>
-    <js-module src="www/phonegap/plugin/wizViewManager/wizViewMessenger.js" name="wizViewMessenger" target="phonegap/plugin/wizViewManager/wizViewMessenger.js">
-        <clobbers target="window.wizViewMessenger" />
-    </js-module>
-    
-    <!-- ios -->
-    <platform name="ios">
+	<js-module src="www/wizViewManager.js" name="WizViewManager">
+		<clobbers target="window.wizViewManager" />
+	</js-module>
+	<js-module src="www/wizViewMessenger.js" name="WizViewMessenger">
+		<clobbers target="window.wizViewMessenger" />
+	</js-module>
 
-        <config-file target="config.xml" parent="/*">
-        	<feature name="WizViewManagerPlugin">
-                <param name="ios-package" value="WizViewManagerPlugin"/>
-                <param name="onload" value="true" />
-            </feature>
-        	<plugin name="WizViewManagerPlugin" value="WizViewManagerPlugin"/>
-        </config-file>
-               
-        <!-- Plugin files -->
-        <header-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizViewManagerPlugin.h" />
-        <source-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizViewManagerPlugin.m" compiler-flags="-fno-objc-arc" />
-        
-        <header-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizWebView.h" />
-        <source-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizWebView.m" compiler-flags="-fno-objc-arc" />
-        	
-        <!-- Logger -->
-        <source-file src="platforms/ios/HelloCordova/Plugins/WizViewManagerPlugin/WizDebugLog.h" compiler-flags="-fno-objc-arc" />
+	<!-- ios -->
+	<platform name="ios">
 
-    </platform>
-    
-    <!-- android -->
-    <platform name="android">
-    
+		<config-file target="config.xml" parent="/*">
+			<feature name="WizViewManager">
+				<param name="ios-package" value="WizViewManager"/>
+				<param name="onload" value="true" />
+			</feature>
+		</config-file>
+
+		<!-- Plugin files -->
+		<header-file src="src/ios/WizViewManager.h" />
+		<source-file src="src/ios/WizViewManager.m" compiler-flags="-fno-objc-arc" />
+
+		<header-file src="src/ios/WizWebView.h" />
+		<source-file src="src/ios/WizWebView.m" compiler-flags="-fno-objc-arc" />
+
+		<!-- Logger -->
+		<source-file src="src/ios/WizDebugLog.h" compiler-flags="-fno-objc-arc" />
+
+	</platform>
+
+	<!-- android -->
+	<platform name="android">
+
 		<config-file target="res/xml/config.xml" parent="/*">
-			<feature name="WizViewManagerPlugin" >
-				<param name="android-package" value="jp.wizcorp.phonegap.plugin.wizViewManager.WizViewManagerPlugin"/>
+			<feature name="WizViewManager" >
+				<param name="android-package" value="jp.wizcorp.wizviewmanager.WizViewManager"/>
 				<url-filter value="wizpostmessage://"/>
 			</feature>
-	    </config-file>
-	    
-	    <config-file target="AndroidManifest.xml" parent="/manifest/application">
-	        <activity android:name="com.custom.plugin.CustomCordovaPlugin"
-	            android:label="@string/app_name">
-	        </activity>
-	    </config-file>
-	
-	    <source-file src="platforms/android/src/jp/wizcorp/phonegap/plugin/wizViewManager/WizViewManagerPlugin.java" 
-	            target-dir="src/jp/wizcorp/phonegap/plugin/wizViewManager"/>
-	    <source-file src="platforms/android/src/jp/wizcorp/phonegap/plugin/wizViewManager/WizWebView.java" 
-	            target-dir="src/jp/wizcorp/phonegap/plugin/wizViewManager"/>
+		</config-file>
 
-    </platform>
-    
-    <license>MIT</license>
+		<source-file src="src/android/WizViewManager.java" target-dir="src/jp/wizcorp/wizviewmanager"/>
+		<source-file src="src/android/WizWebView.java" target-dir="src/jp/wizcorp/wizviewmanager"/>
+
+	</platform>
 
 </plugin>

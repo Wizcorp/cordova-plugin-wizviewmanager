@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="jp.wizcorp.wizviewmanager.exampleapp" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+	<name>WizViewManager Example</name>
+	<description>
+		An example app using WizViewManager.
+	</description>
+	<content src="index.html" />
+	<plugin name="cordova-plugin-wizviewmanager" spec="https://github.com/Wizcorp/cordova-plugin-wizviewmanager" />
+</widget>
