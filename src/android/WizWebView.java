@@ -144,14 +144,14 @@ public class WizWebView extends WebView  {
                         try {
                             targetView = (WebView) viewList.get(msgData[1]);
 
-                            // send data to mainView
                             String data2send = msgData[2];
                             // Log.d("WizWebView", "[wizMessage] targetView ****** is " + msgData[1] + " -> " + targetView + " with data -> " + data2send);
+                            String jsString = "javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");";
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                                 // Only for Kitkat and newer versions
-                                targetView.evaluateJavascript("wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");", null);
+                                targetView.evaluateJavascript(jsString, null);
                             } else {
-                                targetView.loadUrl("javascript:wizViewMessenger.__triggerMessageEvent(\"" + msgData[0] + "\", \"" + msgData[1] + "\", \"" + data2send + "\", \"" + msgData[3] + "\");");
+                                targetView.loadUrl("javascript:" + jsString);
                             }
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
@@ -182,15 +182,15 @@ public class WizWebView extends WebView  {
                         try {
                             targetView = (WebView) viewList.get(msgData[0]);
 
-                            // send data to mainView
                             String data2send = msgData[1];
                             data2send = data2send.replace("'", "\\'");
                             // Log.d(TAG, "[wizMessage] targetView ****** is " + msgData[0] + " -> " + targetView + " with data -> " + data2send);
+                            String jsString = "(wizMessageReceiver('" + data2send + "'))";
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
                                 // Only for Kitkat and newer versions
-                                targetView.evaluateJavascript("wizMessageReceiver('" + data2send + "');", null);
+                                targetView.evaluateJavascript(jsString, null);
                             } else {
-                                targetView.loadUrl("javascript:(wizMessageReceiver('" + data2send + "'))");
+                                targetView.loadUrl("javascript:" + jsString);
                             }
                         } catch (JSONException e) {
                             // TODO Auto-generated catch block
@@ -565,4 +565,3 @@ public class WizWebView extends WebView  {
         }
     }
 }
-
