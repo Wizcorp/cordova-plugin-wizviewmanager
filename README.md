@@ -1,10 +1,10 @@
-# phonegap-plugin-wizViewManager
+# cordova-plugin-wizviewmanager
 
-- PhoneGap Version : 2.6 and above
+- Cordova version : 2.6 and above
 
 # Description
 
-PhoneGap plugin for
+Cordova plugin for
 
 - creating
 - removing
@@ -17,12 +17,12 @@ PhoneGap plugin for
 
 ## Install (with Plugman - example iOS)
 
-	cordova plugin add https://github.com/Wizcorp/phonegap-plugin-wizViewManager
+	cordova plugin add https://github.com/Wizcorp/cordova-plugin-wizviewmanager
 	cordova build ios
 
 	< or >
 
-	phonegap local plugin add https://github.com/Wizcorp/phonegap-plugin-wizViewManager
+	phonegap local plugin add https://github.com/Wizcorp/cordova-plugin-wizviewmanager
 	phonegap build ios
 
 ## APIs
