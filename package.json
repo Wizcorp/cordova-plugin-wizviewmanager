@@ -1,6 +1,6 @@
 {
   "name": "cordova-plugin-wizviewmanager",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "This plugin allows managing multiple webviews in a single application.",
   "cordova": {
     "id": "cordova-plugin-wizviewmanager",
