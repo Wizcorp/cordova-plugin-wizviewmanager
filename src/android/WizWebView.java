@@ -113,7 +113,12 @@ public class WizWebView extends WebView  {
 
         // Set a transparent background
         this.setBackgroundColor(Color.TRANSPARENT);
-        if (Build.VERSION.SDK_INT >= 11) this.setLayerType(WebView.LAYER_TYPE_SOFTWARE, null);
+        if (Build.VERSION.SDK_INT >= 19) {
+            // Build.VERSION_CODES.KitKat
+            this.setLayerType(View.LAYER_TYPE_HARDWARE, null);
+        } else {
+            this.setLayerType(View.LAYER_TYPE_SOFTWARE, null);
+        }
 
         // Override url loading on WebViewClient
         this.setWebViewClient(new WebViewClient () {
